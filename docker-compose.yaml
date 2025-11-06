@@ -19,7 +19,7 @@ services:
             - NODE_ENV=production
             - PORT=${PORT}
         depends_on:
-            postgres:
+            db:
                 condition: service_healthy
             redis:
                 condition: service_healthy
