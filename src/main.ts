@@ -15,6 +15,6 @@ async function bootstrap() {
     SwaggerModule.setup("api-docs", app, documentFactory);
 
     await app.listen(process.env.PORT ?? 8080);
-    console.log(`project start at http://localhost:8080/api`);
+    console.log(`project start at http://localhost:8080/api-docs`);
 }
 bootstrap();
