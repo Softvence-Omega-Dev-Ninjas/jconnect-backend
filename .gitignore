@@ -112,3 +112,14 @@ prisma/generated
 deploy_key*
 backups/
 logs/
+
+# Deployment files
+.env.production
+.env
+*.pem
+*.key
+*.secret
+deploy_key*
+backups/
+logs/
+prisma/generator/
