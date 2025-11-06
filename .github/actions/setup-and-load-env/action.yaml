@@ -1,0 +1,129 @@
+name: "setup-and-load-env"
+description: "setup-and-load-env composite action"
+inputs:
+    DOCKER_USERNAME:
+        description: "DOCKER_USERNAME from .env.production"
+        required: true
+    PACKAGE_NAME:
+        description: "PACKAGE_NAME from .env.production"
+        required: true
+    PACKAGE_VERSION:
+        description: "PACKAGE_VERSION from .env.production"
+        required: true
+    EMAIL:
+        description: "EMAIL from .env.production"
+        required: true
+    IMAGE_TAG:
+        description: "IMAGE_TAG from .env.production"
+        required: true
+    SE_DOCKER_PASSWORD:
+        description: "SE_DOCKER_PASSWORD from .env.production"
+        required: true
+    SE_GIT_TOKEN:
+        description: "SE_GIT_TOKEN from .env.production"
+        required: true
+    VPS_HOST:
+        description: "VPS_HOST from .env.production"
+        required: true
+    VPS_USER:
+        description: "VPS_USER from .env.production"
+        required: true
+    VPS_HOST_IP:
+        description: "VPS_HOST_IP from .env.production"
+        required: true
+    CADDY_CONTAINER_NAME:
+        description: "CADDY_CONTAINER_NAME from .env.production"
+        required: true
+    DATABASE_URL:
+        description: "DATABASE_URL from .env.production"
+        required: true
+    SALT_ROUND:
+        description: "SALT_ROUND from .env.production"
+        required: true
+    PORT:
+        description: "PORT from .env.production"
+        required: true
+    ACCESS_TOKEN_SECRET:
+        description: "ACCESS_TOKEN_SECRET from .env.production"
+        required: true
+    REFRESH_TOKEN_SECRET:
+        description: "REFRESH_TOKEN_SECRET from .env.production"
+        required: true
+    ACCESS_TOKEN_EXPIREIN:
+        description: "ACCESS_TOKEN_EXPIREIN from .env.production"
+        required: true
+    REFRESH_TOKEN_EXPIREIN:
+        description: "REFRESH_TOKEN_EXPIREIN from .env.production"
+        required: true
+    EMAIL_USER:
+        description: "EMAIL_USER from .env.production"
+        required: true
+    EMAIL_PASS:
+        description: "EMAIL_PASS from .env.production"
+        required: true
+    SMTP_HOST:
+        description: "SMTP_HOST from .env.production"
+        required: true
+    SMTP_PORT:
+        description: "SMTP_PORT from .env.production"
+        required: true
+    SMPT_FROM:
+        description: "SMPT_FROM from .env.production"
+        required: true
+    ADMIN_EMAIL:
+        description: "ADMIN_EMAIL from .env.production"
+        required: true
+    ADMIN_PHONE:
+        description: "ADMIN_PHONE from .env.production"
+        required: true
+    ADMIN_PASSWORD:
+        description: "ADMIN_PASSWORD from .env.production"
+        required: true
+    CLIENT_URL:
+        description: "CLIENT_URL from .env.production"
+        required: true
+    SERVER_URL:
+        description: "SERVER_URL from .env.production"
+        required: true
+runs:
+    using: "composite"
+    steps:
+        - name: Generate .env
+          shell: bash
+          run: |
+              ENV_FILE="$GITHUB_WORKSPACE/.env"
+              {
+                echo "DOCKER_USERNAME=${{ inputs.DOCKER_USERNAME }}"
+                echo "PACKAGE_NAME=${{ inputs.PACKAGE_NAME }}"
+                echo "PACKAGE_VERSION=${{ inputs.PACKAGE_VERSION }}"
+                echo "EMAIL=${{ inputs.EMAIL }}"
+                echo "IMAGE_TAG=${{ inputs.IMAGE_TAG }}"
+                echo "SE_DOCKER_PASSWORD=${{ inputs.SE_DOCKER_PASSWORD }}"
+                echo "SE_GIT_TOKEN=${{ inputs.SE_GIT_TOKEN }}"
+                echo "VPS_HOST=${{ inputs.VPS_HOST }}"
+                echo "VPS_USER=${{ inputs.VPS_USER }}"
+                echo "VPS_HOST_IP=${{ inputs.VPS_HOST_IP }}"
+                echo "CADDY_CONTAINER_NAME=${{ inputs.CADDY_CONTAINER_NAME }}"
+                echo "DATABASE_URL=${{ inputs.DATABASE_URL }}"
+                echo "SALT_ROUND=${{ inputs.SALT_ROUND }}"
+                echo "PORT=${{ inputs.PORT }}"
+                echo "ACCESS_TOKEN_SECRET=${{ inputs.ACCESS_TOKEN_SECRET }}"
+                echo "REFRESH_TOKEN_SECRET=${{ inputs.REFRESH_TOKEN_SECRET }}"
+                echo "ACCESS_TOKEN_EXPIREIN=${{ inputs.ACCESS_TOKEN_EXPIREIN }}"
+                echo "REFRESH_TOKEN_EXPIREIN=${{ inputs.REFRESH_TOKEN_EXPIREIN }}"
+                echo "EMAIL_USER=${{ inputs.EMAIL_USER }}"
+                echo "EMAIL_PASS=${{ inputs.EMAIL_PASS }}"
+                echo "SMTP_HOST=${{ inputs.SMTP_HOST }}"
+                echo "SMTP_PORT=${{ inputs.SMTP_PORT }}"
+                echo "SMPT_FROM=${{ inputs.SMPT_FROM }}"
+                echo "ADMIN_EMAIL=${{ inputs.ADMIN_EMAIL }}"
+                echo "ADMIN_PHONE=${{ inputs.ADMIN_PHONE }}"
+                echo "ADMIN_PASSWORD=${{ inputs.ADMIN_PASSWORD }}"
+                echo "CLIENT_URL=${{ inputs.CLIENT_URL }}"
+                echo "SERVER_URL=${{ inputs.SERVER_URL }}"
+              } > "$ENV_FILE"
+              if [[ -n "${{ inputs.VPS_SSH_PRIVATE_KEY }}" ]]; then
+                echo "${{ inputs.VPS_SSH_PRIVATE_KEY }}" > "$GITHUB_WORKSPACE/deploy_key.pem"
+                chmod 600 "$GITHUB_WORKSPACE/deploy_key.pem"
+                echo "VPS_SSH_PRIVATE_KEY_FILE=$GITHUB_WORKSPACE/deploy_key.pem" >> "$ENV_FILE"
+              fi

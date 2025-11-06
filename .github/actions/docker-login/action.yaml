@@ -1,0 +1,17 @@
+name: "docker-login"
+description: "docker-login composite action"
+inputs:
+    DOCKER_USERNAME:
+        description: "DOCKER_USERNAME from .env.production"
+        required: true
+    SE_DOCKER_PASSWORD:
+        description: "SE_DOCKER_PASSWORD from .env.production"
+        required: true
+runs:
+    using: "composite"
+    steps:
+        - name: Log in to Docker
+          shell: bash
+          run: |
+              echo "${{ inputs.SE_DOCKER_PASSWORD }}" | docker login -u "${{ inputs.DOCKER_USERNAME }}" --password-stdin
+              echo '✅ Docker login successful'

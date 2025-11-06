@@ -1,0 +1,123 @@
+name: CI Pipeline
+on:
+    push:
+        branches:
+            - dev
+            - development
+            - main
+    pull_request:
+        branches:
+            - dev
+            - development
+            - main
+jobs:
+    lint-test:
+        runs-on: ubuntu-latest
+        if: (github.ref == 'refs/heads/main') && (github.ref != 'refs/heads/dev') && (github.ref != 'refs/heads/development')
+
+        steps:
+            - uses: actions/checkout@v4
+            - name: Setup env
+              uses: ./.github/actions/setup-and-load-env
+              with:
+                  DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
+                  PACKAGE_NAME: ${{ secrets.PACKAGE_NAME }}
+                  PACKAGE_VERSION: ${{ secrets.PACKAGE_VERSION }}
+                  EMAIL: ${{ secrets.EMAIL }}
+                  IMAGE_TAG: ${{ secrets.IMAGE_TAG }}
+                  SE_DOCKER_PASSWORD: ${{ secrets.SE_DOCKER_PASSWORD }}
+                  SE_GIT_TOKEN: ${{ secrets.SE_GIT_TOKEN }}
+                  VPS_HOST: ${{ secrets.VPS_HOST }}
+                  VPS_USER: ${{ secrets.VPS_USER }}
+                  VPS_HOST_IP: ${{ secrets.VPS_HOST_IP }}
+                  CADDY_CONTAINER_NAME: ${{ secrets.CADDY_CONTAINER_NAME }}
+                  DATABASE_URL: ${{ secrets.DATABASE_URL }}
+                  SALT_ROUND: ${{ secrets.SALT_ROUND }}
+                  PORT: ${{ secrets.PORT }}
+                  ACCESS_TOKEN_SECRET: ${{ secrets.ACCESS_TOKEN_SECRET }}
+                  REFRESH_TOKEN_SECRET: ${{ secrets.REFRESH_TOKEN_SECRET }}
+                  ACCESS_TOKEN_EXPIREIN: ${{ secrets.ACCESS_TOKEN_EXPIREIN }}
+                  REFRESH_TOKEN_EXPIREIN: ${{ secrets.REFRESH_TOKEN_EXPIREIN }}
+                  EMAIL_USER: ${{ secrets.EMAIL_USER }}
+                  EMAIL_PASS: ${{ secrets.EMAIL_PASS }}
+                  SMTP_HOST: ${{ secrets.SMTP_HOST }}
+                  SMTP_PORT: ${{ secrets.SMTP_PORT }}
+                  SMPT_FROM: ${{ secrets.SMPT_FROM }}
+                  ADMIN_EMAIL: ${{ secrets.ADMIN_EMAIL }}
+                  ADMIN_PHONE: ${{ secrets.ADMIN_PHONE }}
+                  ADMIN_PASSWORD: ${{ secrets.ADMIN_PASSWORD }}
+                  CLIENT_URL: ${{ secrets.CLIENT_URL }}
+                  SERVER_URL: ${{ secrets.SERVER_URL }}
+            - uses: ./.github/actions/verify-env
+              with:
+                  PACKAGE_NAME: ${{ secrets.PACKAGE_NAME }}
+                  PACKAGE_VERSION: ${{ secrets.PACKAGE_VERSION }}
+                  IMAGE_TAG: ${{ secrets.IMAGE_TAG }}
+            - uses: actions/setup-node@v4
+              with:
+                  node-version: 22
+            - uses: pnpm/action-setup@v2
+              with:
+                  version: 10
+            - uses: actions/cache@v3
+              with:
+                  path: ~/.pnpm-store
+                  key: ${{ runner.os }}-pnpm-${{ hashFiles('**/pnpm-lock.yaml') }}
+                  restore-keys: |
+                      ${{ runner.os }}-pnpm-
+            - run: pnpm install
+            - run: pnpm ci:fix
+            - run: pnpm prisma:generate
+            - run: pnpm build
+            - if: always()
+              run: rm -f "${{ github.workspace }}/.env"
+    build-and-push:
+        needs: lint-test
+        runs-on: ubuntu-latest
+        if: (github.ref == 'refs/heads/main') && (github.ref != 'refs/heads/dev') && (github.ref != 'refs/heads/development')
+        steps:
+            - uses: actions/checkout@v4
+            - name: Setup env
+              uses: ./.github/actions/setup-and-load-env
+              with:
+                  DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
+                  PACKAGE_NAME: ${{ secrets.PACKAGE_NAME }}
+                  PACKAGE_VERSION: ${{ secrets.PACKAGE_VERSION }}
+                  EMAIL: ${{ secrets.EMAIL }}
+                  IMAGE_TAG: ${{ secrets.IMAGE_TAG }}
+                  SE_DOCKER_PASSWORD: ${{ secrets.SE_DOCKER_PASSWORD }}
+                  SE_GIT_TOKEN: ${{ secrets.SE_GIT_TOKEN }}
+                  VPS_HOST: ${{ secrets.VPS_HOST }}
+                  VPS_USER: ${{ secrets.VPS_USER }}
+                  VPS_HOST_IP: ${{ secrets.VPS_HOST_IP }}
+                  CADDY_CONTAINER_NAME: ${{ secrets.CADDY_CONTAINER_NAME }}
+                  DATABASE_URL: ${{ secrets.DATABASE_URL }}
+                  SALT_ROUND: ${{ secrets.SALT_ROUND }}
+                  PORT: ${{ secrets.PORT }}
+                  ACCESS_TOKEN_SECRET: ${{ secrets.ACCESS_TOKEN_SECRET }}
+                  REFRESH_TOKEN_SECRET: ${{ secrets.REFRESH_TOKEN_SECRET }}
+                  ACCESS_TOKEN_EXPIREIN: ${{ secrets.ACCESS_TOKEN_EXPIREIN }}
+                  REFRESH_TOKEN_EXPIREIN: ${{ secrets.REFRESH_TOKEN_EXPIREIN }}
+                  EMAIL_USER: ${{ secrets.EMAIL_USER }}
+                  EMAIL_PASS: ${{ secrets.EMAIL_PASS }}
+                  SMTP_HOST: ${{ secrets.SMTP_HOST }}
+                  SMTP_PORT: ${{ secrets.SMTP_PORT }}
+                  SMPT_FROM: ${{ secrets.SMPT_FROM }}
+                  ADMIN_EMAIL: ${{ secrets.ADMIN_EMAIL }}
+                  ADMIN_PHONE: ${{ secrets.ADMIN_PHONE }}
+                  ADMIN_PASSWORD: ${{ secrets.ADMIN_PASSWORD }}
+                  CLIENT_URL: ${{ secrets.CLIENT_URL }}
+                  SERVER_URL: ${{ secrets.SERVER_URL }}
+            - uses: ./.github/actions/verify-env
+              with:
+                  PACKAGE_NAME: ${{ secrets.PACKAGE_NAME }}
+                  PACKAGE_VERSION: ${{ secrets.PACKAGE_VERSION }}
+                  IMAGE_TAG: ${{ secrets.IMAGE_TAG }}
+            - uses: ./.github/actions/docker-login
+              with:
+                  DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
+                  SE_DOCKER_PASSWORD: ${{ secrets.SE_DOCKER_PASSWORD }}
+            - run: docker compose --profile prod build --no-cache
+            - run: docker compose --profile prod push
+            - if: always()
+              run: rm -f "${{ github.workspace }}/.env"

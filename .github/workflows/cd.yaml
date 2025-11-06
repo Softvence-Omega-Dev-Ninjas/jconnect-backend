@@ -1,0 +1,171 @@
+name: CD Pipeline
+on:
+    workflow_run:
+        workflows: ["CI Pipeline"]
+        types:
+            - completed
+jobs:
+    deploy:
+        runs-on: ubuntu-latest
+        if: ${{ github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.head_branch == 'main' }}
+        steps:
+            - uses: actions/checkout@v4
+            - name: Setup env
+              uses: ./.github/actions/setup-and-load-env
+              with:
+                  DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
+                  PACKAGE_NAME: ${{ secrets.PACKAGE_NAME }}
+                  PACKAGE_VERSION: ${{ secrets.PACKAGE_VERSION }}
+                  EMAIL: ${{ secrets.EMAIL }}
+                  IMAGE_TAG: ${{ secrets.IMAGE_TAG }}
+                  SE_DOCKER_PASSWORD: ${{ secrets.SE_DOCKER_PASSWORD }}
+                  SE_GIT_TOKEN: ${{ secrets.SE_GIT_TOKEN }}
+                  VPS_HOST: ${{ secrets.VPS_HOST }}
+                  VPS_USER: ${{ secrets.VPS_USER }}
+                  VPS_HOST_IP: ${{ secrets.VPS_HOST_IP }}
+                  CADDY_CONTAINER_NAME: ${{ secrets.CADDY_CONTAINER_NAME }}
+                  DATABASE_URL: ${{ secrets.DATABASE_URL }}
+                  SALT_ROUND: ${{ secrets.SALT_ROUND }}
+                  PORT: ${{ secrets.PORT }}
+                  ACCESS_TOKEN_SECRET: ${{ secrets.ACCESS_TOKEN_SECRET }}
+                  REFRESH_TOKEN_SECRET: ${{ secrets.REFRESH_TOKEN_SECRET }}
+                  ACCESS_TOKEN_EXPIREIN: ${{ secrets.ACCESS_TOKEN_EXPIREIN }}
+                  REFRESH_TOKEN_EXPIREIN: ${{ secrets.REFRESH_TOKEN_EXPIREIN }}
+                  EMAIL_USER: ${{ secrets.EMAIL_USER }}
+                  EMAIL_PASS: ${{ secrets.EMAIL_PASS }}
+                  SMTP_HOST: ${{ secrets.SMTP_HOST }}
+                  SMTP_PORT: ${{ secrets.SMTP_PORT }}
+                  SMPT_FROM: ${{ secrets.SMPT_FROM }}
+                  ADMIN_EMAIL: ${{ secrets.ADMIN_EMAIL }}
+                  ADMIN_PHONE: ${{ secrets.ADMIN_PHONE }}
+                  ADMIN_PASSWORD: ${{ secrets.ADMIN_PASSWORD }}
+                  CLIENT_URL: ${{ secrets.CLIENT_URL }}
+                  SERVER_URL: ${{ secrets.SERVER_URL }}
+            - uses: ./.github/actions/verify-env
+              with:
+                  PACKAGE_NAME: ${{ secrets.PACKAGE_NAME }}
+                  PACKAGE_VERSION: ${{ secrets.PACKAGE_VERSION }}
+                  IMAGE_TAG: ${{ secrets.IMAGE_TAG }}
+            - uses: ./.github/actions/setup-ssh
+              with:
+                  VPS_USER: ${{ secrets.VPS_USER }}
+                  VPS_HOST: ${{ secrets.VPS_HOST }}
+                  VPS_SSH_PRIVATE_KEY: ${{ secrets.VPS_SSH_PRIVATE_KEY }}
+            - name: Copy Files to Server
+              run: |
+                  echo "Creating directories..."
+                  ssh deploy-server "mkdir -p ~/${{ secrets.PACKAGE_NAME }}/scripts"
+                  echo "Copying files..."
+                  scp docker-compose.yaml deploy-server:~/${{ secrets.PACKAGE_NAME }}/
+                  scp .env deploy-server:~/${{ secrets.PACKAGE_NAME }}/
+                  scp Dockerfile deploy-server:~/${{ secrets.PACKAGE_NAME }}/
+                  scp Caddyfile deploy-server:~/${{ secrets.PACKAGE_NAME }}/
+                  scp -r scripts deploy-server:~/${{ secrets.PACKAGE_NAME }}/
+                  echo "✅ Files copied successfully"
+            - name: Fix permissions on server
+              run: ssh deploy-server "chmod -R +x ~/${{ secrets.PACKAGE_NAME }}/scripts/*.sh"
+            - name: Prepare OS
+              run: |
+                  ssh deploy-server bash << 'VERIFY_EOF'
+
+                  # Update packages
+                  sudo apt update && sudo apt upgrade -y
+
+                  # Install Docker
+                  sudo apt install -y docker.io
+
+                  # Enable Docker service
+                  sudo systemctl start docker
+                  sudo systemctl enable docker
+
+                  # Add ubuntu user to docker group (so no sudo needed)
+                  sudo usermod -aG docker $USER
+                  newgrp docker
+
+                  # Verify
+                  docker --version
+
+                  # Install Docker Compose (latest)
+                  sudo curl -L "https://github.com/docker/compose/releases/latest/download/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
+                  sudo chmod +x /usr/local/bin/docker-compose
+                  docker-compose --version
+
+                  VERIFY_EOF
+            - name: Deploy Application 🚀
+              run: |
+                  ssh deploy-server bash << 'DEPLOY_EOF'
+
+                  set -euo pipefail
+
+                  cd ~/${{secrets.PACKAGE_NAME}}
+
+                  # Install Docker Compose if needed
+                  if [ ! -f ~/.docker/cli-plugins/docker-compose ]; then
+                    echo "Installing Docker Compose..."
+                    mkdir -p ~/.docker/cli-plugins/
+                    curl -SL https://github.com/docker/compose/releases/latest/download/docker-compose-linux-x86_64 -o ~/.docker/cli-plugins/docker-compose
+                    chmod +x ~/.docker/cli-plugins/docker-compose
+                  fi
+
+                  # Login to Docker Hub
+                  echo "${{secrets.SE_DOCKER_PASSWORD}}" | docker login -u "${{secrets.DOCKER_USERNAME}}" --password-stdin
+
+                  # Explicitly export required variables
+                  export DOCKER_USERNAME="${{secrets.DOCKER_USERNAME}}"
+                  export PACKAGE_NAME="${{secrets.PACKAGE_NAME}}"
+                  export PACKAGE_VERSION="${{secrets.PACKAGE_VERSION}}"
+                  export EMAIL="${{secrets.EMAIL}}"
+                  export IMAGE_TAG="${{secrets.IMAGE_TAG}}"
+                  export SE_DOCKER_PASSWORD="${{secrets.SE_DOCKER_PASSWORD}}"
+                  export SE_GIT_TOKEN="${{secrets.SE_GIT_TOKEN}}"
+                  export VPS_HOST="${{secrets.VPS_HOST}}"
+                  export VPS_USER="${{secrets.VPS_USER}}"
+                  export VPS_HOST_IP="${{secrets.VPS_HOST_IP}}"
+                  export CADDY_CONTAINER_NAME="${{secrets.CADDY_CONTAINER_NAME}}"
+                  export DATABASE_URL="${{secrets.DATABASE_URL}}"
+                  export SALT_ROUND="${{secrets.SALT_ROUND}}"
+                  export PORT="${{secrets.PORT}}"
+                  export ACCESS_TOKEN_SECRET="${{secrets.ACCESS_TOKEN_SECRET}}"
+                  export REFRESH_TOKEN_SECRET="${{secrets.REFRESH_TOKEN_SECRET}}"
+                  export ACCESS_TOKEN_EXPIREIN="${{secrets.ACCESS_TOKEN_EXPIREIN}}"
+                  export REFRESH_TOKEN_EXPIREIN="${{secrets.REFRESH_TOKEN_EXPIREIN}}"
+                  export EMAIL_USER="${{secrets.EMAIL_USER}}"
+                  export EMAIL_PASS="${{secrets.EMAIL_PASS}}"
+                  export SMTP_HOST="${{secrets.SMTP_HOST}}"
+                  export SMTP_PORT="${{secrets.SMTP_PORT}}"
+                  export SMPT_FROM="${{secrets.SMPT_FROM}}"
+                  export ADMIN_EMAIL="${{secrets.ADMIN_EMAIL}}"
+                  export ADMIN_PHONE="${{secrets.ADMIN_PHONE}}"
+                  export ADMIN_PASSWORD="${{secrets.ADMIN_PASSWORD}}"
+                  export CLIENT_URL="${{secrets.CLIENT_URL}}"
+                  export SERVER_URL="${{secrets.SERVER_URL}}"
+
+                  # Run the deployment script
+                  echo "Starting zero-downtime deployment..."
+                  ./scripts/deploy.sh --version "$PACKAGE_VERSION"
+
+                  docker logout
+                  docker image prune -f
+
+                  DEPLOY_EOF
+
+            - name: Verify Deployment
+              run: |
+                  ssh deploy-server bash << 'VERIFY_EOF'
+                    cd ~/${{ secrets.PACKAGE_NAME }}
+                    echo "=== Running deployment status check ==="
+                    ./scripts/deploy.sh status
+                    echo "=== Testing endpoint directly ==="
+                    if curl -f -s --connect-timeout 5 --max-time 10 "http://${{ secrets.VPS_HOST_IP }}:${{ secrets.PORT }}/" | grep -q '"status":"ok"'; then
+                      echo "🎉 Endpoint health check passed! Service is responding with status: ok"
+                    else
+                      echo "❌ Endpoint health check failed!"
+                      exit 1
+                    fi
+                    echo "Deployment verified successfully!"
+                  VERIFY_EOF
+            - name: Cleanup
+              if: always()
+              run: |
+                  rm -rf ~/.ssh/deploy_key* ~/.ssh/config
+                  rm -f .env

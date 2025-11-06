@@ -1,0 +1,34 @@
+name: "setup-ssh"
+description: "setup-ssh composite action"
+inputs:
+    VPS_USER:
+        description: "VPS_USER from .env.production"
+        required: true
+    VPS_HOST:
+        description: "VPS_HOST from .env.production"
+        required: true
+    VPS_SSH_PRIVATE_KEY:
+        description: "VPS_SSH_PRIVATE_KEY from .env.production"
+        required: true
+runs:
+    using: "composite"
+    steps:
+        - name: Setup SSH
+          shell: bash
+          run: |
+              mkdir -p ~/.ssh && chmod 700 ~/.ssh
+              echo "${{ inputs.VPS_SSH_PRIVATE_KEY }}" | tr -d '\r' > ~/.ssh/deploy_key
+              chmod 600 ~/.ssh/deploy_key
+              ssh-keyscan -H ${{ inputs.VPS_HOST }} >> ~/.ssh/known_hosts
+              chmod 644 ~/.ssh/known_hosts
+              cat > ~/.ssh/config <<EOF
+              Host deploy-server
+                HostName ${{ inputs.VPS_HOST }}
+                User ${{ inputs.VPS_USER }}
+                IdentityFile ~/.ssh/deploy_key
+                StrictHostKeyChecking no
+              EOF
+              chmod 600 ~/.ssh/config
+        - name: Test SSH
+          shell: bash
+          run: ssh deploy-server "echo '🎉 SSH Connected!'"

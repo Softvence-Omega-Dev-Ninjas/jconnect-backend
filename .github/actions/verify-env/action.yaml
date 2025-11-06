@@ -1,0 +1,22 @@
+name: "verify-env"
+description: "verify-env composite action"
+inputs:
+    PACKAGE_NAME:
+        description: "PACKAGE_NAME from .env.production"
+        required: true
+    PACKAGE_VERSION:
+        description: "PACKAGE_VERSION from .env.production"
+        required: true
+    IMAGE_TAG:
+        description: "IMAGE_TAG from .env.production"
+        required: true
+runs:
+    using: "composite"
+    steps:
+        - name: Verify environment
+          shell: bash
+          run: |
+              echo "Package: ${{ inputs.PACKAGE_NAME }}"
+              echo "Version: ${{ inputs.PACKAGE_VERSION }}"
+              echo "Image: ${{ inputs.IMAGE_TAG }}"
+              echo '✅ Environment variables accessible'
