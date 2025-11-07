@@ -1,7 +1,29 @@
 model User {
-  id    Int     @id @default(autoincrement())
-  email String  @unique
-  name  String?
-  posts Post[]
-}
+  id String @id @default(uuid())
+  full_name     String
+  email_address String  @unique 
+  country_code  String? 
+  phone_number  String?
+  password_hash String 
+  is_terms_agreed Boolean @default(false)
+  auth_provider  String    @default("email") // 'email', 'google', 'facebook'
+  is_active      Boolean   @default(true)
+  login_attempts Int       @default(0)
+  last_login_at  DateTime? 
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+  password_reset_token String?
+  token_expires_at     DateTime?
+  role                 Role      @default(USER)
+  // Relation to Service Model 
+  profile              Profile?
+  // services             Service[]
 
+  @@map("users")
+}
+enum Role {
+  USER
+  MODERATOR
+  ADMIN
+  SUPER_ADMIN
+}
