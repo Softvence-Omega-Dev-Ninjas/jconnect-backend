@@ -1,0 +1,29 @@
+model ServiceRequest {
+    id        String @id @default(cuid())
+    serviceId String
+    // Assuming you have a User model for the buyer/customer
+    buyerId   String
+
+    // Request Details from the form
+    captionOrInstructions String?
+    promotionDate         DateTime?
+    specialNotes          String?
+
+    // File/Media Details (Assuming path/URL to the uploaded file)
+    uploadedFileUrl String?
+
+    // Payment Summary
+    servicePrice      Float
+    platformFeeRate   Float
+    platformFeeAmount Float
+    totalAmount       Float
+
+    // Status and Timestamps
+    status    String   @default("PENDING")
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+
+    // Relations (Optional, but highly recommended)
+    service Service @relation(fields: [serviceId], references: [id])
+    buyer   User    @relation(fields: [buyerId], references: [id])
+}

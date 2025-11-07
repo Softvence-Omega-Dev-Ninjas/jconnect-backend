@@ -1,34 +1,49 @@
 import { Body, Controller, Delete, Get, Param, Patch, Post } from "@nestjs/common";
+import { ApiOperation, ApiResponse, ApiTags } from "@nestjs/swagger";
 import { Service } from "@prisma/client";
 import { CreateServiceDto } from "./dto/create-service.dto";
 import { UpdateServiceDto } from "./dto/update-service.dto";
 import { ServiceService } from "./service.service";
 
-@Controller("services") // The route path will be /services
+@ApiTags("Services")
+@Controller("services")
 export class ServiceController {
     constructor(private readonly serviceService: ServiceService) {}
 
-    @Post() // POST /services
+    @Post()
+    @ApiOperation({ summary: "Create a new service listing" })
+    @ApiResponse({ status: 201, description: "Service created successfully" })
     create(@Body() createServiceDto: CreateServiceDto): Promise<Service> {
         return this.serviceService.create(createServiceDto);
     }
 
-    @Get() // GET /services
+    @Get()
+    @ApiOperation({ summary: "Get all available services" })
+    @ApiResponse({ status: 200, description: "List of all services" })
     findAll(): Promise<Service[]> {
         return this.serviceService.findAll();
     }
 
-    @Get(":id") // GET /services/:id
+    @Get(":id")
+    @ApiOperation({ summary: "Get service details by ID" })
+    @ApiResponse({ status: 200, description: "Service details found" })
+    @ApiResponse({ status: 404, description: "Service not found" })
     findOne(@Param("id") id: string): Promise<Service> {
         return this.serviceService.findOne(id);
     }
 
-    @Patch(":id") // PATCH /services/:id
+    @Patch(":id")
+    @ApiOperation({ summary: "Update service details by ID" })
+    @ApiResponse({ status: 200, description: "Service updated successfully" })
+    @ApiResponse({ status: 404, description: "Service not found" })
     update(@Param("id") id: string, @Body() updateServiceDto: UpdateServiceDto): Promise<Service> {
         return this.serviceService.update(id, updateServiceDto);
     }
 
-    @Delete(":id") // DELETE /services/:id
+    @Delete(":id")
+    @ApiOperation({ summary: "Delete a service listing by ID" })
+    @ApiResponse({ status: 200, description: "Service deleted successfully" })
+    @ApiResponse({ status: 404, description: "Service not found" })
     remove(@Param("id") id: string): Promise<Service> {
         return this.serviceService.remove(id);
     }
