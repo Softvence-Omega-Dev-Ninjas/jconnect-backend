@@ -4,7 +4,7 @@ model User {
   email_address String  @unique 
   country_code  String? 
   phone_number  String?
-  password_hash String 
+  password String 
   is_terms_agreed Boolean @default(false)
   auth_provider  String    @default("email") // 'email', 'google', 'facebook'
   is_active      Boolean   @default(true)
