@@ -1,18 +1,22 @@
-import { config } from "dotenv";
-import { expand } from "dotenv-expand";
-import path from "path";
-import { defineConfig, env } from "prisma/config";
+import "dotenv/config"; // * loads .env file for database connection
 
-expand(config({ path: path.resolve(process.cwd(), ".env") }));
-export default defineConfig({
-    //   schema: "prisma/schema.prisma",
-    schema: "prisma/models",
+import path from "node:path";
+import type { PrismaConfig } from "prisma";
+
+export default {
+    schema: path.join("prisma", "schema"),
     migrations: {
-        path: "prisma/migrations",
-        // seed: "tsx prisma/seed.ts",
+        path: path.join("prisma", "migrations"),
     },
-    engine: "classic",
-    datasource: {
-        url: env("DATABASE_URL"),
+    views: {
+        path: path.join("prisma", "views"),
     },
-});
+    typedSql: {
+        path: path.join("prisma", "queries"),
+    },
+    experimental: {
+        studio: true,
+        adapter: true,
+        externalTables: true,
+    },
+} satisfies PrismaConfig;
