@@ -20,13 +20,26 @@ CREATE TABLE "user_profiles" (
 );
 
 -- CreateTable
+CREATE TABLE "Service" (
+    "id" TEXT NOT NULL,
+    "serviceName" TEXT NOT NULL,
+    "description" TEXT,
+    "price" DOUBLE PRECISION NOT NULL,
+    "currency" TEXT NOT NULL DEFAULT 'USD',
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+
+    CONSTRAINT "Service_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
 CREATE TABLE "users" (
     "id" TEXT NOT NULL,
     "full_name" TEXT NOT NULL,
     "email_address" TEXT NOT NULL,
     "country_code" TEXT,
     "phone_number" TEXT,
-    "password_hash" TEXT NOT NULL,
+    "password" TEXT NOT NULL,
     "is_terms_agreed" BOOLEAN NOT NULL DEFAULT false,
     "auth_provider" TEXT NOT NULL DEFAULT 'email',
     "is_active" BOOLEAN NOT NULL DEFAULT true,
@@ -43,6 +56,9 @@ CREATE TABLE "users" (
 
 -- CreateIndex
 CREATE UNIQUE INDEX "user_profiles_user_id_key" ON "user_profiles"("user_id");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "Service_serviceName_key" ON "Service"("serviceName");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "users_email_address_key" ON "users"("email_address");
