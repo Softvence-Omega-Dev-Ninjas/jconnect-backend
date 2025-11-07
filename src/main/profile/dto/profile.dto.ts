@@ -20,22 +20,22 @@ export class CreateProfileDto {
     @ApiProperty({ example: "john_instagram", required: false })
     @IsOptional()
     @IsString()
-    instagram_username?: string;
+    instagram?: string;
 
     @ApiProperty({ example: "john.facebook", required: false })
     @IsOptional()
     @IsString()
-    facebook_username?: string;
+    facebook?: string;
 
     @ApiProperty({ example: "john.tiktok", required: false })
     @IsOptional()
     @IsString()
-    tiktok_username?: string;
+    tiktok?: string;
 
-    @ApiProperty({ example: "https://youtube.com/channel/xyz", required: false })
+    @ApiProperty({ example: "@shamimrana2006", required: false })
     @IsOptional()
-    @IsUrl()
-    youtube_channel_url?: string;
+    @IsString()
+    youtube?: string;
 }
 
 export class UpdateProfileDto {
@@ -52,20 +52,20 @@ export class UpdateProfileDto {
     @ApiProperty({ example: "new_instagram_username", required: false })
     @IsOptional()
     @IsString()
-    instagram_username?: string;
+    instagram?: string;
 
     @ApiProperty({ example: "new_facebook_username", required: false })
     @IsOptional()
     @IsString()
-    facebook_username?: string;
+    facebook?: string;
 
     @ApiProperty({ example: "new_tiktok_username", required: false })
     @IsOptional()
     @IsString()
-    tiktok_username?: string;
+    tiktok?: string;
 
     @ApiProperty({ example: "https://youtube.com/newchannel", required: false })
     @IsOptional()
-    @IsUrl()
-    youtube_channel_url?: string;
+    @IsString()
+    youtube?: string;
 }
