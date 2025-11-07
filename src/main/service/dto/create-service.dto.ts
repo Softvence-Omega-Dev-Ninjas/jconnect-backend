@@ -1,3 +1,4 @@
+// /src/service/dto/create-service.dto.ts
 import { ApiProperty } from "@nestjs/swagger";
 import { IsNotEmpty, IsNumber, IsOptional, IsString, Min } from "class-validator";
 
@@ -36,4 +37,12 @@ export class CreateServiceDto {
     @IsOptional()
     @IsString()
     currency?: string = "USD";
+
+    @ApiProperty({
+        example: "usr_cuid_xyz78901",
+        description: "The ID of the user (creator/seller) offering this service.",
+    })
+    @IsString()
+    @IsNotEmpty()
+    creatorId: string;
 }
