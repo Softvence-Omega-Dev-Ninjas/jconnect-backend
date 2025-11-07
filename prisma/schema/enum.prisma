@@ -7,11 +7,6 @@ enum AuthProvider {
   FACEBOOK
 }
 
-enum Role {
-  USER
-  MODERATOR
-  ADMIN
-  SUPER_ADMIN
-}
+
 
 // ENUMS_END
