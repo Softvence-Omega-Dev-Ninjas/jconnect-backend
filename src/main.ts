@@ -5,16 +5,21 @@ import { AppModule } from "./app.module";
 async function bootstrap() {
     const app = await NestFactory.create(AppModule);
 
-    // Swagger configuration
+    // Swagger config
     const config = new DocumentBuilder()
-        .setTitle("Jconnect backend API")
-        .setDescription("API documentation for jconnect backend")
+        .setTitle("Jconnect Backend API")
+        .setDescription("API documentation for Jconnect backend")
         .setVersion("1.0")
         .build();
-    const documentFactory = () => SwaggerModule.createDocument(app, config);
-    SwaggerModule.setup("api-docs", app, documentFactory);
 
-    await app.listen(process.env.PORT ?? 8080);
-    console.log(`project start at http://localhost:8080/api-docs`);
+    const document = SwaggerModule.createDocument(app, config);
+    SwaggerModule.setup("api-docs", app, document);
+
+    const PORT = process.env.PORT ?? 8080;
+    await app.listen(PORT);
+
+    console.log(`🚀 Server running at: http://localhost:${PORT}`);
+    console.log(`📘 Swagger docs: http://localhost:${PORT}/api-docs`);
 }
+
 bootstrap();
