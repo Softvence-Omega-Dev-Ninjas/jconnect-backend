@@ -9,14 +9,34 @@ CREATE TABLE "user_profiles" (
     "user_id" TEXT NOT NULL,
     "profile_image_url" TEXT,
     "short_bio" TEXT,
-    "instagram_username" TEXT,
-    "facebook_username" TEXT,
-    "tiktok_username" TEXT,
-    "youtube_channel_url" TEXT,
+    "instagram" TEXT,
+    "facebook" TEXT,
+    "tiktok" TEXT,
+    "youtube" TEXT,
     "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updated_at" TIMESTAMP(3) NOT NULL,
 
     CONSTRAINT "user_profiles_pkey" PRIMARY KEY ("user_id")
+);
+
+-- CreateTable
+CREATE TABLE "ServiceRequest" (
+    "id" TEXT NOT NULL,
+    "serviceId" TEXT NOT NULL,
+    "buyerId" TEXT NOT NULL,
+    "captionOrInstructions" TEXT,
+    "promotionDate" TIMESTAMP(3),
+    "specialNotes" TEXT,
+    "uploadedFileUrl" TEXT,
+    "servicePrice" DOUBLE PRECISION NOT NULL,
+    "platformFeeRate" DOUBLE PRECISION NOT NULL,
+    "platformFeeAmount" DOUBLE PRECISION NOT NULL,
+    "totalAmount" DOUBLE PRECISION NOT NULL,
+    "status" TEXT NOT NULL DEFAULT 'PENDING',
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+
+    CONSTRAINT "ServiceRequest_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
@@ -26,6 +46,7 @@ CREATE TABLE "Service" (
     "description" TEXT,
     "price" DOUBLE PRECISION NOT NULL,
     "currency" TEXT NOT NULL DEFAULT 'USD',
+    "creatorId" TEXT NOT NULL,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
 
@@ -65,3 +86,12 @@ CREATE UNIQUE INDEX "users_email_address_key" ON "users"("email_address");
 
 -- AddForeignKey
 ALTER TABLE "user_profiles" ADD CONSTRAINT "user_profiles_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "users"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "ServiceRequest" ADD CONSTRAINT "ServiceRequest_serviceId_fkey" FOREIGN KEY ("serviceId") REFERENCES "Service"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "ServiceRequest" ADD CONSTRAINT "ServiceRequest_buyerId_fkey" FOREIGN KEY ("buyerId") REFERENCES "users"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "Service" ADD CONSTRAINT "Service_creatorId_fkey" FOREIGN KEY ("creatorId") REFERENCES "users"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
