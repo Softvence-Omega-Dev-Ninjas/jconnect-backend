@@ -16,18 +16,18 @@ model User {
   pinCode         Int?
   is_terms_agreed Boolean   @default(false)
 
-  is_active          Boolean               @default(true)
-  login_attempts     Int                   @default(0)
-  last_login_at      DateTime?
-  created_at         DateTime              @default(now())
-  updated_at         DateTime              @updatedAt
-  token_expires_at   DateTime?
-  role               Role                  @default(USER)
-  validation_type    ValidationType?       @default(EMAIL)
-  auth_provider      AuthProvider?
-  // Relation to Service Model 
+  is_active        Boolean         @default(true)
+  login_attempts   Int             @default(0)
+  last_login_at    DateTime?
+  created_at       DateTime        @default(now())
+  updated_at       DateTime        @updatedAt
+  token_expires_at DateTime?
+  role             Role            @default(USER)
+  validation_type  ValidationType? @default(EMAIL)
+  auth_provider    AuthProvider?
+
+  // Relations
   profile            Profile?
-  // services             Service[]
   serviceRequests    ServiceRequest[]
   services           Service[]
   devices            Device[]
@@ -35,6 +35,10 @@ model User {
   chatParticipations LiveChatParticipant[]
   liveMessages       LiveMessage[]
   liveMessageReads   LiveMessageRead[]
+
+  // Custom Service Requests relations
+  customRequestsMade     CustomServiceRequest[] @relation("BuyerCustomRequests")
+  customRequestsReceived CustomServiceRequest[] @relation("TargetedCustomRequests")
 
   @@map("users")
 }
