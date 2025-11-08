@@ -43,10 +43,10 @@ export class UsersService {
     async update(id: string, data: UpdateUserDto) {
         const exists = await this.prisma.user.findUnique({ where: { id } });
         if (!exists) throw new NotFoundException("User not found");
-        if (data.password) {
-            const matchPassword = await agoron2.verify(exists.password, data?.password);
-            if (matchPassword) throw new HttpException("Password is same as before", 400);
-        }
+        // if (data.password) {
+        //     const matchPassword = await agoron2.verify(exists.password, data?.password);
+        //     if (matchPassword) throw new HttpException("Password is same as before", 400);
+        // }
         if (data.password) {
             const hash = await agoron2.hash(data.password);
             data.password = hash;
