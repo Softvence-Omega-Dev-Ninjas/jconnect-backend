@@ -55,17 +55,17 @@ export class UpdateUserDto {
     @ApiProperty({ example: "john_new@example.com", required: false })
     @IsOptional()
     @IsEmail()
-    email_address?: string;
+    email?: string;
 
-    @ApiProperty({ example: "+880", required: false })
-    @IsOptional()
-    @IsString()
-    country_code?: string;
+    // @ApiProperty({ example: "+880", required: false })
+    // @IsOptional()
+    // @IsString()
+    // country_code?: string;
 
-    @ApiProperty({ example: "01800000000", required: false })
-    @IsOptional()
-    @IsString()
-    phone_number?: string;
+    // @ApiProperty({ example: "01800000000", required: false })
+    // @IsOptional()
+    // @IsString()
+    // phone_number?: string;
 
     @ApiProperty({ example: "MIn6@ssa", required: false })
     @IsOptional()
