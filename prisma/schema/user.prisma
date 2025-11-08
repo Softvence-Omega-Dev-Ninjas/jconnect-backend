@@ -42,6 +42,8 @@ model User {
   // Custom Service Requests relations
   customRequestsMade     CustomServiceRequest[] @relation("BuyerCustomRequests")
   customRequestsReceived CustomServiceRequest[] @relation("TargetedCustomRequests")
+  reviews                Review[]               @relation("ReviewsGiven")
+  reviewsreceive         Review[]               @relation("ReviewsReceived")
 
   @@map("users")
 }
