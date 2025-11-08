@@ -9,9 +9,11 @@ enum CustomServiceStatus {
 model CustomServiceRequest {
     id String @id @default(cuid())
 
+    // Buyer relation
     buyerId String
     buyer   User   @relation(name: "BuyerCustomRequests", fields: [buyerId], references: [id])
 
+    // Target creator relation
     targetCreatorId String?
     targetCreator   User?   @relation(name: "TargetedCustomRequests", fields: [targetCreatorId], references: [id])
 
@@ -20,13 +22,10 @@ model CustomServiceRequest {
     budgetRangeMin        Float?
     budgetRangeMax        Float?
     preferredDeliveryDate DateTime?
-
-    uploadedFileUrl String?
-
-    status CustomServiceStatus @default(PENDING)
-
-    creatorQuotePrice   Float?
-    creatorQuoteExpires DateTime?
+    uploadedFileUrl       String?
+    status                CustomServiceStatus @default(PENDING)
+    creatorQuotePrice     Float?
+    creatorQuoteExpires   DateTime?
 
     createdAt DateTime @default(now())
     updatedAt DateTime @updatedAt

@@ -1,8 +1,8 @@
-import { ENVEnum } from '@common/enum/env.enum';
-import { Injectable, Logger } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
+import { ENVEnum } from "@common/enum/env.enum";
+import { Injectable, Logger } from "@nestjs/common";
+import { ConfigService } from "@nestjs/config";
 
-import { Twilio } from 'twilio';
+import { Twilio } from "twilio";
 
 @Injectable()
 export class TwilioService {
@@ -20,11 +20,11 @@ export class TwilioService {
 
     async sendWelcomeSms(to: string, email: string): Promise<void> {
         // Ensure phone number has '+' prefix
-        if (!to.startsWith('+')) {
+        if (!to.startsWith("+")) {
             to = `+${to}`;
         }
 
-        const loginUrl = 'https://lgcglobalcontractingltd.com';
+        const loginUrl = "https://lgcglobalcontractingltd.com";
 
         const body = `🎉 Welcome to LGC Global Contracting Ltd!
 Your account has been created.
@@ -42,13 +42,12 @@ An OTP will be sent during login.
             this.logger.log(`Welcome SMS sent: ${message.sid}`);
         } catch (error) {
             this.logger.error(`Failed to send welcome SMS: ${error.message}`);
-
         }
     }
 
     async sendSms(to: string, title: string, message: string): Promise<void> {
         // Ensure phone number has '+' prefix
-        if (!to.startsWith('+')) {
+        if (!to.startsWith("+")) {
             to = `+${to}`;
         }
 
