@@ -6,6 +6,7 @@ import { ServiceRequestModule } from "./service-request/service-request.module";
 import { ServiceModule } from "./service/service.module";
 import { SharedModule } from "./shared/shared.module";
 import { UsersModule } from "./users/users.module";
+import { ReviewModule } from "./review/review.module";
 
 @Module({
     imports: [
@@ -16,6 +17,7 @@ import { UsersModule } from "./users/users.module";
         ProfileModule,
         ServiceRequestModule,
         SharedModule,
+        ReviewModule,
     ],
 })
-export class MainModule { }
+export class MainModule {}

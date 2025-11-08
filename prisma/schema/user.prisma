@@ -1,30 +1,35 @@
 // /prisma/schema.prisma (FIXED User Model)
 
 model User {
-  id                 String                @id @default(uuid())
-  full_name          String
-  email              String                @unique
-  profilePhoto       String?
-  phone              String?
-  password           String
-  pinCode            Int?
-  otp                String?
-  googleId           String?               @unique
-  emailOtp           Int?
-  otpExpiresAt       DateTime?
-  isVerified         Boolean               @default(false)
-  is_terms_agreed    Boolean               @default(false)
-  isLogin            Boolean               @default(false)
-  isDeleted          Boolean               @default(false)
-  isActive           Boolean               @default(true)
-  login_attempts     Int?                  @default(0)
-  last_login_at      DateTime?
-  created_at         DateTime              @default(now())
-  updated_at         DateTime              @updatedAt
-  token_expires_at   DateTime?
-  role               Role                  @default(USER)
-  validation_type    ValidationType?       @default(EMAIL)
-  auth_provider      AuthProvider?
+  id               String          @id @default(uuid())
+  full_name        String
+  email            String          @unique
+  profilePhoto     String?
+  phone            String?
+  password         String
+  pinCode          Int?
+  otp              String?
+  googleId         String?         @unique
+  emailOtp         Int?
+  otpExpiresAt     DateTime?
+  isVerified       Boolean         @default(false)
+  is_terms_agreed  Boolean         @default(false)
+  isLogin          Boolean         @default(false)
+  isDeleted        Boolean         @default(false)
+  isActive         Boolean         @default(true)
+  login_attempts   Int?            @default(0)
+  last_login_at    DateTime?
+  created_at       DateTime        @default(now())
+  updated_at       DateTime        @updatedAt
+  token_expires_at DateTime?
+  role             Role            @default(USER)
+  validation_type  ValidationType? @default(EMAIL)
+  auth_provider    AuthProvider?
+
+  // Review Relations 
+  reviewsGiven    Review[] @relation("ReviewsGiven")
+  reviewsReceived Review[] @relation("ReviewsReceived")
+
   // Relation to Service Model 
   profile            Profile?
   serviceRequests    ServiceRequest[]
