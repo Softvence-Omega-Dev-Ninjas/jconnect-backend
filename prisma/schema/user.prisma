@@ -12,6 +12,7 @@ model User {
   googleId        String?   @unique
   emailOtp        Int?
   otpExpiresAt    DateTime?
+
   isVerified      Boolean   @default(false)
   pinCode         Int?
   is_terms_agreed Boolean   @default(false)

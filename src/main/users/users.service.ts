@@ -12,7 +12,7 @@ export class UsersService {
         const { password, ...users } = Userdata;
         try {
             const exists = await this.prisma.user.findUnique({
-                where: { email_address: users.email_address },
+                where: { email: users.email },
             });
             if (exists)
                 throw new HttpException(
