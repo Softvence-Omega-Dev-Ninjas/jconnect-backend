@@ -1,14 +1,14 @@
 model Service {
-    id          String  @id @default(cuid())
-    serviceName String  @unique
-    description String?
-    price       Float
-    currency    String  @default("USD")
-    creatorId   String
-    creator     User    @relation(fields: [creatorId], references: [id])
+  id          String  @id @default(cuid())
+  serviceName String  @unique
+  description String?
+  price       Float
+  currency    String  @default("USD")
+  creatorId   String
+  creator     User    @relation(fields: [creatorId], references: [id])
 
-    createdAt DateTime @default(now())
-    updatedAt DateTime @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-    serviceRequests ServiceRequest[]
+  serviceRequests ServiceRequest[]
 }

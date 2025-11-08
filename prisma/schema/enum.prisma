@@ -1,12 +1,3 @@
 // ENUMS_START
 
-enum AuthProvider {
-  GOOGLE
-  APPLE
-  EMAIL
-  FACEBOOK
-}
-
-
-
 // ENUMS_END
