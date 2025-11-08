@@ -15,7 +15,7 @@ import { UtilsService } from 'src/lib/utils/utils.service';
 import { JwtService } from '@nestjs/jwt';
 import { RegisterDto } from '../dto/register.dto';
 
-import { UserResponseDto } from '@common/dto/user.response';
+import { UserResponseDto } from '@common/enum/dto/user.response';
 import { HandleError } from 'src/common/error/handle-error.decorator';
 import { ForgotPasswordDto } from '../dto/forgot-password.dto';
 import { LoginDto } from '../dto/login.dto';
@@ -34,12 +34,9 @@ export class AuthService {
     // ---------- REGISTER (send email verification OTP) ----------
     @HandleError('Failed to Register profile', 'Register ')
     async register(payload: RegisterDto) {
-        const { email, password, confirmPassword, fullName } = payload;
+        const { email, password, full_name } = payload;
 
-        // Check if passwords match
-        if (password !== confirmPassword) {
-            throw new AppError(400, 'Passwords do not match');
-        }
+
 
         // Check if user already exists
         const existing = await this.prisma.user.findUnique({ where: { email } });
@@ -57,20 +54,21 @@ export class AuthService {
         const newUser = await this.prisma.user.create({
             data: {
                 email,
-                full_name: fullName, // Fixed: use full_name instead of fullName
+                full_name: full_name,
                 password: hashedPassword,
                 isVerified: false,
                 emailOtp: otp,
-                otpExpiresAt: expiryTime, // Fixed: use otpExpiresAt instead of otpExpiry
+                otpExpiresAt: expiryTime,
             },
         });
+        console.log('the new user', newUser);
 
         // Send OTP email
         await this.mail.sendEmail(
             email,
             'Verify Your Email',
             `
-      <h3>Hi ${fullName},</h3>
+      <h3>Hi ${full_name},</h3>
       <p>Use the OTP below to verify your email:</p>
       <h2>${otp}</h2>
       <p>This OTP will expire in 10 minutes.</p>
@@ -263,7 +261,7 @@ export class AuthService {
             where: { id: user.id },
             data: {
                 emailOtp: null,
-                otpExpiresAt: null, // Fixed: use otpExpiresAt instead of otpExpiry
+                otpExpiresAt: null,
             },
         });
 

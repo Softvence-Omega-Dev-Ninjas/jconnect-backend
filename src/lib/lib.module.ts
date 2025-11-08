@@ -12,10 +12,7 @@ import { UtilsModule } from "./utils/utils.module";
         TwilioModule
     ],
     exports: [
-        PrismaModule,
-        MailModule,
-        UtilsModule,
-        TwilioModule
+
     ],
     providers: [],
 })

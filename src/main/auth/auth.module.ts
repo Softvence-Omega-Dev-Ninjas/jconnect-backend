@@ -1,14 +1,16 @@
 import { Module } from '@nestjs/common';
-import { JwtModule } from '@nestjs/jwt';
 import { ConfigModule, ConfigService } from '@nestjs/config';
-import { AuthService } from './services/auth.service';
+import { JwtModule } from '@nestjs/jwt';
+import { LibModule } from 'src/lib/lib.module';
 import { AuthController } from './controllers/auth.controller';
 import { AuthGoogleService } from './services/auh-google.service';
+import { AuthService } from './services/auth.service';
 
 
 @Module({
     imports: [
         ConfigModule,
+        LibModule,
         JwtModule.registerAsync({
             imports: [ConfigModule],
             inject: [ConfigService],

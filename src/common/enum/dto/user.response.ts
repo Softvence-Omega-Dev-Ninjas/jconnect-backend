@@ -1,4 +1,3 @@
-
 import { Role } from '@prisma/client';
 import { Expose } from 'class-transformer';
 
@@ -7,16 +6,16 @@ export class UserResponseDto {
     id: string;
 
     @Expose()
-    email: string;
+    full_name: string;
 
     @Expose()
-    address?: string;
+    email: string;
 
     @Expose()
     profilePhoto?: string;
 
     @Expose()
-    fullName?: string;
+    phone?: string;
 
     @Expose()
     role: Role;
@@ -31,11 +30,29 @@ export class UserResponseDto {
     isDeleted: boolean;
 
     @Expose()
-    createdAt: Date;
+    is_terms_agreed: boolean;
 
     @Expose()
-    updatedAt: Date;
+    created_at: Date;
 
     @Expose()
-    deletedAt?: Date;
+    updated_at: Date;
+
+    @Expose()
+    last_login_at?: Date;
+
+    @Expose()
+    login_attempts?: number;
+
+    @Expose()
+    auth_provider?: string;
+
+    @Expose()
+    validation_type?: string;
+
+    @Expose()
+    googleId?: string;
+
+    @Expose()
+    token_expires_at?: Date;
 }

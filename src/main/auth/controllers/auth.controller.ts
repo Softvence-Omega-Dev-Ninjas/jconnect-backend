@@ -12,7 +12,7 @@ import { ForgotPasswordDto } from '../dto/forgot-password.dto';
 import { ResetPasswordAuthDto } from '../dto/reset-password';
 import { AuthGoogleService } from '../services/auh-google.service';
 
-@ApiTags('Auth')
+@ApiTags('Authentication apis')
 @Controller('auth')
 export class AuthController {
     constructor(
@@ -130,7 +130,7 @@ export class AuthController {
     }
 
     // -------------- Reset Password --------------
-    @ApiOperation({ summary: 'Reset Password with Token' })
+    @ApiOperation({ summary: ' Forgot Reset Password with Token' })
     @Post('reset-password')
     async resetPassword(@Body() payload: ResetPasswordAuthDto) {
         const result = await this.authService.resetPassword(payload);

@@ -2,16 +2,16 @@
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { OAuth2Client, TokenPayload } from 'google-auth-library';
-import { GoogleLoginDto } from '../dto/google-login.dto';
 import { PrismaService } from 'src/lib/prisma/prisma.service';
+import { GoogleLoginDto } from '../dto/google-login.dto';
 
 import { ENVEnum } from 'src/common/enum/env.enum';
 import { HandleError } from 'src/common/error/handle-error.decorator';
 
+import { UserResponseDto } from '@common/enum/dto/user.response';
+import { successResponse, TResponse } from '@common/utilsResponse/response.util';
 import { AppError } from 'src/common/error/handle-error.app';
 import { UtilsService } from 'src/lib/utils/utils.service';
-import { successResponse, TResponse } from '@common/utilsResponse/response.util';
-import { UserResponseDto } from '@common/dto/user.response';
 
 
 @Injectable()
