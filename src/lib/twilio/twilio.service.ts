@@ -18,31 +18,9 @@ export class TwilioService {
         this.fromPhone = this.config.getOrThrow(ENVEnum.TWILIO_PHONE_NUMBER);
     }
 
-    async sendWelcomeSms(to: string, email: string): Promise<void> {
-        // Ensure phone number has '+' prefix
-        if (!to.startsWith("+")) {
-            to = `+${to}`;
-        }
-
-        const loginUrl = "https://lgcglobalcontractingltd.com";
-
-        const body = `🎉 Welcome to LGC Global Contracting Ltd!
-Your account has been created.
-Login with either your email (${email}) or phone (${to}). 
-An OTP will be sent during login.
-👉 Login here: ${loginUrl}`;
-
-        try {
-            const message = await this.twilio.messages.create({
-                body,
-                from: this.fromPhone,
-                to,
-            });
-
-            this.logger.log(`Welcome SMS sent: ${message.sid}`);
-        } catch (error) {
-            this.logger.error(`Failed to send welcome SMS: ${error.message}`);
-        }
+    async sendVerificationCode(to: string, otp: number): Promise<void> {
+        const body = `Your LGC verification code is ${otp}. It expires in 10 minutes.`;
+        await this.sendSms(to, 'LGC Verification', body);
     }
 
     async sendSms(to: string, title: string, message: string): Promise<void> {
@@ -63,7 +41,12 @@ An OTP will be sent during login.
             this.logger.log(`SMS sent: ${message.sid}`);
         } catch (error) {
             this.logger.error(`Failed to send SMS: ${error.message}`);
-            // no throw — just log
+
         }
+    }
+
+    async sendOtpSms(to: string, otp: number): Promise<void> {
+        const body = `Your Jconnect verification code is ${otp}. It expires in 10 minutes.`;
+        await this.sendSms(to, 'Jconnect Verification', body);
     }
 }

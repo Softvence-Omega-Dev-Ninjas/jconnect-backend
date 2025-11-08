@@ -1,8 +1,8 @@
-import { Controller, Get, Post, Body, Param, Delete, Put } from "@nestjs/common";
-import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from "@nestjs/swagger";
-import { UsersService } from "./users.service";
-import { CreateUserDto, UpdateUserDto } from "./dto/user.dto";
 import { ValidateAdmin } from "@common/jwt/jwt.decorator";
+import { Body, Controller, Delete, Get, Param, Post, Put } from "@nestjs/common";
+import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from "@nestjs/swagger";
+import { CreateUserDto, UpdateUserDto } from "./dto/user.dto";
+import { UsersService } from "./users.service";
 
 @ApiTags("Users")
 @Controller("users")
@@ -11,6 +11,7 @@ export class UsersController {
 
     @ApiBearerAuth()
     @ValidateAdmin()
+
     @Post()
     @ApiOperation({ summary: "Create a new user" })
     @ApiResponse({ status: 201, description: "User created successfully" })

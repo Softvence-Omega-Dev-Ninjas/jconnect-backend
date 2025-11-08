@@ -48,11 +48,11 @@ export class AuthGoogleService {
             user = await this.prisma.user.create({
                 data: {
                     email: payload.email as string,
-                    full_name: payload.name || 'Google User', // Fixed: use full_name
+                    full_name: payload.name || 'Google User',
                     googleId: payload.sub,
                     isVerified: true,
-                    auth_provider: 'GOOGLE', // Added: set auth provider
-                    password: '', // Required field - empty for Google users
+                    auth_provider: 'GOOGLE',
+                    password: '',
                 },
             });
         } else if (!user.googleId) {
@@ -62,7 +62,7 @@ export class AuthGoogleService {
                 data: {
                     googleId: payload.sub,
                     isVerified: true,
-                    auth_provider: 'GOOGLE', // Added: set auth provider
+                    auth_provider: 'GOOGLE',
                 },
             });
         }
