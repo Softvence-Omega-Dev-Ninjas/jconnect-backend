@@ -1,33 +1,31 @@
 // /prisma/schema.prisma (FIXED User Model)
 
 model User {
-  id              String    @id @default(uuid())
-  full_name       String
-  email           String    @unique
-  profilePhoto    String?
-  phone           String?
-  password        String
-  isLogin         Boolean   @default(false)
-  otp             String?
-  googleId        String?   @unique
-  emailOtp        Int?
-  otpExpiresAt    DateTime?
-
-  isVerified      Boolean   @default(false)
-  pinCode         Int?
-  is_terms_agreed Boolean   @default(false)
-
-  is_active        Boolean         @default(true)
-  login_attempts   Int             @default(0)
-  last_login_at    DateTime?
-  created_at       DateTime        @default(now())
-  updated_at       DateTime        @updatedAt
-  token_expires_at DateTime?
-  role             Role            @default(USER)
-  validation_type  ValidationType? @default(EMAIL)
-  auth_provider    AuthProvider?
-
-  // Relations
+  id                 String                @id @default(uuid())
+  full_name          String
+  email              String                @unique
+  profilePhoto       String?
+  phone              String?
+  password           String
+  pinCode            Int?
+  otp                String?
+  googleId           String?               @unique
+  emailOtp           Int?
+  otpExpiresAt       DateTime?
+  isVerified         Boolean               @default(false)
+  is_terms_agreed    Boolean               @default(false)
+  isLogin            Boolean               @default(false)
+  isDeleted          Boolean               @default(false)
+  isActive           Boolean               @default(true)
+  login_attempts     Int?                  @default(0)
+  last_login_at      DateTime?
+  created_at         DateTime              @default(now())
+  updated_at         DateTime              @updatedAt
+  token_expires_at   DateTime?
+  role               Role                  @default(USER)
+  validation_type    ValidationType?       @default(EMAIL)
+  auth_provider      AuthProvider?
+  // Relation to Service Model 
   profile            Profile?
   serviceRequests    ServiceRequest[]
   services           Service[]
