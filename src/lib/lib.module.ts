@@ -1,6 +1,7 @@
 import { Module } from "@nestjs/common";
-import { PrismaModule } from "./prisma/prisma.module";
 import { MailModule } from "./mail/mail.module";
+import { PrismaModule } from "./prisma/prisma.module";
+import { TwilioModule } from "./twilio/twilo.module";
 import { UtilsModule } from "./utils/utils.module";
 
 @Module({
@@ -8,11 +9,13 @@ import { UtilsModule } from "./utils/utils.module";
         PrismaModule,
         MailModule,
         UtilsModule,
+        TwilioModule
     ],
     exports: [
         PrismaModule,
         MailModule,
-        UtilsModule
+        UtilsModule,
+        TwilioModule
     ],
     providers: [],
 })
