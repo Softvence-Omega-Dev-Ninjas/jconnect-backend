@@ -10,7 +10,7 @@ import {
 
 export class RegisterDto {
     @ApiProperty({
-        example: 'John Doe',
+        example: 'ss joy Doe',
         description: 'Full name of the user',
     })
     @IsNotEmpty({ message: 'Full name is required' })
@@ -37,5 +37,13 @@ export class RegisterDto {
 
     password: string;
 
+    //---------------  Optional phone number field ------------------
+    @ApiProperty({
+        example: '8801234567890',
+        description: 'Phone number of the user (optional)',
+        required: false,
+    })
+    @IsString()
+    phone?: string;
 
 }
