@@ -1,5 +1,5 @@
 import { ApiProperty } from "@nestjs/swagger";
-import { Role } from "@prisma/client";
+import { AuthProvider, Role } from "@prisma/client";
 import { IsBoolean, IsEmail, IsEnum, IsOptional, IsString, MinLength } from "class-validator";
 
 export class CreateUserDto {
@@ -9,17 +9,17 @@ export class CreateUserDto {
 
     @ApiProperty({ example: "john@example.com" })
     @IsEmail()
-    email_address: string;
+    email: string;
 
-    @ApiProperty({ example: "+880" })
-    @IsOptional()
-    @IsString()
-    country_code?: string;
+    // @ApiProperty({ example: "+880" })
+    // @IsOptional()
+    // @IsString()
+    // country_code?: string;
 
-    @ApiProperty({ example: "01700000000" })
-    @IsOptional()
-    @IsString()
-    phone_number?: string;
+    // @ApiProperty({ example: "01700000000" })
+    // @IsOptional()
+    // @IsString()
+    // phone_number?: string;
 
     @ApiProperty({ example: "MIn6@ssa" })
     @IsString()
@@ -31,10 +31,14 @@ export class CreateUserDto {
     @IsBoolean()
     is_terms_agreed?: boolean;
 
-    @ApiProperty({ example: "email", enum: ["email", "google", "facebook"] })
+    // @ApiProperty({ example: "email", enum: ["email", "google", "facebook"] })
+    // @IsOptional()
+    // @IsString()
+    // auth_provider?: string;
+
     @IsOptional()
-    @IsString()
-    auth_provider?: string;
+    @IsEnum(AuthProvider)
+    auth_provider?: AuthProvider;
 
     @ApiProperty({ example: "USER", enum: Role })
     @IsOptional()
@@ -51,17 +55,17 @@ export class UpdateUserDto {
     @ApiProperty({ example: "john_new@example.com", required: false })
     @IsOptional()
     @IsEmail()
-    email_address?: string;
+    email?: string;
 
-    @ApiProperty({ example: "+880", required: false })
-    @IsOptional()
-    @IsString()
-    country_code?: string;
+    // @ApiProperty({ example: "+880", required: false })
+    // @IsOptional()
+    // @IsString()
+    // country_code?: string;
 
-    @ApiProperty({ example: "01800000000", required: false })
-    @IsOptional()
-    @IsString()
-    phone_number?: string;
+    // @ApiProperty({ example: "01800000000", required: false })
+    // @IsOptional()
+    // @IsString()
+    // phone_number?: string;
 
     @ApiProperty({ example: "MIn6@ssa", required: false })
     @IsOptional()

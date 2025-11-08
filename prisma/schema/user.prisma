@@ -1,3 +1,5 @@
+// /prisma/schema.prisma (FIXED User Model)
+
 model User {
   id                 String                @id @default(uuid())
   full_name          String
@@ -25,7 +27,6 @@ model User {
   auth_provider      AuthProvider?
   // Relation to Service Model 
   profile            Profile?
-  // services             Service[]
   serviceRequests    ServiceRequest[]
   services           Service[]
   devices            Device[]
@@ -33,6 +34,10 @@ model User {
   chatParticipations LiveChatParticipant[]
   liveMessages       LiveMessage[]
   liveMessageReads   LiveMessageRead[]
+
+  // Custom Service Requests relations
+  customRequestsMade     CustomServiceRequest[] @relation("BuyerCustomRequests")
+  customRequestsReceived CustomServiceRequest[] @relation("TargetedCustomRequests")
 
   @@map("users")
 }
