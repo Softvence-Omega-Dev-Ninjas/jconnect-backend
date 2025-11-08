@@ -4,7 +4,7 @@ import { ProfileModule } from "./profile/profile.module";
 import { ServiceModule } from "./service/service.module";
 import { UsersModule } from "./users/users.module";
 import { ServiceRequestModule } from "./service-request/service-request.module";
-import { CustomServiceRequestModule } from "./custom-service-request/custom-service-request.module";
+import { SharedModule } from "./shared/shared.module";
 
 @Module({
     imports: [
@@ -13,7 +13,7 @@ import { CustomServiceRequestModule } from "./custom-service-request/custom-serv
         ServiceModule,
         ProfileModule,
         ServiceRequestModule,
-        CustomServiceRequestModule,
+        SharedModule,
     ],
 })
 export class MainModule {}

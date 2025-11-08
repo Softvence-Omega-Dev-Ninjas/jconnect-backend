@@ -1,36 +1,60 @@
 // /prisma/schema.prisma (FIXED User Model)
 
 model User {
-  id                   String    @id @default(uuid())
-  full_name            String
-  email_address        String    @unique
-  country_code         String?
-  phone_number         String?
-  password             String
-  is_terms_agreed      Boolean   @default(false)
-  auth_provider        String    @default("email") // 'email', 'google', 'facebook'
-  is_active            Boolean   @default(true)
-  login_attempts       Int       @default(0)
-  last_login_at        DateTime?
-  created_at           DateTime  @default(now())
-  updated_at           DateTime  @updatedAt
-  password_reset_token String?
-  token_expires_at     DateTime?
-  role                 Role      @default(USER)
+  id              String    @id @default(uuid())
+  full_name       String
+  email           String    @unique
+  profilePhoto    String?
+  phone           String?
+  password        String
+  isLogin         Boolean   @default(false)
+  otp             String?
+  googleId        String?   @unique
+  emailOtp        Int?
+  otpExpiresAt    DateTime?
+  isVerified      Boolean   @default(false)
+  pinCode         Int?
+  is_terms_agreed Boolean   @default(false)
 
-  profile Profile?
-
-  // Relations:
-  services        Service[] // Services created by this User (Creator)
-  serviceRequests ServiceRequest[] // Fixed Services requested by this User (Buyer)
-
-  // Custom Requests where User is the Buyer (Relation field renamed for clarity)
-  customRequestsAsBuyer CustomServiceRequest[] @relation(name: "BuyerCustomRequests")
-
-  // Custom Requests where User is the Target Creator (Field renamed to fix conflict)
-  targetedCustomRequests CustomServiceRequest[] @relation(name: "TargetedCustomRequests")
+  is_active          Boolean               @default(true)
+  login_attempts     Int                   @default(0)
+  last_login_at      DateTime?
+  created_at         DateTime              @default(now())
+  updated_at         DateTime              @updatedAt
+  token_expires_at   DateTime?
+  role               Role                  @default(USER)
+  validation_type    ValidationType?       @default(EMAIL)
+  auth_provider      AuthProvider?
+  // Relation to Service Model 
+  profile            Profile?
+  // services             Service[]
+  serviceRequests    ServiceRequest[]
+  services           Service[]
+  devices            Device[]
+  LiveChatsCreated   LiveChat[]            @relation("LiveChatCreator")
+  chatParticipations LiveChatParticipant[]
+  liveMessages       LiveMessage[]
+  liveMessageReads   LiveMessageRead[]
 
   @@map("users")
+}
+
+model Device {
+  id             String   @id @default(uuid())
+  userId         String
+  user           User     @relation(fields: [userId], references: [id])
+  browser        String?
+  browserVersion String?
+  os             String?
+  osVersion      String?
+  deviceType     String?
+  deviceModel    String?
+  ipAddress      String?
+  lastUsedAt     DateTime @default(now())
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  @@map("devices")
 }
 
 enum Role {
@@ -38,4 +62,16 @@ enum Role {
   MODERATOR
   ADMIN
   SUPER_ADMIN
+  MEMBER
+  ARTIST
+}
+
+enum ValidationType {
+  EMAIL
+  PHONE
+}
+
+enum AuthProvider {
+  GOOGLE
+  FACEBOOK
 }
