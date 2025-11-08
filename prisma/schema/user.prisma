@@ -1,3 +1,5 @@
+// /prisma/schema.prisma (FIXED User Model)
+
 model User {
   id              String    @id @default(uuid())
   full_name       String
