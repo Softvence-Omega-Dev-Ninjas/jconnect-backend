@@ -39,6 +39,13 @@ model User {
   customRequestsMade     CustomServiceRequest[] @relation("BuyerCustomRequests")
   customRequestsReceived CustomServiceRequest[] @relation("TargetedCustomRequests")
 
+  //social request relations
+  socialServiceRequests SocialServiceRequest[] @relation("SocialRequestBuyer")
+  artistRequester       SocialServiceRequest[] @relation("SocialRequestRequester")
+
+  // socialServices
+  socialServices SocialService[]
+
   @@map("users")
 }
 
