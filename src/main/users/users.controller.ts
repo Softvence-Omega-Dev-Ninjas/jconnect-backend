@@ -1,16 +1,12 @@
-import { ValidateAdmin } from "@common/jwt/jwt.decorator";
 import { Body, Controller, Delete, Get, Param, Post, Put } from "@nestjs/common";
-import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from "@nestjs/swagger";
+import { ApiOperation, ApiResponse, ApiTags } from "@nestjs/swagger";
 import { CreateUserDto, UpdateUserDto } from "./dto/user.dto";
 import { UsersService } from "./users.service";
 
 @ApiTags("Users")
 @Controller("users")
 export class UsersController {
-    constructor(private readonly usersService: UsersService) { }
-
-    @ApiBearerAuth()
-    @ValidateAdmin()
+    constructor(private readonly usersService: UsersService) {}
 
     @Post()
     @ApiOperation({ summary: "Create a new user" })
