@@ -20,7 +20,7 @@ export class TwilioService {
 
     async sendVerificationCode(to: string, otp: number): Promise<void> {
         const body = `Your LGC verification code is ${otp}. It expires in 10 minutes.`;
-        await this.sendSms(to, 'LGC Verification', body);
+        await this.sendSms(to, "LGC Verification", body);
     }
 
     async sendSms(to: string, title: string, message: string): Promise<void> {
@@ -41,12 +41,11 @@ export class TwilioService {
             this.logger.log(`SMS sent: ${message.sid}`);
         } catch (error) {
             this.logger.error(`Failed to send SMS: ${error.message}`);
-
         }
     }
 
     async sendOtpSms(to: string, otp: number): Promise<void> {
         const body = `Your Jconnect verification code is ${otp}. It expires in 10 minutes.`;
-        await this.sendSms(to, 'Jconnect Verification', body);
+        await this.sendSms(to, "Jconnect Verification", body);
     }
 }

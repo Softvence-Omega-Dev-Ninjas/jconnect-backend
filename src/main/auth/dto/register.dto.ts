@@ -1,49 +1,42 @@
 // ==================== register.dto.ts ====================
-import { ApiProperty } from '@nestjs/swagger';
-import {
-    IsEmail,
-    IsNotEmpty,
-    IsString,
-    MaxLength,
-    MinLength
-} from 'class-validator';
+import { ApiProperty } from "@nestjs/swagger";
+import { IsEmail, IsNotEmpty, IsString, MaxLength, MinLength } from "class-validator";
 
 export class RegisterDto {
     @ApiProperty({
-        example: 'ss joy Doe',
-        description: 'Full name of the user',
+        example: "ss joy Doe",
+        description: "Full name of the user",
     })
-    @IsNotEmpty({ message: 'Full name is required' })
+    @IsNotEmpty({ message: "Full name is required" })
     @IsString()
-    @MinLength(2, { message: 'Full name must be at least 2 characters' })
-    @MaxLength(100, { message: 'Full name must not exceed 100 characters' })
+    @MinLength(2, { message: "Full name must be at least 2 characters" })
+    @MaxLength(100, { message: "Full name must not exceed 100 characters" })
     full_name: string;
 
     @ApiProperty({
-        example: 'user@gmail.com',
-        description: 'Email address of the user',
+        example: "user@gmail.com",
+        description: "Email address of the user",
     })
-    @IsNotEmpty({ message: 'Email is required' })
-    @IsEmail({}, { message: 'Please provide a valid email address' })
+    @IsNotEmpty({ message: "Email is required" })
+    @IsEmail({}, { message: "Please provide a valid email address" })
     email: string;
 
     @ApiProperty({
-        example: '12345678',
-        description: 'Password (min 8 chars, must include uppercase, lowercase, number, and special character)',
+        example: "12345678",
+        description:
+            "Password (min 8 chars, must include uppercase, lowercase, number, and special character)",
     })
-    @IsNotEmpty({ message: 'Password is required' })
+    @IsNotEmpty({ message: "Password is required" })
     @IsString()
-    @MinLength(8, { message: 'Password must be at least 8 characters long' })
-
+    @MinLength(8, { message: "Password must be at least 8 characters long" })
     password: string;
 
     //---------------  Optional phone number field ------------------
     @ApiProperty({
-        example: '8801234567890',
-        description: 'Phone number of the user (optional)',
+        example: "8801234567890",
+        description: "Phone number of the user (optional)",
         required: false,
     })
     @IsString()
     phone?: string;
-
 }

@@ -7,6 +7,8 @@ import { ReviewModule } from "./review/review.module";
 import { ServiceRequestModule } from "./service-request/service-request.module";
 import { ServiceModule } from "./service/service.module";
 import { SharedModule } from "./shared/shared.module";
+import { SocialServiceRequestModule } from "./social-service-request/social-service-request.module";
+import { SocialServiceModule } from "./social-service/social-service.module";
 import { UsersModule } from "./users/users.module";
 
 @Module({
@@ -15,6 +17,8 @@ import { UsersModule } from "./users/users.module";
         AuthModule,
         UsersModule,
         ProfileModule,
+        SocialServiceModule,
+        SocialServiceRequestModule,
         ServiceModule,
         ServiceRequestModule,
         CustomServiceRequestModule,
