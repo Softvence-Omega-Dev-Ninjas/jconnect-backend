@@ -9,6 +9,7 @@ import { ServiceService } from "./service.service";
 @Controller("services")
 export class ServiceController {
     constructor(private readonly serviceService: ServiceService) {}
+
     @Post()
     @ApiOperation({ summary: "Create a new service listing" })
     @ApiResponse({ status: 201, description: "Service created successfully" })
