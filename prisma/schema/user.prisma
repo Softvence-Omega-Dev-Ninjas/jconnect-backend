@@ -5,7 +5,7 @@ model User {
   full_name          String
   email              String                @unique
   profilePhoto       String?
-  phone              String?
+  phone              String?               @unique
   password           String
   pinCode            Int?
   otp                String?
@@ -18,6 +18,10 @@ model User {
   isDeleted          Boolean               @default(false)
   isActive           Boolean               @default(true)
   login_attempts     Int?                  @default(0)
+  // OTP sent to phone for phone verification
+  phoneOtp           Int?
+  phoneOtpExpiresAt  DateTime?
+  phoneVerified      Boolean               @default(false)
   last_login_at      DateTime?
   created_at         DateTime              @default(now())
   updated_at         DateTime              @updatedAt
@@ -38,6 +42,8 @@ model User {
   // Custom Service Requests relations
   customRequestsMade     CustomServiceRequest[] @relation("BuyerCustomRequests")
   customRequestsReceived CustomServiceRequest[] @relation("TargetedCustomRequests")
+  reviews                Review[]               @relation("ReviewsGiven")
+  reviewsreceive         Review[]               @relation("ReviewsReceived")
 
   //social request relations
   socialServiceRequests SocialServiceRequest[] @relation("SocialRequestBuyer")

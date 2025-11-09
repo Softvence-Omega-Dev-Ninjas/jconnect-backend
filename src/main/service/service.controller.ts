@@ -13,7 +13,7 @@ export class ServiceController {
     @Post()
     @ApiOperation({ summary: "Create a new service listing" })
     @ApiResponse({ status: 201, description: "Service created successfully" })
-    create(@Body() createServiceDto: CreateServiceDto): Promise<Service> {
+    async create(@Body() createServiceDto: CreateServiceDto): Promise<Service> {
         return this.serviceService.create(createServiceDto);
     }
 

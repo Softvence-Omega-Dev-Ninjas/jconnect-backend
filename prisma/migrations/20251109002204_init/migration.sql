@@ -105,6 +105,19 @@ CREATE TABLE "user_profiles" (
 );
 
 -- CreateTable
+CREATE TABLE "reviews" (
+    "id" TEXT NOT NULL,
+    "reviewerId" TEXT NOT NULL,
+    "artistId" TEXT NOT NULL,
+    "rating" INTEGER NOT NULL,
+    "reviewText" TEXT DEFAULT '',
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+
+    CONSTRAINT "reviews_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
 CREATE TABLE "ServiceRequest" (
     "id" TEXT NOT NULL,
     "serviceId" TEXT NOT NULL,
@@ -157,6 +170,9 @@ CREATE TABLE "users" (
     "isDeleted" BOOLEAN NOT NULL DEFAULT false,
     "isActive" BOOLEAN NOT NULL DEFAULT true,
     "login_attempts" INTEGER DEFAULT 0,
+    "phoneOtp" INTEGER,
+    "phoneOtpExpiresAt" TIMESTAMP(3),
+    "phoneVerified" BOOLEAN NOT NULL DEFAULT false,
     "last_login_at" TIMESTAMP(3),
     "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updated_at" TIMESTAMP(3) NOT NULL,
@@ -229,10 +245,16 @@ CREATE UNIQUE INDEX "live_message_reads_messageId_userId_key" ON "live_message_r
 CREATE UNIQUE INDEX "user_profiles_user_id_key" ON "user_profiles"("user_id");
 
 -- CreateIndex
+CREATE UNIQUE INDEX "reviews_reviewerId_artistId_key" ON "reviews"("reviewerId", "artistId");
+
+-- CreateIndex
 CREATE UNIQUE INDEX "Service_serviceName_key" ON "Service"("serviceName");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "users_email_key" ON "users"("email");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "users_phone_key" ON "users"("phone");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "users_googleId_key" ON "users"("googleId");
@@ -269,6 +291,12 @@ ALTER TABLE "live_message_reads" ADD CONSTRAINT "live_message_reads_liveChatId_f
 
 -- AddForeignKey
 ALTER TABLE "user_profiles" ADD CONSTRAINT "user_profiles_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "users"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "reviews" ADD CONSTRAINT "reviews_reviewerId_fkey" FOREIGN KEY ("reviewerId") REFERENCES "users"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "reviews" ADD CONSTRAINT "reviews_artistId_fkey" FOREIGN KEY ("artistId") REFERENCES "users"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "ServiceRequest" ADD CONSTRAINT "ServiceRequest_serviceId_fkey" FOREIGN KEY ("serviceId") REFERENCES "Service"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
