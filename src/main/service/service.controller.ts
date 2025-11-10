@@ -1,4 +1,4 @@
-import { ValidateArtist, ValidateUser } from "@common/jwt/jwt.decorator";
+import { GetUser, ValidateArtist, ValidateUser } from "@common/jwt/jwt.decorator";
 import { Body, Controller, Delete, Get, Param, Patch, Post } from "@nestjs/common";
 import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from "@nestjs/swagger";
 import { Service } from "@prisma/client";
@@ -35,7 +35,7 @@ export class ServiceController {
     @ApiOperation({ summary: "Get service details by ID" })
     @ApiResponse({ status: 200, description: "Service details found" })
     @ApiResponse({ status: 404, description: "Service not found" })
-    findOne(@Param("id") id: string): Promise<Service> {
+    findOne(@Param("id") id: string, @GetUser() user: any) {
         return this.serviceService.findOne(id);
     }
 
@@ -45,8 +45,12 @@ export class ServiceController {
     @ApiOperation({ summary: "Update service details by ID" })
     @ApiResponse({ status: 200, description: "Service updated successfully" })
     @ApiResponse({ status: 404, description: "Service not found" })
-    update(@Param("id") id: string, @Body() updateServiceDto: UpdateServiceDto): Promise<Service> {
-        return this.serviceService.update(id, updateServiceDto);
+    update(
+        @Param("id") id: string,
+        @GetUser() user: any,
+        @Body() updateServiceDto: UpdateServiceDto,
+    ): Promise<Service> {
+        return this.serviceService.update(id, user, updateServiceDto);
     }
 
     @ApiBearerAuth()
