@@ -17,3 +17,9 @@
 - [x] Implemented **authentication explore from joy**
 - [x] Implemented **auth guards impliment with jwt**
 - [x] Properly Implemented **Swagger Documentation proper setup**
+
+## 10/11/2025 Monday
+
+- [ ] **probleme solving** user module add guard
+
+          authGuard problem then solving and check again authentication then work start
