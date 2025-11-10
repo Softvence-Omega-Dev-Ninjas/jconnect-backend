@@ -38,11 +38,13 @@ model User {
   chatParticipations LiveChatParticipant[]
   liveMessages       LiveMessage[]
   liveMessageReads   LiveMessageRead[]
-
+  Payments           Payment[]  
   // Custom Service Requests relations
   customRequestsMade     CustomServiceRequest[] @relation("BuyerCustomRequests")
   customRequestsReceived CustomServiceRequest[] @relation("TargetedCustomRequests")
-
+// 🔹 Buyer/Seller relation with BuyService
+  buyServicesAsBuyer     BuyService[]          @relation("Buyer")
+  buyServicesAsSeller    BuyService[]          @relation("Seller")
   @@map("users")
 }
 

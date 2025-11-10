@@ -38,11 +38,5 @@ export class CreateServiceDto {
     @IsString()
     currency?: string = "USD";
 
-    @ApiProperty({
-        example: "usr_cuid_xyz78901",
-        description: "The ID of the user (creator/seller) offering this service.",
-    })
-    @IsString()
-    @IsNotEmpty()
-    creatorId: string;
+    
 }
