@@ -1,6 +1,6 @@
 import { Injectable } from "@nestjs/common";
-import { CreateLivechatDto } from "./dto/create-livechat.dto";
-import { UpdateLivechatDto } from "./dto/update-livechat.dto";
+import { CreateLivechatDto } from "../dto/create-livechat.dto";
+import { UpdateLivechatDto } from "../dto/update-livechat.dto";
 
 @Injectable()
 export class LivechatService {

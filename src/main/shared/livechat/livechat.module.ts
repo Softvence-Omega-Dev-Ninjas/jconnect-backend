@@ -1,9 +1,10 @@
 import { Module } from "@nestjs/common";
-import { LivechatService } from "./livechat.service";
+
 import { LivechatController } from "./livechat.controller";
+import { LivechatService } from "./service/livechat.service";
 
 @Module({
     controllers: [LivechatController],
     providers: [LivechatService],
 })
-export class LivechatModule {}
+export class LivechatModule { }

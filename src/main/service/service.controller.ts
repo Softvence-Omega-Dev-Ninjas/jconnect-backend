@@ -1,5 +1,6 @@
+import { GetUser, ValidateAuth } from "@common/jwt/jwt.decorator";
 import { Body, Controller, Delete, Get, Param, Patch, Post } from "@nestjs/common";
-import { ApiOperation, ApiResponse, ApiTags } from "@nestjs/swagger";
+import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from "@nestjs/swagger";
 import { Service } from "@prisma/client";
 import { CreateServiceDto } from "./dto/create-service.dto";
 import { UpdateServiceDto } from "./dto/update-service.dto";
@@ -8,14 +9,19 @@ import { ServiceService } from "./service.service";
 @ApiTags("Services")
 @Controller("services")
 export class ServiceController {
-    constructor(private readonly serviceService: ServiceService) {}
-
+    constructor(private readonly serviceService: ServiceService) { }
     @Post()
-    @ApiOperation({ summary: "Create a new service listing" })
-    @ApiResponse({ status: 201, description: "Service created successfully" })
-    async create(@Body() createServiceDto: CreateServiceDto): Promise<Service> {
-        return this.serviceService.create(createServiceDto);
+    @ApiBearerAuth()
+    @ValidateAuth()
+    @ApiOperation({ summary: 'Create a new service listing' })
+    create(
+        @Body() payload: CreateServiceDto,
+        @GetUser('userId') userId: string,
+    ) {
+        console.log('Creator ID:', userId);
+        return this.serviceService.create(payload, userId);
     }
+
 
     @Get()
     @ApiOperation({ summary: "Get all available services" })

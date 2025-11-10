@@ -1,5 +1,5 @@
 model Service {
-  id          String  @id @default(cuid())
+  id          String  @id @default(uuid())
   serviceName String  @unique
   description String?
   price       Float
@@ -11,4 +11,8 @@ model Service {
   updatedAt DateTime @updatedAt
 
   serviceRequests ServiceRequest[]
+  payments        Payment[]
+  buyServices     BuyService[]
+
+  @@map("services")
 }
