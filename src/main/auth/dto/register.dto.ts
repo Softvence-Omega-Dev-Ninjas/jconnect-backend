@@ -4,7 +4,7 @@ import { IsEmail, IsNotEmpty, IsString, MaxLength, MinLength } from "class-valid
 
 export class RegisterDto {
     @ApiProperty({
-        example: "ss joy Doe",
+        example: "demo user",
         description: "Full name of the user",
     })
     @IsNotEmpty({ message: "Full name is required" })
@@ -14,7 +14,7 @@ export class RegisterDto {
     full_name: string;
 
     @ApiProperty({
-        example: "user@gmail.com",
+        example: "mijn78146@gmail.com",
         description: "Email address of the user",
     })
     @IsNotEmpty({ message: "Email is required" })
@@ -33,7 +33,7 @@ export class RegisterDto {
 
     //---------------  Optional phone number field ------------------
     @ApiProperty({
-        example: "8801234567890",
+        example: "01909616418",
         description: "Phone number of the user (optional)",
         required: false,
     })
