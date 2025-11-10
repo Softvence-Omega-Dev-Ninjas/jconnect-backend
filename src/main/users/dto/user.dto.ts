@@ -36,6 +36,11 @@ export class CreateUserDto {
     // @IsString()
     // auth_provider?: string;
 
+    @ApiProperty({ example: true, required: false })
+    @IsOptional()
+    @IsBoolean()
+    isActive?: boolean;
+
     @IsOptional()
     @IsEnum(AuthProvider)
     auth_provider?: AuthProvider;
@@ -57,16 +62,6 @@ export class UpdateUserDto {
     @IsEmail()
     email?: string;
 
-    // @ApiProperty({ example: "+880", required: false })
-    // @IsOptional()
-    // @IsString()
-    // country_code?: string;
-
-    // @ApiProperty({ example: "01800000000", required: false })
-    // @IsOptional()
-    // @IsString()
-    // phone_number?: string;
-
     @ApiProperty({ example: "MIn6@ssa", required: false })
     @IsOptional()
     @IsString()
@@ -76,7 +71,7 @@ export class UpdateUserDto {
     @ApiProperty({ example: true, required: false })
     @IsOptional()
     @IsBoolean()
-    is_active?: boolean;
+    isActive?: boolean;
 
     @ApiProperty({ example: "ADMIN", enum: Role, required: false })
     @IsOptional()

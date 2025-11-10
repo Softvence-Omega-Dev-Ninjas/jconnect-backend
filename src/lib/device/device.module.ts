@@ -1,6 +1,6 @@
-import { Global, Module } from '@nestjs/common';
-import { ConfigModule } from '@nestjs/config';
-import { DeviceService } from './device.service';
+import { Global, Module } from "@nestjs/common";
+import { ConfigModule } from "@nestjs/config";
+import { DeviceService } from "./device.service";
 
 @Global()
 @Module({
@@ -8,5 +8,4 @@ import { DeviceService } from './device.service';
     providers: [DeviceService],
     exports: [DeviceService],
 })
-export class DeviceModule { }
-
+export class DeviceModule {}

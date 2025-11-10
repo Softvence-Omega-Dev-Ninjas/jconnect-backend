@@ -9,3 +9,17 @@
 - [x] Implemented **Password Hashing generate with argon2**
 - [x] Implemented **URL Generation from Username/Social Links**
 - [x] Properly Implemented **Swagger Documentation proper setup**
+
+## 7/11/2025 Friday
+
+- [x] Completed **social service module**
+- [x] Completed **request social service module**
+- [x] Implemented **authentication explore from joy**
+- [x] Implemented **auth guards impliment with jwt**
+- [x] Properly Implemented **Swagger Documentation proper setup**
+
+## 10/11/2025 Monday
+
+- [ ] **probleme solving** user module add guard
+
+          authGuard problem then solving and check again authentication then work start

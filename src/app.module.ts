@@ -12,19 +12,18 @@
 // export class AppModule {}
 // import { CacheModule } from '@nestjs/common';
 
-import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
-import { ConfigModule, ConfigService } from '@nestjs/config';
-import { JwtModule } from '@nestjs/jwt';
-import { PassportModule } from '@nestjs/passport';
-import { ServeStaticModule } from '@nestjs/serve-static';
-import { join } from 'path';
-import { AppController } from './app.controller';
-import { ENVEnum } from './common/enum/env.enum';
-import { JwtStrategy } from './common/jwt/jwt.strategy';
-import { LoggerMiddleware } from './common/middleware/logger.middleware';
-import { LibModule } from './lib/lib.module';
-import { MainModule } from './main/main.module';
-
+import { MiddlewareConsumer, Module, NestModule } from "@nestjs/common";
+import { ConfigModule, ConfigService } from "@nestjs/config";
+import { JwtModule } from "@nestjs/jwt";
+import { PassportModule } from "@nestjs/passport";
+import { ServeStaticModule } from "@nestjs/serve-static";
+import { join } from "path";
+import { AppController } from "./app.controller";
+import { ENVEnum } from "./common/enum/env.enum";
+import { JwtStrategy } from "./common/jwt/jwt.strategy";
+import { LoggerMiddleware } from "./common/middleware/logger.middleware";
+import { LibModule } from "./lib/lib.module";
+import { MainModule } from "./main/main.module";
 
 @Module({
     imports: [
@@ -37,8 +36,8 @@ import { MainModule } from './main/main.module';
         // }),
 
         ServeStaticModule.forRoot({
-            rootPath: join(process.cwd(), 'uploads'),
-            serveRoot: '/files',
+            rootPath: join(process.cwd(), "uploads"),
+            serveRoot: "/files",
         }),
 
         PassportModule,
@@ -62,6 +61,6 @@ import { MainModule } from './main/main.module';
 })
 export class AppModule implements NestModule {
     configure(consumer: MiddlewareConsumer) {
-        consumer.apply(LoggerMiddleware).forRoutes('*');
+        consumer.apply(LoggerMiddleware).forRoutes("*");
     }
 }

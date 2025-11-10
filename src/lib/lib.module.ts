@@ -6,16 +6,8 @@ import { TwilioModule } from "./twilio/twilo.module";
 import { UtilsModule } from "./utils/utils.module";
 
 @Module({
-    imports: [
-        PrismaModule,
-        MailModule,
-        UtilsModule,
-        TwilioModule,
-        DeviceModule
-    ],
-    exports: [
-
-    ],
+    imports: [PrismaModule, MailModule, UtilsModule, TwilioModule, DeviceModule],
+    exports: [],
     providers: [],
 })
-export class LibModule { }
+export class LibModule {}

@@ -1,6 +1,6 @@
-import { Injectable, Logger } from '@nestjs/common';
-import { PrismaService } from 'src/lib/prisma/prisma.service';
-import { UAParser } from 'ua-parser-js';
+import { Injectable, Logger } from "@nestjs/common";
+import { PrismaService } from "src/lib/prisma/prisma.service";
+import { UAParser } from "ua-parser-js";
 
 export interface DeviceInfo {
     browser?: string;
@@ -16,7 +16,7 @@ export interface DeviceInfo {
 export class DeviceService {
     private readonly logger = new Logger(DeviceService.name);
 
-    constructor(private readonly prisma: PrismaService) { }
+    constructor(private readonly prisma: PrismaService) {}
 
     /**
      * Parse User-Agent string and extract device information
@@ -26,23 +26,19 @@ export class DeviceService {
         const result = parser.getResult();
 
         return {
-            browser: result.browser.name || 'Unknown',
-            browserVersion: result.browser.version || 'Unknown',
-            os: result.os.name || 'Unknown',
-            osVersion: result.os.version || 'Unknown',
-            deviceType: result.device.type || 'desktop',
-            deviceModel: result.device.model || result.device.vendor || 'Unknown',
+            browser: result.browser.name || "Unknown",
+            browserVersion: result.browser.version || "Unknown",
+            os: result.os.name || "Unknown",
+            osVersion: result.os.version || "Unknown",
+            deviceType: result.device.type || "desktop",
+            deviceModel: result.device.model || result.device.vendor || "Unknown",
         };
     }
 
     /**
      * Save or update device information for a user
      */
-    async saveDeviceInfo(
-        userId: string,
-        userAgent: string,
-        ipAddress: string,
-    ): Promise<void> {
+    async saveDeviceInfo(userId: string, userAgent: string, ipAddress: string): Promise<void> {
         try {
             const deviceInfo = this.parseUserAgent(userAgent);
 
@@ -91,10 +87,7 @@ export class DeviceService {
                 );
             }
         } catch (error) {
-            this.logger.error(
-                `❌ Failed to save device info for user ${userId}:`,
-                error,
-            );
+            this.logger.error(`❌ Failed to save device info for user ${userId}:`, error);
             // Don't throw error - device tracking should not break authentication
         }
     }
@@ -105,7 +98,7 @@ export class DeviceService {
     async getUserDevices(userId: string) {
         return this.prisma.device.findMany({
             where: { userId },
-            orderBy: { lastUsedAt: 'desc' },
+            orderBy: { lastUsedAt: "desc" },
         });
     }
 

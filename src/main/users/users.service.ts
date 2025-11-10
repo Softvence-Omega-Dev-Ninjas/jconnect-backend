@@ -6,7 +6,7 @@ import { CreateUserDto, UpdateUserDto } from "./dto/user.dto";
 
 @Injectable()
 export class UsersService {
-    constructor(private prisma: PrismaService) { }
+    constructor(private prisma: PrismaService) {}
 
     async create(Userdata: CreateUserDto) {
         const { password, ...users } = Userdata;
@@ -33,6 +33,22 @@ export class UsersService {
     async findAll() {
         return await this.prisma.user.findMany();
     }
+    async findMe(Id: string) {
+        return await this.prisma.user.findUnique({ where: { id: Id } });
+    }
+
+    async findAllArtist() {
+        return await this.prisma.user.findMany({
+            where: {
+                role: "ARTIST",
+                isDeleted: false,
+                isActive: true,
+            },
+            omit: {
+                password: true,
+            },
+        });
+    }
 
     async findOne(id: string) {
         const user = await this.prisma.user.findUnique({ where: { id } });
@@ -41,25 +57,33 @@ export class UsersService {
     }
 
     async update(id: string, data: UpdateUserDto) {
-        const exists = await this.prisma.user.findUnique({ where: { id } });
+        const exists = await this.prisma.user.findUnique({
+            where: { id },
+            omit: { password: true },
+        });
         if (!exists) throw new NotFoundException("User not found");
-        // if (data.password) {
-        //     const matchPassword = await agoron2.verify(exists.password, data?.password);
-        //     if (matchPassword) throw new HttpException("Password is same as before", 400);
-        // }
         if (data.password) {
             const hash = await agoron2.hash(data.password);
             data.password = hash;
         }
         return await this.prisma.user.update({
             where: { id },
+            omit: { password: true },
             data,
         });
     }
 
     async remove(id: string) {
         const exists = await this.prisma.user.findUnique({ where: { id } });
+        console.log(exists);
+
         if (!exists) throw new NotFoundException("User not found");
-        return await this.prisma.user.delete({ where: { id } });
+        if (exists?.isDeleted) throw new NotFoundException("User Already deleted");
+
+        return await this.prisma.user.update({
+            where: { id },
+            data: { isDeleted: true },
+            omit: { password: true },
+        });
     }
 }

@@ -11,3 +11,12 @@
 - [x] Implemented **ServiceRequest** CRUD module (for fixed services) including **Controller**, **Service**, and **DTOs**.
 - [x] Implemented **CustomServiceRequest** CRUD module (for custom orders) including **Controller**, **Service**, and **DTOs**.
 - [x] Integrated **Swagger Documentation** (OpenAPI) for all `Service` and `ServiceRequest` endpoints (`@ApiTags`, `@ApiOperation`, `@ApiResponse`).
+
+---
+
+## 8/11/2025
+
+- [x] Implemented the **Review** CRUD module (for user reviews), including **Controller**, **Service**, and **DTOs**.
+- [x] Performed unit testing for Authentication and Authorization.
+- [x] Explored **Twilio** for OTP verification purposes.
+- [x] Tried implementing **Auth Guard**, but it failed — will fix this issue tomorrow.
