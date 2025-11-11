@@ -1,9 +1,14 @@
 import { Module } from "@nestjs/common";
-import { PaymentService } from "./payment.service";
-import { PaymentController } from "./payment.controller";
+
+
+import { LibModule } from "src/lib/lib.module";
+import { PaymentWebhookController } from "./controller/payment-webhook";
+import { PaymentController } from "./controller/payment.controller";
+import { PaymentService } from "./service/payment.service";
 
 @Module({
-    controllers: [PaymentController],
+    imports: [LibModule],
+    controllers: [PaymentController, PaymentWebhookController],
     providers: [PaymentService],
 })
-export class PaymentModule {}
+export class PaymentModule { }

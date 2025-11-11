@@ -1,11 +1,12 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from "@nestjs/common";
-import { LivechatService } from "./livechat.service";
+import { Body, Controller, Delete, Get, Param, Patch, Post } from "@nestjs/common";
+
 import { CreateLivechatDto } from "./dto/create-livechat.dto";
 import { UpdateLivechatDto } from "./dto/update-livechat.dto";
+import { LivechatService } from "./service/livechat.service";
 
 @Controller("livechat")
 export class LivechatController {
-    constructor(private readonly livechatService: LivechatService) {}
+    constructor(private readonly livechatService: LivechatService) { }
 
     @Post()
     create(@Body() createLivechatDto: CreateLivechatDto) {
