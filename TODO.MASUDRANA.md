@@ -14,3 +14,8 @@
 - [ ] **upload file in aws tutorial from sojib vai** learn how to deploy image/file in aws like profile photo and service files
 - [ ] Troubleshoot and finalize the **Service Module**, **Service Request Module**, and **Custom Service Request Module** — verify their relations and integrate with guards.
 - [ ] Fix the **role-based access** issue.
+
+## 11/11/2025
+
+- [ ] Finalize **Service**, **Service Request**, and **Custom Service** modules with full guard integration.
+- [ ] Fix **role-based access** completely.
