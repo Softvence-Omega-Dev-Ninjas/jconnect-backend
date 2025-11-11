@@ -34,7 +34,63 @@ export class UsersService {
         return await this.prisma.user.findMany();
     }
     async findMe(Id: string) {
-        return await this.prisma.user.findUnique({ where: { id: Id } });
+        // ---------------------------
+        const user = await this.prisma.user.findUnique({
+            where: { id: Id },
+            omit: { password: true },
+            include: {
+                profile: true,
+                devices: true,
+
+                //  Service relations
+                services: true,
+                serviceRequests: {
+                    include: {
+                        buyer: true,
+                        service: true,
+                    },
+                },
+
+                //  LiveChat relations
+                LiveChatsCreated: true,
+                chatParticipations: {
+                    include: {
+                        chat: true,
+                    },
+                },
+                liveMessages: true,
+                liveMessageReads: {
+                    include: {
+                        message: true,
+                    },
+                },
+
+                //  Custom service requests
+                customRequestsMade: {
+                    include: {
+                        buyer: true,
+                        targetCreator: true,
+                    },
+                },
+                customRequestsReceived: {
+                    include: {
+                        buyer: true,
+                        targetCreator: true,
+                    },
+                },
+
+                //  Social services
+                socialServices: {
+                    include: {},
+                },
+            },
+        });
+
+        // ---------------------------
+
+        // return await this.prisma.user.findUnique({ where: { id: Id }, omit: { password: true }, });
+
+        return user;
     }
 
     async findAllArtist() {

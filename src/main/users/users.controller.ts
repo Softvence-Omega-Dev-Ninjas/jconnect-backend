@@ -28,7 +28,7 @@ export class UsersController {
     @ApiBearerAuth()
     @ValidateUser()
     @Get("me")
-    @ApiOperation({ summary: "Get all users access by only admin/userAdmin" })
+    @ApiOperation({ summary: "if login then get the logged in user data" })
     GetOwnUserData(@GetUser() user: any) {
         console.log("ami user", user);
 
