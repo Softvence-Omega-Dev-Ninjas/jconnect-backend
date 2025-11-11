@@ -20,3 +20,8 @@
 - [x] Performed unit testing for Authentication and Authorization.
 - [x] Explored **Twilio** for OTP verification purposes.
 - [x] Tried implementing **Auth Guard**, but it failed — will fix this issue tomorrow.
+
+## 10/11/2025
+
+- [x] Working on **Service Module**, **Service Request Module**, and **Custom Service Request Module** — verified their relations and partially integrated guards.
+- [x] Working on **role-based access issue** — some roles are functioning correctly, but full implementation is still in progress.

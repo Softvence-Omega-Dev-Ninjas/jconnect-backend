@@ -1,6 +1,15 @@
 import { ApiProperty } from "@nestjs/swagger";
-import { AuthProvider, Role } from "@prisma/client";
-import { IsBoolean, IsEmail, IsEnum, IsOptional, IsString, MinLength } from "class-validator";
+import { AuthProvider, Role, ValidationType } from "@prisma/client";
+import {
+    IsBoolean,
+    IsDateString,
+    IsEmail,
+    IsEnum,
+    IsInt,
+    IsOptional,
+    IsString,
+    MinLength,
+} from "class-validator";
 
 export class CreateUserDto {
     @ApiProperty({ example: "John Doe" })
@@ -11,44 +20,115 @@ export class CreateUserDto {
     @IsEmail()
     email: string;
 
-    // @ApiProperty({ example: "+880" })
-    // @IsOptional()
-    // @IsString()
-    // country_code?: string;
+    @ApiProperty({ example: "https://example.com/profile.jpg", required: false })
+    @IsOptional()
+    @IsString()
+    profilePhoto?: string;
 
-    // @ApiProperty({ example: "01700000000" })
-    // @IsOptional()
-    // @IsString()
-    // phone_number?: string;
+    @ApiProperty({ example: "+8801700000000", required: false })
+    @IsOptional()
+    @IsString()
+    phone?: string;
 
-    @ApiProperty({ example: "MIn6@ssa" })
+    @ApiProperty({ example: "Pass@1234" })
     @IsString()
     @MinLength(6, { message: "Password must be at least 6 characters long" })
     password: string;
 
-    @ApiProperty({ example: true })
+    @ApiProperty({ example: 1234, required: false })
+    @IsOptional()
+    @IsInt()
+    pinCode?: number;
+
+    @ApiProperty({ example: "123456", required: false })
+    @IsOptional()
+    @IsString()
+    otp?: string;
+
+    @ApiProperty({ example: "google-12345", required: false })
+    @IsOptional()
+    @IsString()
+    googleId?: string;
+
+    @ApiProperty({ example: 123456, required: false })
+    @IsOptional()
+    @IsInt()
+    emailOtp?: number;
+
+    @ApiProperty({ example: "2025-11-12T12:00:00Z", required: false })
+    @IsOptional()
+    @IsDateString()
+    otpExpiresAt?: Date;
+
+    @ApiProperty({ example: false, required: false })
+    @IsOptional()
+    @IsBoolean()
+    isVerified?: boolean;
+
+    @ApiProperty({ example: true, required: false })
     @IsOptional()
     @IsBoolean()
     is_terms_agreed?: boolean;
 
-    // @ApiProperty({ example: "email", enum: ["email", "google", "facebook"] })
-    // @IsOptional()
-    // @IsString()
-    // auth_provider?: string;
+    @ApiProperty({ example: false, required: false })
+    @IsOptional()
+    @IsBoolean()
+    isLogin?: boolean;
+
+    @ApiProperty({ example: false, required: false })
+    @IsOptional()
+    @IsBoolean()
+    isDeleted?: boolean;
 
     @ApiProperty({ example: true, required: false })
     @IsOptional()
     @IsBoolean()
     isActive?: boolean;
 
+    @ApiProperty({ example: 0, required: false })
     @IsOptional()
-    @IsEnum(AuthProvider)
-    auth_provider?: AuthProvider;
+    @IsInt()
+    login_attempts?: number;
 
-    @ApiProperty({ example: "USER", enum: Role })
+    @ApiProperty({ example: 654321, required: false })
+    @IsOptional()
+    @IsInt()
+    phoneOtp?: number;
+
+    @ApiProperty({ example: "2025-11-12T12:00:00Z", required: false })
+    @IsOptional()
+    @IsDateString()
+    phoneOtpExpiresAt?: Date;
+
+    @ApiProperty({ example: false, required: false })
+    @IsOptional()
+    @IsBoolean()
+    phoneVerified?: boolean;
+
+    @ApiProperty({ example: "2025-11-12T10:00:00Z", required: false })
+    @IsOptional()
+    @IsDateString()
+    last_login_at?: Date;
+
+    @ApiProperty({ example: "2025-11-12T11:00:00Z", required: false })
+    @IsOptional()
+    @IsDateString()
+    token_expires_at?: Date;
+
+    @ApiProperty({ example: "USER", enum: Role, required: false })
     @IsOptional()
     @IsEnum(Role)
     role?: Role;
+
+    @ApiProperty({ example: "EMAIL", enum: ValidationType, required: false })
+    @IsOptional()
+    @IsEnum(ValidationType)
+    validation_type?: ValidationType;
+
+    @ApiProperty({ example: "GOOGLE", enum: AuthProvider, required: false })
+    @IsOptional()
+    @IsEnum(AuthProvider)
+    auth_provider?: AuthProvider;
 }
 
 export class UpdateUserDto {
@@ -62,19 +142,80 @@ export class UpdateUserDto {
     @IsEmail()
     email?: string;
 
-    @ApiProperty({ example: "MIn6@ssa", required: false })
+    @ApiProperty({ example: "https://example.com/new-photo.jpg", required: false })
+    @IsOptional()
+    @IsString()
+    profilePhoto?: string;
+
+    @ApiProperty({ example: "+8801700000000", required: false })
+    @IsOptional()
+    @IsString()
+    phone?: string;
+
+    @ApiProperty({ example: "NewPass@123", required: false })
     @IsOptional()
     @IsString()
     @MinLength(6, { message: "Password must be at least 6 characters long" })
     password?: string;
+
+    @ApiProperty({ example: 1234, required: false })
+    @IsOptional()
+    @IsInt()
+    pinCode?: number;
 
     @ApiProperty({ example: true, required: false })
     @IsOptional()
     @IsBoolean()
     isActive?: boolean;
 
+    @ApiProperty({ example: true, required: false })
+    @IsOptional()
+    @IsBoolean()
+    isVerified?: boolean;
+
+    @ApiProperty({ example: false, required: false })
+    @IsOptional()
+    @IsBoolean()
+    isDeleted?: boolean;
+
+    @ApiProperty({ example: true, required: false })
+    @IsOptional()
+    @IsBoolean()
+    is_terms_agreed?: boolean;
+
     @ApiProperty({ example: "ADMIN", enum: Role, required: false })
     @IsOptional()
     @IsEnum(Role)
     role?: Role;
+
+    @ApiProperty({ example: "EMAIL", enum: ValidationType, required: false })
+    @IsOptional()
+    @IsEnum(ValidationType)
+    validation_type?: ValidationType;
+
+    @ApiProperty({ example: "GOOGLE", enum: AuthProvider, required: false })
+    @IsOptional()
+    @IsEnum(AuthProvider)
+    auth_provider?: AuthProvider;
+
+    @ApiProperty({ example: "2025-11-12T12:00:00Z", required: false })
+    @IsOptional()
+    @IsDateString()
+    last_login_at?: Date;
+
+    @ApiProperty({ example: "2025-11-12T12:00:00Z", required: false })
+    @IsOptional()
+    @IsDateString()
+    token_expires_at?: Date;
+}
+
+export class reset_password {
+    @ApiProperty({ example: "xxxxxx", required: true })
+    @IsString()
+    old: string;
+
+    @ApiProperty({ example: "MIn6@ssa", required: true })
+    @IsString()
+    @MinLength(6, { message: "Password must be at least 6 characters long" })
+    newPass: string;
 }

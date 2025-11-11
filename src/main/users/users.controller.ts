@@ -1,13 +1,39 @@
 import { GetUser, ValidateAdmin, ValidateUser } from "@common/jwt/jwt.decorator";
-import { Body, Controller, Delete, ForbiddenException, Get, Param, Put } from "@nestjs/common";
-import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from "@nestjs/swagger";
-import { UpdateUserDto } from "./dto/user.dto";
+import {
+    Body,
+    Controller,
+    Delete,
+    ForbiddenException,
+    Get,
+    Param,
+    Put,
+    Query,
+} from "@nestjs/common";
+import { ApiBearerAuth, ApiOperation, ApiQuery, ApiResponse, ApiTags } from "@nestjs/swagger";
+import { reset_password, UpdateUserDto } from "./dto/user.dto";
 import { UsersService } from "./users.service";
 
 @ApiTags("Users")
 @Controller("users")
 export class UsersController {
     constructor(private readonly usersService: UsersService) {}
+
+    @ApiBearerAuth()
+    @ValidateUser()
+    @Get("me")
+    @ApiOperation({ summary: "if login then get the logged in user data" })
+    GetOwnUserData(@GetUser() user: any) {
+        return this.usersService.findMe(user.userId);
+    }
+
+    @ApiBearerAuth()
+    @ValidateUser()
+    @Put("reset_Password")
+    @ApiOperation({ summary: "reset password by logged in user" })
+    @ApiResponse({ status: 200, description: "user password reset successfully" })
+    reset_password(@GetUser() user: any, @Body() Body: reset_password) {
+        return this.usersService.reset_password(user.userId, Body.old, Body.newPass);
+    }
 
     @ApiBearerAuth()
     @ValidateUser()
@@ -20,19 +46,20 @@ export class UsersController {
     @ApiBearerAuth()
     @ValidateAdmin()
     @Get("getalluser")
-    @ApiOperation({ summary: "Get all users access by only admin/userAdmin" })
-    findAll() {
-        return this.usersService.findAll();
-    }
-
-    @ApiBearerAuth()
-    @ValidateUser()
-    @Get("me")
-    @ApiOperation({ summary: "Get all users access by only admin/userAdmin" })
-    GetOwnUserData(@GetUser() user: any) {
-        console.log("ami user", user);
-
-        return this.usersService.findMe(user.userId);
+    @ApiOperation({ summary: "Get all users (Admin only) with pagination & filtering" })
+    @ApiQuery({ name: "page", required: false, type: Number, example: 1 })
+    @ApiQuery({ name: "limit", required: false, type: Number, example: 10 })
+    @ApiQuery({ name: "isActive", required: false, type: Boolean, example: true })
+    async findAll(
+        @Query("page") page = 1,
+        @Query("limit") limit = 10,
+        @Query("isActive") isActive?: boolean,
+    ) {
+        return this.usersService.findAll({
+            page: Number(page),
+            limit: Number(limit),
+            isActive: isActive !== undefined ? isActive : undefined,
+        });
     }
 
     @ApiBearerAuth()
