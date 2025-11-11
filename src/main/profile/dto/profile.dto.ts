@@ -3,9 +3,9 @@ import { ApiProperty } from "@nestjs/swagger";
 import { IsOptional, IsString, IsUrl } from "class-validator";
 
 export class CreateProfileDto {
-    @ApiProperty({ example: "user-uuid-id", description: "User ID (must exist in User table)" })
+    @IsOptional()
     @IsString()
-    user_id: string;
+    userId: string;
 
     @ApiProperty({ example: "https://example.com/image.jpg", required: false })
     @IsOptional()
