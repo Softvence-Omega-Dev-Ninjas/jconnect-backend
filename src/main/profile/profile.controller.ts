@@ -1,47 +1,49 @@
 // src/profile/profile.controller.ts
-import { Controller, Get, Post, Body, Param, Put, Delete } from "@nestjs/common";
-import { ApiTags, ApiOperation, ApiResponse } from "@nestjs/swagger";
-import { ProfileService } from "./profile.service";
+import { GetUser, ValidateUser } from "@common/jwt/jwt.decorator";
+import { Body, Controller, Delete, Get, Post, Put } from "@nestjs/common";
+import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from "@nestjs/swagger";
 import { CreateProfileDto, UpdateProfileDto } from "./dto/profile.dto";
+import { ProfileService } from "./profile.service";
 
 @ApiTags("Profile")
 @Controller("profiles")
 export class ProfileController {
     constructor(private readonly profileService: ProfileService) {}
 
+    @ApiBearerAuth()
+    @ValidateUser()
     @Post()
     @ApiOperation({ summary: "Create a user profile" })
-    @ApiResponse({ status: 201, description: "Profile created successfully" })
-    create(@Body() createProfileDto: CreateProfileDto) {
-        return this.profileService.create(createProfileDto);
+    async create(@Body() createProfileDto: CreateProfileDto, @GetUser() user: any) {
+        const userProfileData = { ...createProfileDto, ...user };
+        console.log(" ami user bolchi", user);
+        return this.profileService.create(userProfileData);
     }
 
+    @ApiBearerAuth()
+    @ValidateUser()
     @Get()
-    @ApiOperation({ summary: "Get all profiles" })
+    @ApiOperation({ summary: "Get My profiles" })
     @ApiResponse({ status: 200, description: "List of profiles" })
-    findAll() {
-        return this.profileService.findAll();
+    findAll(@GetUser() user: any) {
+        return this.profileService.findOne(user.userId);
     }
 
-    @Get(":user_id")
-    @ApiOperation({ summary: "Get profile by user_id" })
-    @ApiResponse({ status: 200, description: "Profile found" })
-    @ApiResponse({ status: 404, description: "Profile not found" })
-    findOne(@Param("user_id") user_id: string) {
-        return this.profileService.findOne(user_id);
-    }
-
-    @Put(":user_id")
-    @ApiOperation({ summary: "Update profile by user_id" })
+    @ApiBearerAuth()
+    @ValidateUser()
+    @Put()
+    @ApiOperation({ summary: "Update my profile" })
     @ApiResponse({ status: 200, description: "Profile updated successfully" })
-    update(@Param("user_id") user_id: string, @Body() updateProfileDto: UpdateProfileDto) {
-        return this.profileService.update(user_id, updateProfileDto);
+    update(@Body() updateProfileDto: UpdateProfileDto, @GetUser() user: any) {
+        return this.profileService.update(user.userId, updateProfileDto);
     }
 
-    @Delete(":user_id")
-    @ApiOperation({ summary: "Delete profile by user_id" })
+    @ApiBearerAuth()
+    @ValidateUser()
+    @Delete()
+    @ApiOperation({ summary: "Delete my profile" })
     @ApiResponse({ status: 200, description: "Profile deleted successfully" })
-    remove(@Param("user_id") user_id: string) {
-        return this.profileService.remove(user_id);
+    remove(@GetUser() user: any) {
+        return this.profileService.remove(user.userId);
     }
 }
