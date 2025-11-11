@@ -1,0 +1,14 @@
+model Profile {
+  user_id           String   @id @unique
+  user              User     @relation(fields: [user_id], references: [id])
+  profile_image_url String?
+  short_bio         String?
+  instagram         String?
+  facebook          String?
+  tiktok            String?
+  youtube           String?
+  created_at        DateTime @default(now())
+  updated_at        DateTime @updatedAt
+
+  @@map("user_profiles")
+}
