@@ -26,7 +26,7 @@
         "prepare": "husky"
     },
     "dependencies": {
-        "@aws-sdk/client-s3": "^3.927.0",
+        "@aws-sdk/client-s3": "^3.929.0",
         "@aws-sdk/lib-storage": "^3.927.0",
         "@nestjs/common": "^11.1.8",
         "@nestjs/config": "^4.0.2",
@@ -39,6 +39,7 @@
         "@nestjs/swagger": "^11.2.1",
         "@prisma/client": "^6.19.0",
         "argon2": "^0.44.0",
+        "aws-sdk": "^2.1692.0",
         "bcrypt": "^6.0.0",
         "body-parser": "^2.2.0",
         "cache-manager": "^7.2.4",
@@ -48,6 +49,7 @@
         "express": "^5.1.0",
         "google-auth-library": "^10.5.0",
         "mime-types": "^3.0.1",
+        "multer": "^2.0.2",
         "nodemailer": "^7.0.10",
         "passport": "^0.7.0",
         "passport-jwt": "^4.0.1",
@@ -58,7 +60,8 @@
         "stripe": "^19.3.0",
         "twilio": "^5.10.4",
         "twilio-cli": "^6.2.0",
-        "ua-parser-js": "^2.0.6"
+        "ua-parser-js": "^2.0.6",
+        "uuid": "^13.0.0"
     },
     "devDependencies": {
         "@eslint/eslintrc": "^3.3.1",
@@ -71,6 +74,7 @@
         "@types/express": "^5.0.5",
         "@types/jest": "^30.0.0",
         "@types/mime-types": "^3.0.1",
+        "@types/multer": "^2.0.0",
         "@types/node": "^22.19.0",
         "@types/passport-jwt": "^4.0.1",
         "@types/supertest": "^6.0.3",

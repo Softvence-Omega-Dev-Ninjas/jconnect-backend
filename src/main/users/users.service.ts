@@ -2,11 +2,15 @@ import { HttpException, Injectable, NotFoundException } from "@nestjs/common";
 
 import agoron2 from "argon2";
 import { PrismaService } from "src/lib/prisma/prisma.service";
+import { UtilsService } from "src/lib/utils/utils.service";
 import { CreateUserDto, UpdateUserDto } from "./dto/user.dto";
 
 @Injectable()
 export class UsersService {
-    constructor(private prisma: PrismaService) {}
+    constructor(
+        private prisma: PrismaService,
+        private utils: UtilsService,
+    ) {}
 
     async create(Userdata: CreateUserDto) {
         const { password, ...users } = Userdata;
@@ -30,9 +34,48 @@ export class UsersService {
         }
     }
 
-    async findAll() {
-        return await this.prisma.user.findMany();
+    async findAll(params: { page: number; limit: number; isActive?: boolean }) {
+        const { page, limit, isActive } = params;
+
+        const whereCondition = {
+            isDeleted: false,
+            ...(isActive !== undefined ? { isActive } : {}),
+        };
+
+        const skip = (page - 1) * limit;
+
+        const [data, total] = await this.prisma.$transaction([
+            this.prisma.user.findMany({
+                where: whereCondition,
+                skip,
+                take: limit,
+                orderBy: { created_at: "desc" },
+                select: {
+                    id: true,
+                    full_name: true,
+                    email: true,
+                    phone: true,
+                    isActive: true,
+                    isVerified: true,
+                    created_at: true,
+                    role: true,
+                },
+            }),
+            this.prisma.user.count({ where: whereCondition }),
+        ]);
+
+        const totalPages = Math.ceil(total / limit);
+
+        return {
+            success: true,
+            page,
+            limit,
+            total,
+            totalPages,
+            data,
+        };
     }
+
     async findMe(Id: string) {
         // ---------------------------
         const user = await this.prisma.user.findUnique({
@@ -126,6 +169,22 @@ export class UsersService {
             where: { id },
             omit: { password: true },
             data,
+        });
+    }
+
+    async reset_password(id: string, old: string, newPass: string) {
+        const exists = await this.prisma.user.findUnique({ where: { id } });
+        if (!exists) throw new NotFoundException("User not found");
+        if (exists?.isDeleted) throw new NotFoundException("User Already deleted");
+        const ValidPass = await this.utils.compare(old, exists.password);
+        if (!ValidPass) throw new NotFoundException("Old Password is not correct");
+
+        const hash = await this.utils.hash(newPass);
+
+        return await this.prisma.user.update({
+            where: { id },
+            data: { password: hash },
+            omit: { password: true },
         });
     }
 

@@ -212,6 +212,8 @@ export class AuthService {
             data: {
                 emailOtp: null,
                 otpExpiresAt: null,
+                isVerified: true,
+                last_login_at: new Date(),
             },
         });
 
