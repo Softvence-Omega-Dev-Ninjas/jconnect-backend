@@ -23,5 +23,5 @@
 ## 12/11/2025 Monday
 
 - [ ] **Other Dashboard api creation** create alternative and important all api for dashboard
-- [ ] **waiting for chate/support area** waiting support session chate section then
-                     Joy Vai consistently gives his best effort, and we learn from him gradually, step by step.
+- [ ] **waiting for chat/support area** waiting support session chate section then
+      joy Vai consistently gives his best effort, and we learn from him gradually, step by step.
