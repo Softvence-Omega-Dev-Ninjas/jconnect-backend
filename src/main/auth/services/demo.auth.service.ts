@@ -60,11 +60,10 @@
 //             },
 //         });
 
-//         // ❌ REMOVED: Device tracking moved to post-verification/login step.
-//         // if (userAgent && ipAddress) {
-//         //     await this.deviceService.saveDeviceInfo(newUser.id, userAgent, ipAddress);
-//         // }
-
+//         //Track device information (async, non-blocking)
+//         if (userAgent && ipAddress) {
+//             await this.deviceService.saveDeviceInfo(newUser.id, userAgent, ipAddress);
+//         }
 //         console.log("the new user", newUser);
 
 //         // Send OTP email
@@ -113,7 +112,7 @@
 //             },
 //         });
 
-//         // ✅ ADDED/KEPT: Track device information on successful LOGIN
+//         // Track device information (async, non-blocking)
 //         if (userAgent && ipAddress) {
 //             await this.deviceService.saveDeviceInfo(user.id, userAgent, ipAddress);
 //         }
@@ -130,7 +129,7 @@
 //         return successResponse({ token, user: safeUser, devices: device }, "Login successful");
 //     }
 
-//     // ---------- FORGOT PASSWORD (unchanged) ----------
+//     // ---------- FORGOT PASSWORD ----------
 //     @HandleError("Failed to process forgot password", "ForgotPassword")
 //     async forgetPassword(payload: ForgotPasswordDto) {
 //         const { email } = payload;
@@ -179,7 +178,7 @@
 
 //     // ---------- VERIFY OTP (for signup) ----------
 //     @HandleError("Failed to verify OTP", "VerifyOTP")
-//     async verifyOtp(payload: VerifyOtpAuthDto, userAgent?: string, ipAddress?: string) {
+//     async verifyOtp(payload: VerifyOtpAuthDto) {
 //         // Verify the JWT token
 //         let decoded: any;
 //         try {
@@ -213,15 +212,10 @@
 //             data: {
 //                 emailOtp: null,
 //                 otpExpiresAt: null,
-//                 isVerified: true, // Verification successful
+//                 isVerified: true,
 //                 last_login_at: new Date(),
 //             },
 //         });
-
-//         // ✅ ADDED: Track device information on successful VERIFICATION (first login)
-//         if (userAgent && ipAddress) {
-//             await this.deviceService.saveDeviceInfo(user.id, userAgent, ipAddress);
-//         }
 
 //         // Generate a new JWT token for authentication
 //         const token = await this.jwt.signAsync(
@@ -242,7 +236,7 @@
 //         };
 //     }
 
-//     // ---------- VERIFY OTP (for password reset - unchanged) ----------
+//     // ---------- VERIFY OTP (for password reset) ----------
 //     @HandleError("Failed to verify reset OTP", "ResetVerifyOTP")
 //     async resetverifyOtp(payload: VerifyOtpAuthDto) {
 //         // Verify the JWT token
@@ -291,7 +285,7 @@
 //     }
 
 //     // ------------------------- phone otp verification via sms -------------------------
-//     // ---------- SEND PHONE OTP (signup / login / forgot - unchanged) ----------
+//     // ---------- SEND PHONE OTP (signup / login / forgot) ----------
 //     @HandleError("Failed to send phone OTP", "SendPhoneOtp")
 //     async sendPhoneOtp(dto: SendPhoneOtpDto) {
 //         let phone = dto.phone;
@@ -323,7 +317,7 @@
 //             data: {
 //                 phoneOtp: otp,
 //                 phoneOtpExpiresAt: expiryTime,
-//                 isVerified: true, // Setting as verified since phone is primary validation
+//                 isVerified: true,
 //                 validation_type: ValidationType.PHONE,
 //             },
 //         });
@@ -339,7 +333,7 @@
 
 //     // ---------- VERIFY PHONE OTP (signup / login) ----------
 //     @HandleError("Failed to verify phone OTP", "VerifyPhoneOtp")
-//     async verifyPhoneOtp(dto: VerifyPhoneOtpDto, userAgent?: string, ipAddress?: string) {
+//     async verifyPhoneOtp(dto: VerifyPhoneOtpDto) {
 //         const phone = dto.phone.startsWith("+") ? dto.phone : `+${dto.phone}`;
 
 //         const user = await this.prisma.user.findFirst({ where: { phone } });
@@ -357,16 +351,11 @@
 //                 phoneOtp: null,
 //                 phoneOtpExpiresAt: null,
 //                 phoneVerified: true,
+
 //                 isVerified: true,
 //                 validation_type: ValidationType.PHONE,
-//                 last_login_at: new Date(), // Set login time on successful verification
 //             },
 //         });
-
-//         // ✅ ADDED: Track device information on successful PHONE VERIFICATION (first login)
-//         if (userAgent && ipAddress) {
-//             await this.deviceService.saveDeviceInfo(updated.id, userAgent, ipAddress);
-//         }
 
 //         const token = this.utils.generateToken({
 //             sub: updated.id,
@@ -383,7 +372,7 @@
 //         );
 //     }
 
-//     // ---------- FORGOT PASSWORD VIA PHONE (unchanged) ----------
+//     // ---------- FORGOT PASSWORD VIA PHONE ----------
 //     @HandleError("Failed to process phone forgot password", "PhoneForgot")
 //     async phoneForgotPassword(dto: SendPhoneOtpDto) {
 //         const phone = dto.phone.startsWith("+") ? dto.phone : `+${dto.phone}`;
@@ -403,7 +392,7 @@
 //         return { resetToken };
 //     }
 
-//     // ---------- VERIFY PHONE OTP FOR PASSWORD RESET (unchanged) ----------
+//     // ---------- VERIFY PHONE OTP FOR PASSWORD RESET ----------
 //     @HandleError("Failed to verify phone reset OTP", "PhoneResetVerify")
 //     async phoneResetVerifyOtp(dto: VerifyPhoneOtpDto) {
 //         // token verification
@@ -431,7 +420,7 @@
 //         return { resetToken: newResetToken };
 //     }
 
-//     // ---------- RESET PASSWORD (unchanged) ----------
+//     // ---------- RESET PASSWORD ----------
 //     @HandleError("Failed to reset password", "ResetPassword")
 //     async resetPassword(payload: ResetPasswordAuthDto) {
 //         // Verify token
@@ -463,12 +452,12 @@
 //         return { message: "Password reset successfully" };
 //     }
 
-//     // ----------get devices from user (unchanged)----------
+//     // ----------get devices from user ----------
 //     getUserDevices(userId: string) {
 //         return this.deviceService.getUserDevices(userId);
 //     }
 
-//     // ------------- Logout from all devices-- (unchanged)
+//     // ------------- Logout from all devices--
 //     async logoutAllDevices(userId: string) {
 //         await this.deviceService.removeAllUserDevices(userId);
 //         return { message: "Logged out from all devices successfully" };

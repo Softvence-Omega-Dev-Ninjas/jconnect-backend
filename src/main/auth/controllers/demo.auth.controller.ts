@@ -33,12 +33,9 @@
 //     @Post("register")
 //     async register(
 //         @Body() body: RegisterDto,
-//         // userAgent এবং ipAddress এখানে পাস করা হচ্ছে, কিন্তু AuthService এর register ফাংশন এটি ignore করবে
-//         // কারণ আমরা আগের ধাপে ঠিক করেছি যে ডিভাইস ট্র্যাকিং কেবল লগইনের সময় হবে।
 //         @UserAgent() userAgent: string,
 //         @IpAddress() ipAddress: string,
 //     ) {
-//         // userAgent, ipAddress এখানে পাস করা হলেও, AuthService এর register মেথডে এটি ব্যবহার হচ্ছে না (আগের সমাধান অনুযায়ী)
 //         const result = await this.authService.register(body, userAgent, ipAddress);
 //         return {
 //             statusCode: HttpStatus.CREATED,
@@ -57,8 +54,7 @@
 //         @IpAddress() ipAddress: string,
 //         @Res({ passthrough: true }) res: Response,
 //     ) {
-//         // ✅ Fixed: Passing userAgent and ipAddress to the service layer for device tracking.
-//         const result = (await this.authService.login(body, userAgent, ipAddress)) as any;
+//         const result = (await this.authService.login(body)) as any;
 
 //         // Set HTTP-only cookie
 //         res.cookie("token", result?.data?.token, {
@@ -72,7 +68,7 @@
 //         return result;
 //     }
 
-//     // -------------- Google Login (Device tracking is typically done inside authGoogleService) --------------
+//     // -------------- Google Login --------------
 //     @ApiOperation({ summary: "Google Login or Sign Up" })
 //     @Post("google-login")
 //     async googleLogin(@Body() body: GoogleLoginDto, @Res({ passthrough: true }) res: Response) {
@@ -93,14 +89,8 @@
 //     // -------------- Verify OTP (Signup) --------------
 //     @ApiOperation({ summary: "Verify OTP after Registration" })
 //     @Post("signup-verify-otp")
-//     async verifyOtp(
-//         @Body() payload: VerifyOtpAuthDto,
-//         @UserAgent() userAgent: string, // ✅ Added: Capturing UserAgent
-//         @IpAddress() ipAddress: string,   // ✅ Added: Capturing IpAddress
-//         @Res({ passthrough: true }) res: Response,
-//     ) {
-//         // ✅ Fixed: Passing userAgent and ipAddress to the service layer for device tracking (First Login)
-//         const result = await this.authService.verifyOtp(payload, userAgent, ipAddress);
+//     async verifyOtp(@Body() payload: VerifyOtpAuthDto, @Res({ passthrough: true }) res: Response) {
+//         const result = await this.authService.verifyOtp(payload);
 
 //         // -----------Set HTTP-only cookie after successful verification
 //         if (result.data?.token) {
@@ -113,9 +103,12 @@
 //             });
 //         }
 
-//         // Response structure adjusted to return the raw service result if successful,
-//         // since the service layer already prepares the data/message.
-//         return result;
+//         return {
+//             statusCode: HttpStatus.OK,
+//             success: true,
+//             message: "OTP verified successfully!",
+//             data: result,
+//         };
 //     }
 
 //     // -------------- Verify OTP (Password Reset) --------------
@@ -176,12 +169,9 @@
 //     @ApiOperation({ summary: "Verify phone OTP – login" })
 //     async verifyPhoneOtp(
 //         @Body() dto: VerifyPhoneOtpDto,
-//         @UserAgent() userAgent: string, // ✅ Added: Capturing UserAgent
-//         @IpAddress() ipAddress: string,   // ✅ Added: Capturing IpAddress
 //         @Res({ passthrough: true }) res: Response,
 //     ) {
-//         // ✅ Fixed: Passing userAgent and ipAddress to the service layer for device tracking (Phone Login)
-//         const result = await this.authService.verifyPhoneOtp(dto, userAgent, ipAddress);
+//         const result = await this.authService.verifyPhoneOtp(dto);
 
 //         // set HTTP-only cookie
 //         res.cookie("token", result.data.token, {
