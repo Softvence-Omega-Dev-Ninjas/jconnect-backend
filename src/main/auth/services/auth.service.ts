@@ -28,7 +28,7 @@ export class AuthService {
         private readonly jwt: JwtService,
         private readonly deviceService: DeviceService,
         private readonly twilio: TwilioService,
-    ) {}
+    ) { }
 
     // ---------- REGISTER (send email verification OTP) ----------
     @HandleError("Failed to Register profile", "Register ")
@@ -212,6 +212,8 @@ export class AuthService {
             data: {
                 emailOtp: null,
                 otpExpiresAt: null,
+                isVerified: true,
+                last_login_at: new Date(),
             },
         });
 
