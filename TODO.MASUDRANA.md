@@ -19,3 +19,10 @@
 
 - [ ] Finalize **Service**, **Service Request**, and **Custom Service** modules with full guard integration.
 - [ ] Fix **role-based access** completely.
+
+## 12/11/2025 — Admin Dashboard Stats & Payment Module
+
+- [ ] Fix issues in **Total Disputes** and **Total Refunds** statistics on the Admin Dashboard.
+- [ ] Debug and fix bugs in the **User Activity API**.
+- [ ] Explore and review the **Payment Integration** implemented by **Joy Vai**.
+- [ ] Conduct overall testing to ensure smooth data visualization in all dashboard stats.

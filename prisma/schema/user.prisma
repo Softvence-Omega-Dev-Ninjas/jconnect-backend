@@ -42,7 +42,7 @@ model User {
   // Custom Service Requests relations
   customRequestsMade     CustomServiceRequest[] @relation("BuyerCustomRequests")
   customRequestsReceived CustomServiceRequest[] @relation("TargetedCustomRequests")
-  // 🔹 Buyer/Seller relation with BuyService
+  //  Buyer/Seller relation with BuyService
   buyServicesAsBuyer     BuyService[]           @relation("Buyer")
   buyServicesAsSeller    BuyService[]           @relation("Seller")
   Buyer                  SocialServiceRequest[] @relation("SocialRequestBuyer")
@@ -51,6 +51,16 @@ model User {
   ReviewsGiven    Review[]        @relation("ReviewsGiven")
   ReviewsReceived Review[]        @relation("ReviewsReceived")
   socialServices  SocialService[]
+
+  // Support system relations
+  supportChats        SupportChat[]
+  supportChatsAsAdmin SupportChat[]       @relation("SupportChatAdmin")
+  supportMessages     SupportMessage[]
+  // Notification relations
+  notifications       Notification[]
+  userNotifications   UserNotification[]
+  notificationToggle  NotificationToggle?
+
 
   @@map("users")
 }
