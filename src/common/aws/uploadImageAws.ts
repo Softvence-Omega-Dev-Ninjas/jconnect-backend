@@ -4,7 +4,7 @@ import fs from 'fs';
 import mime from 'mime-types';
 import path from 'path';
 
-// Create the S3 client
+//--------------------  Create the S3 client-------------
 const s3 = new S3({
     region: 'ap-southeast-1',
     credentials: {
@@ -43,7 +43,7 @@ const uploadFileToS3 = async (
         };
     } catch (err) {
         fs.unlinkSync(filePath);
-        console.error('❌ Failed to upload file to S3:', err);
+        console.error('Failed to upload file to S3:', err);
         throw err;
     }
 };
