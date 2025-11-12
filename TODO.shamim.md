@@ -18,4 +18,4 @@
 ## 11/11/2025 Monday
 
 - [ ] **upload file in aws tutorial from sojib vai** learn how to deploy image/file in aws like profile photo and service files
-- [ ] **probleme solving** user module, profile module, social service crud, and relation
+- [x] **probleme solving** user module, profile module, social service crud, and relation

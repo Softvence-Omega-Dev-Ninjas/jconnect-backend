@@ -10,6 +10,8 @@ import { SharedModule } from "./shared/shared.module";
 import { SocialServiceRequestModule } from "./social-service-request/social-service-request.module";
 import { SocialServiceModule } from "./social-service/social-service.module";
 import { UsersModule } from "./users/users.module";
+import { AwsModule } from "./aws/aws.module";
+import { StripepaymentModule } from "./stripepayment/stripepayment.module";
 
 @Module({
     imports: [
@@ -24,6 +26,8 @@ import { UsersModule } from "./users/users.module";
         CustomServiceRequestModule,
         ReviewModule,
         SharedModule,
+        AwsModule,
+        StripepaymentModule,
     ],
 })
 export class MainModule {}
