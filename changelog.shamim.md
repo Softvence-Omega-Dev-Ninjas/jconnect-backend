@@ -22,11 +22,15 @@
 
 - [x] **probleme solving** user module add guard
 
-            authGuard problem then solving and check again authentication then work start
+              authGuard problem then solving and check again authentication then work start
 
 ## 11/11/2025 Tuesday
 
 - [x] **User Module:** Implemented pagination and active/inactive filtering using query parameters
+- [x] **file Upload in aws s3:** file uploader aws s3 global module/service create
+
+          but i cant use this  file uploading module use from joy
+
 - [x] **User DTOs:** Added all fields from Prisma model with full validation and Swagger documentation
 - [x] **Profile Module:** Updated DTO, controller, and service structure for better consistency
 - [x] **Refactor:** Improved code organization and validation in both User and Profile modules

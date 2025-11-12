@@ -17,5 +17,11 @@
 
 ## 11/11/2025 Monday
 
-- [ ] **upload file in aws tutorial from sojib vai** learn how to deploy image/file in aws like profile photo and service files
-- [x] **probleme solving** user module, profile module, social service crud, and relation
+- [x] **upload file in aws tutorial from sojib vai** learn how to deploy image/file in aws like profile photo and service files
+- [x] **expolore** payment methodei with nest + stripe and test
+
+## 12/11/2025 Monday
+
+- [ ] **Other Dashboard api creation** create alternative and important all api for dashboard
+- [ ] **waiting for chate/support area** waiting support session chate section then
+             Joy Vai consistently gives his best effort, and we learn from him gradually, step by step.
