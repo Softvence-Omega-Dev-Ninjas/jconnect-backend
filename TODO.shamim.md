@@ -24,4 +24,4 @@
 
 - [ ] **Other Dashboard api creation** create alternative and important all api for dashboard
 - [ ] **waiting for chate/support area** waiting support session chate section then
-             Joy Vai consistently gives his best effort, and we learn from him gradually, step by step.
+               Joy Vai consistently gives his best effort, and we learn from him gradually, step by step.
