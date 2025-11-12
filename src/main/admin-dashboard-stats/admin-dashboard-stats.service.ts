@@ -42,32 +42,74 @@ export class AdminDashboardStatsService {
         }));
     }
 
-    // Top Sellers table (by revenue from BuyService)
     async getTopSellers(limit: number = 10): Promise<TopSellerDto[]> {
-        const result = (await this.prisma.$queryRaw`
+        const thirtyDaysAgo = new Date();
+        thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+
+        const buyServiceData = await this.prisma
+            .$queryRaw`SELECT COUNT(*) as count FROM "BuyService"`;
+        const hasBuyServiceData = Number((buyServiceData as any)[0].count) > 0;
+
+        if (!hasBuyServiceData) {
+            const result = await this.prisma.$queryRaw<
+                {
+                    sellerId: string;
+                    sellerName: string;
+                    totalRevenue: bigint;
+                    completedDeals: bigint;
+                    avgOrderValue: number;
+                }[]
+            >`
             SELECT 
-                bs."sellerId",
-                u.full_name as "sellerName",
-                SUM(bs.amount) as "totalRevenue",
-                COUNT(bs.id) as "completedDeals",
-                AVG(bs.amount) as "avgOrderValue"
-            FROM "BuyService" bs
-            JOIN users u ON bs."sellerId" = u.id
-            WHERE bs.status = 'SUCCESS'
-            GROUP BY bs."sellerId", u.full_name
+                p."userId" as "sellerId",
+                u.full_name AS "sellerName",
+                SUM(p.amount) AS "totalRevenue",
+                COUNT(p.id) AS "completedDeals",
+                AVG(p.amount) AS "avgOrderValue"
+            FROM payments AS p
+            JOIN users AS u ON p."userId" = u.id
+            WHERE p.status = 'COMPLETED' AND p."createdAt" >= ${thirtyDaysAgo}
+            GROUP BY p."userId", u.full_name
             ORDER BY "totalRevenue" DESC
-            LIMIT ${limit}
-        `) as {
-            sellerId: string;
-            sellerName: string;
-            totalRevenue: bigint;
-            completedDeals: bigint;
-            avgOrderValue: number;
-        }[];
+            LIMIT ${limit};
+            `;
+
+            return result.map((item) => ({
+                sellerId: item.sellerId,
+                sellerName: item.sellerName || "Unknown Seller",
+                totalRevenue: Number(item.totalRevenue) / 100,
+                completedDeals: Number(item.completedDeals),
+                avgOrderValue: Number(item.avgOrderValue) / 100,
+            }));
+        }
+
+        const result = await this.prisma.$queryRaw<
+            {
+                sellerId: string;
+                sellerName: string;
+                totalRevenue: bigint;
+                completedDeals: bigint;
+                avgOrderValue: number;
+            }[]
+        >`
+        SELECT 
+            bs."sellerId",
+            u.full_name AS "sellerName",
+            SUM(bs.amount) AS "totalRevenue",
+            COUNT(bs.id) AS "completedDeals",
+            AVG(bs.amount) AS "avgOrderValue"
+        FROM "BuyService" AS bs
+        JOIN payments AS p ON bs."paymentId" = p.id
+        JOIN users AS u ON bs."sellerId" = u.id
+        WHERE p.status = 'COMPLETED' AND bs."createdAt" >= ${thirtyDaysAgo}
+        GROUP BY bs."sellerId", u.full_name
+        ORDER BY "totalRevenue" DESC
+        LIMIT ${limit};
+        `;
 
         return result.map((item) => ({
             sellerId: item.sellerId,
-            sellerName: item.sellerName,
+            sellerName: item.sellerName || "Unknown Seller",
             totalRevenue: Number(item.totalRevenue) / 100,
             completedDeals: Number(item.completedDeals),
             avgOrderValue: Number(item.avgOrderValue) / 100,
@@ -76,6 +118,7 @@ export class AdminDashboardStatsService {
 
     // Top Performing Users (by amount of money spent/paid)
     async getTopPerformingUsers(limit: number = 10): Promise<TopSellerDto[]> {
+        // Query aggregates completed payments grouped by the user (buyer)
         const result = (await this.prisma.$queryRaw`
             SELECT 
                 p."userId" as "sellerId",
@@ -108,23 +151,19 @@ export class AdminDashboardStatsService {
 
     // Get Active User counts grouped by the day of the week over the last 7 days.
     async getUserActivityWeekly() {
-        // Calculate the start date (7 days ago, start of the day)
         const sevenDaysAgo = new Date();
         sevenDaysAgo.setHours(0, 0, 0, 0);
         sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 6);
 
-        // Calculate the end date (Today, start of the day)
         const today = new Date();
         today.setHours(0, 0, 0, 0);
 
-        // Fetch total active user count
         const totalUsers = await this.prisma.user.count({
             where: { isDeleted: false, isActive: true },
         });
 
         const result = (await this.prisma.$queryRaw`
             WITH date_series AS (
-                -- Generate a series of dates for the last 7 days
                 SELECT generate_series(
                     DATE_TRUNC('day', ${sevenDaysAgo}::timestamp),
                     DATE_TRUNC('day', ${today}::timestamp),
@@ -132,18 +171,15 @@ export class AdminDashboardStatsService {
                 ) as active_day
             ),
             daily_active_users AS (
-                -- Count unique users who logged in/used the device each day
                 SELECT
                     DATE_TRUNC('day', "lastUsedAt")::date as active_day,
                     COUNT(DISTINCT "userId") as active_count
                 FROM devices
-                -- ✅ FIX: Filter by active days starting 7 days ago, and ensure lastUsedAt is not null
                 WHERE 
                     "lastUsedAt" IS NOT NULL AND 
                     "lastUsedAt" >= DATE_TRUNC('day', ${sevenDaysAgo}::timestamp)
                 GROUP BY 1
             )
-            -- LEFT JOIN to ensure all 7 days are included, even if active_count is 0
             SELECT
                 TO_CHAR(ds.active_day, 'Dy') as day,
                 COALESCE(dau.active_count, 0) as active
@@ -153,7 +189,6 @@ export class AdminDashboardStatsService {
             ORDER BY ds.active_day ASC
         `) as { day: string; active: bigint }[];
 
-        // Calculate inactive users based on total users
         return result.map((item) => {
             const activeCount = Number(item.active);
             return {
@@ -175,14 +210,14 @@ export class AdminDashboardStatsService {
     }
 
     private async getTotalDisputes(): Promise<number> {
-        // Assuming disputes are tracked in ServiceRequest with status 'DISPUTED'
+        // Disputes are tracked in ServiceRequest with status 'DISPUTED'
         return this.prisma.serviceRequest.count({
             where: { status: "DISPUTED" },
         });
     }
 
     private async getTotalRefunds(): Promise<number> {
-        // Assuming refunds are tracked as CANCELLED payments
+        // Refunds are tracked as CANCELLED payments
         return this.prisma.payment.count({
             where: { status: "CANCELLED" },
         });
