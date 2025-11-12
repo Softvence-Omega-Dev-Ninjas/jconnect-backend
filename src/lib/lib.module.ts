@@ -29,4 +29,4 @@ import { UtilsModule } from "./utils/utils.module";
     ],
     providers: [],
 })
-export class LibModule { }
+export class LibModule {}
