@@ -1,10 +1,10 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
-import { HandleError } from 'src/common/error/handle-error.decorator';
-import { PrismaService } from 'src/lib/prisma/prisma.service';
+import { Injectable, NotFoundException } from "@nestjs/common";
+import { HandleError } from "src/common/error/handle-error.decorator";
+import { PrismaService } from "src/lib/prisma/prisma.service";
 
-import { PaymentStatus } from '@prisma/client';
-import Stripe from 'stripe';
-import { CreatePaymentDto } from '../dto/create-payment.dto';
+import { PaymentStatus } from "@prisma/client";
+import Stripe from "stripe";
+import { CreatePaymentDto } from "../dto/create-payment.dto";
 @Injectable()
 export class PaymentService {
     private stripe: Stripe;
@@ -15,7 +15,7 @@ export class PaymentService {
 
     // ---------------- create payment ----------------
 
-    @HandleError('Failed to create payment')
+    @HandleError("Failed to create payment")
     async createCheckoutSession(
         userId: string,
         payload: CreatePaymentDto,
@@ -25,23 +25,23 @@ export class PaymentService {
             where: { id: payload.serviceId },
         });
 
-        if (!service) throw new NotFoundException('Payment service not found');
+        if (!service) throw new NotFoundException("Payment service not found");
 
         // Create Stripe checkout session
-        const frontendUrl = process.env.FRONTEND_URL?.startsWith('http')
+        const frontendUrl = process.env.FRONTEND_URL?.startsWith("http")
             ? process.env.FRONTEND_URL
             : `https://${process.env.FRONTEND_URL}`;
 
         const session = await this.stripe.checkout.sessions.create({
-            mode: 'payment',
-            payment_method_types: ['card'],
+            mode: "payment",
+            payment_method_types: ["card"],
             line_items: [
                 {
                     price_data: {
-                        currency: 'usd',
+                        currency: "usd",
                         product_data: {
-                            name: service.serviceName || 'Payment price',
-                            description: service.description ?? '',
+                            name: service.serviceName || "Payment price",
+                            description: service.description ?? "",
                             metadata: {
                                 serviceCreator: service.creatorId,
                                 currency: service.currency,
@@ -57,30 +57,41 @@ export class PaymentService {
             metadata: { userId, serviceId: service.id },
         });
 
+        await this.prisma.payment.create({
+            data: {
+                sessionId: session.id,
+                amount: service.price * 100,
+                currency: "usd",
+                status: PaymentStatus.PENDING,
+                userId: userId,
+                serviceId: service.id,
+                paymentMethod: "STRIPE",
+            },
+        });
 
-
+        console.log("payment info", session);
 
         return { url: session.url! };
     }
 
-    @HandleError('Failed to fetch user payments')
+    @HandleError("Failed to fetch user payments")
     async findmyPayment(userId: string) {
         return this.prisma.payment.findMany({
             where: {
                 userId,
                 status: PaymentStatus.COMPLETED,
             },
-            orderBy: { createdAt: 'desc' },
+            orderBy: { createdAt: "desc" },
         });
     }
     // ------------------- Admin only -------------------
-    @HandleError('Failed to fetch all payments')
+    @HandleError("Failed to fetch all payments")
     async findAllPayments() {
         const payments = await this.prisma.payment.findMany({
             where: {
                 status: PaymentStatus.COMPLETED,
             },
-            orderBy: { createdAt: 'desc' },
+            orderBy: { createdAt: "desc" },
             include: {
                 user: {
                     select: {
@@ -100,16 +111,13 @@ export class PaymentService {
                         creatorId: true,
                     },
                 },
-
             },
-        },
-        );
-        payments.forEach(payment => {
+        });
+        payments.forEach((payment) => {
             payment.service.creatorId = payment.service.creatorId;
         });
 
         return payments;
-
     }
     // ------------service purchased by id ------------
 
@@ -147,7 +155,7 @@ export class PaymentService {
                 },
                 service: true,
             },
-            orderBy: { createdAt: 'desc' },
+            orderBy: { createdAt: "desc" },
         });
     }
 

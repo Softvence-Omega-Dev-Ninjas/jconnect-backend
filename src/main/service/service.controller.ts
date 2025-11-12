@@ -16,8 +16,11 @@ export class ServiceController {
     @Post()
     @ApiOperation({ summary: "Create a new service listing" })
     @ApiResponse({ status: 201, description: "Service created successfully" })
-    async create(@Body() createServiceDto: CreateServiceDto): Promise<Service> {
-        return this.serviceService.create(createServiceDto);
+    async create(
+        @Body() createServiceDto: CreateServiceDto,
+        @GetUser() user: any,
+    ): Promise<Service> {
+        return this.serviceService.create(createServiceDto, user);
     }
 
     @ApiBearerAuth()
@@ -59,7 +62,7 @@ export class ServiceController {
     @ApiOperation({ summary: "Delete a service listing by ID" })
     @ApiResponse({ status: 200, description: "Service deleted successfully" })
     @ApiResponse({ status: 404, description: "Service not found" })
-    remove(@Param("id") id: string): Promise<Service> {
+    remove(@Param("id") id: string, @GetUser() user: any): Promise<Service> {
         return this.serviceService.remove(id);
     }
 }
