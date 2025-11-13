@@ -1,7 +1,7 @@
 // /prisma/schema.prisma (FIXED User Model)
 
 model User {
-  id                     String                 @id @default(cuid())
+  id                     String                 @id @default(uuid())
   full_name              String
   email                  String                 @unique
   profilePhoto           String?
@@ -61,7 +61,6 @@ model User {
   userNotifications   UserNotification[]
   notificationToggle  NotificationToggle?
 
-
   @@map("users")
 }
 
@@ -88,6 +87,9 @@ enum Role {
   MODERATOR
   ADMIN
   SUPER_ADMIN
+  FINANCE_ADMIN
+  SUPPORT_ADMIN
+  ANALYST
   MEMBER
   ARTIST
 }

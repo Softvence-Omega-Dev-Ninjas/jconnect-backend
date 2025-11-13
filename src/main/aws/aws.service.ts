@@ -1,5 +1,6 @@
 import { Injectable } from "@nestjs/common";
 import { S3 } from "aws-sdk";
+import { PrismaService } from "src/lib/prisma/prisma.service";
 
 @Injectable()
 export class AwsService {
