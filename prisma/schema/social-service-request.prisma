@@ -1,5 +1,5 @@
 model SocialServiceRequest {
-  id                    String       @id @default(cuid())
+  id                    String       @id @default(uuid())
   serviceName           String
   socialServiceId       String
   platform              PlatformName

@@ -19,7 +19,7 @@ export class ServiceService {
         });
         if (existingService) return errorResponse('Service already exists');
 
-        // Create new service
+        // ----------Create new service-------------
         const service = await this.prisma.service.create({
             data: { ...payload, creatorId: userId },
         });
