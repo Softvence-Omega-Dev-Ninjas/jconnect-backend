@@ -33,3 +33,8 @@
 - [x] Implemented **Top Sellers API** to identify highest-earning users.
 - [x] Implemented **Top Performing Users API** for performance-based user ranking.
 - [x] Developed **User Activity API** to monitor and visualize active user metrics.
+
+## 12/11/2025
+
+- [x] Refactored **Admin Dashboard Stats** including the **Top Sellers API**, **Top Performing API** ensuring that only **Super Admin** can access this route.
+- [x] Displayed **all transaction history** in the **Super Admin Dashboard**.
