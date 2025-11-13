@@ -24,10 +24,14 @@ export class RolesGuard implements CanActivate {
             context.getClass(),
         ]);
 
+        // console.log("Roles", requiredRoles)
+
         if (!requiredRoles) return true;
 
         const request = context.switchToHttp().getRequest<RequestWithUser>();
         const user = request.user;
+
+        console.log("User", user);
 
         if (!user?.roles) {
             throw new ForbiddenException("User roles not found");

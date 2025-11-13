@@ -1,16 +1,19 @@
 // /src/servicerequest/servicerequest.controller.ts
+import { ValidateUser } from "@common/jwt/jwt.decorator";
 import { Body, Controller, Delete, Get, Param, Patch, Post } from "@nestjs/common";
-import { ApiOperation, ApiResponse, ApiTags } from "@nestjs/swagger";
+import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from "@nestjs/swagger";
 import { ServiceRequest } from "@prisma/client";
 import { CreateServiceRequestDto } from "./dto/create-service-request.dto";
-import { ServiceRequestService } from "./service-request.service";
 import { UpdateServiceRequestDto } from "./dto/update-service-request.dto";
+import { ServiceRequestService } from "./service-request.service";
 
 @ApiTags("Service Requests (Orders)")
 @Controller("requests")
 export class ServiceRequestController {
     constructor(private readonly serviceRequestService: ServiceRequestService) {}
 
+    @ApiBearerAuth()
+    @ValidateUser()
     @Post()
     @ApiOperation({ summary: "Create a new service request/order" })
     @ApiResponse({
@@ -21,6 +24,8 @@ export class ServiceRequestController {
         return this.serviceRequestService.create(createRequestDto);
     }
 
+    @ApiBearerAuth()
+    @ValidateUser()
     @Get()
     @ApiOperation({ summary: "Retrieve all service requests" })
     @ApiResponse({ status: 200, description: "List of all service requests" })
@@ -28,6 +33,8 @@ export class ServiceRequestController {
         return this.serviceRequestService.findAll();
     }
 
+    @ApiBearerAuth()
+    @ValidateUser()
     @Get(":id")
     @ApiOperation({ summary: "Get a service request by ID" })
     @ApiResponse({ status: 200, description: "Request found" })
@@ -36,6 +43,8 @@ export class ServiceRequestController {
         return this.serviceRequestService.findOne(id);
     }
 
+    @ApiBearerAuth()
+    @ValidateUser()
     @Patch(":id")
     @ApiOperation({ summary: "Update status or details of a service request" })
     @ApiResponse({ status: 200, description: "Request updated successfully" })
@@ -47,6 +56,8 @@ export class ServiceRequestController {
         return this.serviceRequestService.update(id, updateRequestDto);
     }
 
+    @ApiBearerAuth()
+    @ValidateUser()
     @Delete(":id")
     @ApiOperation({ summary: "Cancel/Delete a service request by ID" })
     @ApiResponse({ status: 200, description: "Request deleted successfully" })

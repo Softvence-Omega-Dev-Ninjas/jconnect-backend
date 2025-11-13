@@ -44,16 +44,24 @@ export function ValidateContibutor() {
 export function ValidateAdmin() {
     return ValidateAuth(UserEnum.ADMIN, UserEnum.SUPER_ADMIN);
 }
+
 export function ValidateMember() {
     return ValidateAuth(UserEnum.MEMBER, UserEnum.SUPER_ADMIN);
 }
+
 export function ValidateArtist() {
-    return ValidateAuth(UserEnum.ARTIST);
+    return ValidateAuth(UserEnum.ARTIST, UserEnum.SUPER_ADMIN);
 }
 
 export function ValidateModerator() {
     return ValidateAuth(UserEnum.MODERATOR);
 }
 export function ValidateUser() {
-    return ValidateAuth(UserEnum.USER, UserEnum.SUPER_ADMIN, UserEnum.MEMBER, UserEnum.ADMIN);
+    return ValidateAuth(
+        UserEnum.USER,
+        UserEnum.MEMBER,
+        UserEnum.ARTIST,
+        UserEnum.ADMIN,
+        UserEnum.SUPER_ADMIN,
+    );
 }

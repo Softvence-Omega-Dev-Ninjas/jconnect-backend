@@ -10,4 +10,4 @@ import { AwsUploadModule } from "./upload-aws/upload-aws.module";
     providers: [],
     exports: [],
 })
-export class SharedModule { }
+export class SharedModule {}
