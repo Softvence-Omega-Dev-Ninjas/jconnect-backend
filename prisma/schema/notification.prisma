@@ -5,21 +5,19 @@ model Notification {
   userId String
   user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  // Notification details
-  type     NotificationType
-  title    String // Notification title
-  message  String           @db.Text // Notification message
-  entityId String? // ID of related entity (post, comment, etc.)
+
+  title    String 
+  message  String           @db.Text 
+  entityId String? 
   read     Boolean          @default(false)
 
   // Additional data as JSON
-  metadata  Json? // Extra notification data
+  metadata  Json? 
   users     UserNotification[]
   createdAt DateTime           @default(now())
   updatedAt DateTime           @updatedAt
 
   @@index([userId])
-  @@index([type])
   @@index([read])
   @@index([createdAt])
   @@map("notifications")
@@ -42,11 +40,3 @@ model UserNotification {
   @@unique([userId, notificationId])
 }
 
-enum NotificationType {
-  PAYMENT_SUCCESS
-  PAYMENT_FAILED
-  SERVICE_REQUEST
-  MESSAGE
-  SYSTEM
-  PROMOTION
-}

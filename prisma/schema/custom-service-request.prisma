@@ -7,7 +7,7 @@ enum CustomServiceStatus {
 }
 
 model CustomServiceRequest {
-  id String @id @default(cuid())
+  id String @id @default(uuid())
 
   // Buyer relation
   buyerId String
