@@ -66,7 +66,7 @@ export class UsersController {
                 image: {
                     type: "string",
                     format: "binary",
-                    description: "File to upload",
+                    description: "File to upload give me less than 1MB",
                 },
             },
             required: ["image"],
