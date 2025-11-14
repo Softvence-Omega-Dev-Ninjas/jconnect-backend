@@ -11,9 +11,6 @@ CREATE TYPE "LiveMessageStatus" AS ENUM ('SENT', 'DELIVERED', 'READ');
 CREATE TYPE "LiveMediaType" AS ENUM ('IMAGE', 'VIDEO', 'AUDIO', 'DOCUMENT');
 
 -- CreateEnum
-CREATE TYPE "NotificationType" AS ENUM ('PAYMENT_SUCCESS', 'PAYMENT_FAILED', 'SERVICE_REQUEST', 'MESSAGE', 'SYSTEM', 'PROMOTION');
-
--- CreateEnum
 CREATE TYPE "PaymentStatus" AS ENUM ('PENDING', 'COMPLETED', 'CANCELLED');
 
 -- CreateEnum
@@ -109,13 +106,11 @@ CREATE TABLE "notification-toggle" (
     "id" TEXT NOT NULL,
     "email" BOOLEAN NOT NULL DEFAULT true,
     "userUpdates" BOOLEAN NOT NULL DEFAULT true,
-    "communication" BOOLEAN NOT NULL DEFAULT true,
-    "community" BOOLEAN NOT NULL DEFAULT true,
-    "comment" BOOLEAN NOT NULL DEFAULT true,
+    "serviceCreate" BOOLEAN NOT NULL DEFAULT true,
+    "review" BOOLEAN NOT NULL DEFAULT true,
     "post" BOOLEAN NOT NULL DEFAULT true,
     "message" BOOLEAN NOT NULL DEFAULT true,
     "userRegistration" BOOLEAN NOT NULL DEFAULT true,
-    "ngo" BOOLEAN NOT NULL DEFAULT true,
     "userId" TEXT NOT NULL,
 
     CONSTRAINT "notification-toggle_pkey" PRIMARY KEY ("id")
@@ -125,7 +120,6 @@ CREATE TABLE "notification-toggle" (
 CREATE TABLE "notifications" (
     "id" TEXT NOT NULL,
     "userId" TEXT NOT NULL,
-    "type" "NotificationType" NOT NULL,
     "title" TEXT NOT NULL,
     "message" TEXT NOT NULL,
     "entityId" TEXT,
@@ -337,6 +331,7 @@ CREATE TABLE "users" (
     "validation_type" "ValidationType" DEFAULT 'EMAIL',
     "auth_provider" "AuthProvider",
     "stripeAccountId" TEXT,
+    "customerIdStripe" TEXT,
 
     CONSTRAINT "users_pkey" PRIMARY KEY ("id")
 );
@@ -399,13 +394,7 @@ CREATE INDEX "live_message_reads_liveChatId_idx" ON "live_message_reads"("liveCh
 CREATE UNIQUE INDEX "live_message_reads_messageId_userId_key" ON "live_message_reads"("messageId", "userId");
 
 -- CreateIndex
-CREATE UNIQUE INDEX "notification-toggle_userId_key" ON "notification-toggle"("userId");
-
--- CreateIndex
 CREATE INDEX "notifications_userId_idx" ON "notifications"("userId");
-
--- CreateIndex
-CREATE INDEX "notifications_type_idx" ON "notifications"("type");
 
 -- CreateIndex
 CREATE INDEX "notifications_read_idx" ON "notifications"("read");

@@ -26,3 +26,10 @@
 - [ ] Debug and fix bugs in the **User Activity API**.
 - [ ] Explore and review the **Payment Integration** implemented by **Joy Vai**.
 - [ ] Conduct overall testing to ensure smooth data visualization in all dashboard stats.
+
+## 13/11/2025
+
+- [ ] Implemented **Transactions History Filtering** by **Type**, **Status**, and **Date Range**.
+- [ ] Implemented **Total Stripe Payouts** API.
+- [ ] Implemented **Refunds** API.
+- [ ] Planning the Order Details page and implementing it if time permits.

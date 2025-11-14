@@ -1,5 +1,5 @@
 model ServiceRequest {
-  id        String @id @default(cuid())
+  id        String @id @default(uuid())
   serviceId String
   // Assuming you have a User model for the buyer/customer
   buyerId   String
