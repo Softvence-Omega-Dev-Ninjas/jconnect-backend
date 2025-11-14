@@ -1,23 +1,24 @@
-import { Module } from '@nestjs/common';
-import { ConfigModule, ConfigService } from '@nestjs/config';
-import { JwtModule } from '@nestjs/jwt';
-import { LibModule } from 'src/lib/lib.module';
-import { AuthController } from './controllers/auth.controller';
-import { AuthGoogleService } from './services/auh-google.service';
-import { AuthService } from './services/auth.service';
-
+import { StripeModule } from "@main/stripe/stripe.module";
+import { Module } from "@nestjs/common";
+import { ConfigModule, ConfigService } from "@nestjs/config";
+import { JwtModule } from "@nestjs/jwt";
+import { LibModule } from "src/lib/lib.module";
+import { AuthController } from "./controllers/auth.controller";
+import { AuthGoogleService } from "./services/auh-google.service";
+import { AuthService } from "./services/auth.service";
 
 @Module({
     imports: [
         ConfigModule,
+        StripeModule,
         LibModule,
         JwtModule.registerAsync({
             imports: [ConfigModule],
             inject: [ConfigService],
             useFactory: async (config: ConfigService) => ({
-                secret: config.getOrThrow('JWT_SECRET'),
+                secret: config.getOrThrow("JWT_SECRET"),
                 signOptions: {
-                    expiresIn: config.getOrThrow('JWT_EXPIRES_IN'),
+                    expiresIn: config.getOrThrow("JWT_EXPIRES_IN"),
                 },
             }),
         }),
@@ -26,4 +27,4 @@ import { AuthService } from './services/auth.service';
     providers: [AuthService, AuthGoogleService],
     exports: [AuthService, JwtModule],
 })
-export class AuthModule { }
+export class AuthModule {}

@@ -13,6 +13,8 @@ import { SocialServiceModule } from "./social-service/social-service.module";
 import { UsersModule } from "./users/users.module";
 
 import { StripepaymentModule } from "./stripepayment/stripepayment.module";
+import { PaymentsController } from "./payments/payments.controller";
+import { PaymentsService } from "./payments/payments.service";
 
 @Module({
     imports: [
@@ -30,5 +32,7 @@ import { StripepaymentModule } from "./stripepayment/stripepayment.module";
         SharedModule,
         StripepaymentModule,
     ],
+    controllers: [PaymentsController],
+    providers: [PaymentsService],
 })
 export class MainModule {}

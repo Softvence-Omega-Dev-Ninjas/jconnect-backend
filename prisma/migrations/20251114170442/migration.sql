@@ -26,7 +26,7 @@ CREATE TYPE "SupportStatus" AS ENUM ('OPEN', 'IN_PROGRESS', 'RESOLVED', 'CLOSED'
 CREATE TYPE "SupportPriority" AS ENUM ('LOW', 'MEDIUM', 'HIGH');
 
 -- CreateEnum
-CREATE TYPE "Role" AS ENUM ('USER', 'MODERATOR', 'ADMIN', 'SUPER_ADMIN', 'MEMBER', 'ARTIST');
+CREATE TYPE "Role" AS ENUM ('USER', 'MODERATOR', 'ADMIN', 'SUPER_ADMIN', 'FINANCE_ADMIN', 'SUPPORT_ADMIN', 'ANALYST', 'MEMBER', 'ARTIST');
 
 -- CreateEnum
 CREATE TYPE "ValidationType" AS ENUM ('EMAIL', 'PHONE');
@@ -336,6 +336,7 @@ CREATE TABLE "users" (
     "role" "Role" NOT NULL DEFAULT 'USER',
     "validation_type" "ValidationType" DEFAULT 'EMAIL',
     "auth_provider" "AuthProvider",
+    "stripeAccountId" TEXT,
 
     CONSTRAINT "users_pkey" PRIMARY KEY ("id")
 );

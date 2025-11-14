@@ -9,7 +9,8 @@ import { JwtService } from "@nestjs/jwt";
 import { RegisterDto } from "../dto/register.dto";
 
 import { UserResponseDto } from "@common/enum/dto/user.response";
-import { ValidationType } from "@prisma/client";
+import { StripeService } from "@main/stripe/stripe.service";
+import { Role, ValidationType } from "@prisma/client";
 import { HandleError } from "src/common/error/handle-error.decorator";
 import { DeviceService } from "src/lib/device/device.service";
 import { TwilioService } from "src/lib/twilio/twilio.service";
@@ -28,6 +29,7 @@ export class AuthService {
         private readonly jwt: JwtService,
         private readonly deviceService: DeviceService,
         private readonly twilio: TwilioService,
+        private readonly stripeSErvice: StripeService,
     ) {}
 
     // ---------- REGISTER (send email verification OTP) ----------
@@ -47,6 +49,7 @@ export class AuthService {
         // Generate OTP
         const { otp, expiryTime } = this.utils.generateOtpAndExpiry();
 
+        const customers = await this.stripeSErvice.createCustomer(email, full_name);
         // Create new user with OTP
         const newUser = await this.prisma.user.create({
             data: {
@@ -55,8 +58,10 @@ export class AuthService {
                 phone: phone,
                 password: hashedPassword,
                 isVerified: false,
+                role: Role.ARTIST,
                 emailOtp: otp,
                 otpExpiresAt: expiryTime,
+                customerIdStripe: customers.id,
             },
         });
 

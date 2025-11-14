@@ -29,6 +29,8 @@ model User {
   role                   Role                   @default(USER)
   validation_type        ValidationType?        @default(EMAIL)
   auth_provider          AuthProvider?
+  stripeAccountId        String?
+  customerIdStripe       String?
   // Relation to Service Model 
   profile                Profile?
   serviceRequests        ServiceRequest[]
