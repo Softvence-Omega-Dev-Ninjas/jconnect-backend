@@ -29,7 +29,7 @@ export class AuthService {
         private readonly jwt: JwtService,
         private readonly deviceService: DeviceService,
         private readonly twilio: TwilioService,
-        @Inject("STRIPE_CLIENT") private stripe: StripeService,
+        private readonly stripe: StripeService,
     ) {}
 
     // ---------- REGISTER (send email verification OTP) ----------

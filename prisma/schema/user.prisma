@@ -62,6 +62,8 @@ model User {
   userNotifications   UserNotification[]
   notificationToggles NotificationToggle[]
 
+  orders_buyer Order[] @relation("OrderBuyer")
+  orders_seller Order[] @relation("OrderSeller")
   @@map("users")
 }
 

@@ -15,4 +15,5 @@ model Service {
   buyServices     BuyService[]
 
   @@map("services")
+  orders Order[]
 }

@@ -1,4 +1,4 @@
-import { Injectable, Inject } from "@nestjs/common";
+import { Inject, Injectable } from "@nestjs/common";
 import Stripe from "stripe";
 
 @Injectable()
@@ -15,11 +15,11 @@ export class StripeService {
         });
     }
 
-    // async createPaymentIntent(amount: number, currency: string) {
-    //     return this.stripe.paymentIntents.create({
-    //         amount,
-    //         currency,
-    //         automatic_payment_methods: { enabled: true },
-    //     });
-    // }
+    async createPaymentIntent(amount: number, currency: string) {
+        return this.stripe.paymentIntents.create({
+            amount,
+            currency,
+            automatic_payment_methods: { enabled: true },
+        });
+    }
 }
