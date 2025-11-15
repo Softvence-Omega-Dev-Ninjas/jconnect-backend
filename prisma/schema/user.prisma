@@ -28,6 +28,7 @@ model User {
   validation_type        ValidationType?        @default(EMAIL)
   auth_provider          AuthProvider?
   stripeAccountId        String?
+  sellerIDStripe         String?
   customerIdStripe       String?
   // Relation to Service Model 
   profile                Profile?

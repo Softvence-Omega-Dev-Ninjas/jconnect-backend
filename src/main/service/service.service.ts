@@ -1,37 +1,91 @@
-import { ForbiddenException, Injectable, NotFoundException } from "@nestjs/common";
-import { Service } from "@prisma/client";
-import { PrismaService } from "src/lib/prisma/prisma.service";
-import { CreateServiceDto } from "./dto/create-service.dto";
-import { UpdateServiceDto } from "./dto/update-service.dto";
 import { HandleError } from "@common/error/handle-error.decorator";
 import { errorResponse } from "@common/utilsResponse/response.util";
+import { ForbiddenException, Inject, Injectable, NotFoundException } from "@nestjs/common";
+import { Service } from "@prisma/client";
+import { PrismaService } from "src/lib/prisma/prisma.service";
+import Stripe from "stripe";
+import { CreateServiceDto } from "./dto/create-service.dto";
+import { UpdateServiceDto } from "./dto/update-service.dto";
 @Injectable()
 export class ServiceService {
-    constructor(private prisma: PrismaService) {}
+    constructor(
+        private prisma: PrismaService,
+        @Inject("STRIPE_CLIENT") private stripe: Stripe,
+    ) {}
 
     @HandleError("Failed to create service")
-    async create(payload: CreateServiceDto, userId: string): Promise<any> {
-        if (!userId) return errorResponse("User ID is missing");
+    async create(payload: CreateServiceDto, user: any): Promise<any> {
+        if (!user.userId) return errorResponse("User ID is missing");
+
+        const seller = await this.prisma.user.findUnique({
+            where: { id: user.userId },
+        });
+
+        if (!seller) return errorResponse("Seller not found");
+        // 1. Check if seller has Stripe account
+        if (!seller.sellerIDStripe) {
+            // Create new Stripe connect account
+            const account = await this.stripe.accounts.create({ type: "express" });
+
+            // Save account id
+            await this.prisma.user.update({
+                where: { id: user.userId },
+                data: { sellerIDStripe: account.id },
+            });
+
+            // Create onboarding link
+            const link = await this.stripe.accountLinks.create({
+                account: account.id,
+                refresh_url: "http://localhost:3000/reauth",
+                return_url: "http://localhost:3000/onboarding-success",
+                type: "account_onboarding",
+            });
+
+            return {
+                status: "onboarding_required",
+                url: link.url,
+            };
+        }
 
         // Check for existing service
         const existingService = await this.prisma.service.findFirst({
-            where: { serviceName: payload.serviceName, creatorId: userId },
+            where: { serviceName: payload.serviceName, creatorId: user.userId },
         });
         if (existingService) return errorResponse("Service already exists");
 
         // ----------Create new service-------------
         const service = await this.prisma.service.create({
-            data: { ...payload, creatorId: userId },
+            data: { ...payload, creatorId: user.userId },
         });
+        return { message: "Service created successfully", service };
     }
 
     async findAll(): Promise<Service[]> {
-        return this.prisma.service.findMany();
+        return this.prisma.service.findMany({
+            include: {
+                creator: {
+                    select: {
+                        sellerIDStripe: true,
+                        email: true,
+                        full_name: true,
+                    },
+                },
+            },
+        });
     }
 
     async findOne(id: string): Promise<Service> {
         const service = await this.prisma.service.findUnique({
             where: { id },
+            include: {
+                creator: {
+                    select: {
+                        sellerIDStripe: true,
+                        email: true,
+                        full_name: true,
+                    },
+                },
+            },
         });
 
         if (!service) {

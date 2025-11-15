@@ -1,4 +1,4 @@
-import { ForbiddenException, Injectable, NotFoundException } from "@nestjs/common";
+import { ForbiddenException, Inject, Injectable, NotFoundException } from "@nestjs/common";
 import { AppError } from "src/common/error/handle-error.app";
 import { successResponse, TResponse } from "src/common/utilsResponse/response.util";
 import { MailService } from "src/lib/mail/mail.service";
@@ -29,7 +29,7 @@ export class AuthService {
         private readonly jwt: JwtService,
         private readonly deviceService: DeviceService,
         private readonly twilio: TwilioService,
-        private readonly stripeSErvice: StripeService,
+        @Inject("STRIPE_CLIENT") private stripe: StripeService,
     ) {}
 
     // ---------- REGISTER (send email verification OTP) ----------
@@ -49,7 +49,7 @@ export class AuthService {
         // Generate OTP
         const { otp, expiryTime } = this.utils.generateOtpAndExpiry();
 
-        const customers = await this.stripeSErvice.createCustomer(email, full_name);
+        const customers = await this.stripe.createCustomer(email, full_name);
         // Create new user with OTP
         const newUser = await this.prisma.user.create({
             data: {

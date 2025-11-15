@@ -25,3 +25,15 @@
 - [ ] **Other Dashboard api creation** create alternative and important all api for dashboard
 - [ ] **waiting for chat/support area** waiting support session chate section then
       joy Vai consistently gives his best effort, and we learn from him gradually, step by step.
+
+## 13/11/2025 Monday
+
+- [ ] **Other Dashboard api creation** create alternative and important all api for dashboard
+- [ ] **waiting for chat/support area** waiting support session chate section then
+      joy Vai consistently gives his best effort, and we learn from him gradually, step by step.
+
+## 15/11/2025 Monday
+
+- [ ] **payment method error solved** escrow system enable but some error and bugg tomorrow
+
+              stripe listen --forward-to http://localhost:5050/payments/webhook

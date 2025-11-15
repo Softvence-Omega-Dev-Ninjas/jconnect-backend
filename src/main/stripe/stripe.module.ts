@@ -1,18 +1,15 @@
-import { Global, Module } from "@nestjs/common";
+import { Module } from "@nestjs/common";
 import Stripe from "stripe";
-import { StripeService } from "./stripe.service";
 
-@Global()
 @Module({
     providers: [
         {
             provide: "STRIPE_CLIENT",
             useFactory: () => {
-                return new Stripe(process.env.STRIPE_SECRET_KEY!);
+                return new Stripe(process.env.STRIPE_SECRET_KEY_S!);
             },
         },
-        StripeService,
     ],
-    exports: ["STRIPE_CLIENT", StripeService],
+    exports: ["STRIPE_CLIENT"],
 })
 export class StripeModule {}
