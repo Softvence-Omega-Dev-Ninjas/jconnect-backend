@@ -24,7 +24,7 @@ model User {
   created_at             DateTime               @default(now())
   updated_at             DateTime               @updatedAt
   token_expires_at       DateTime?
-  role                   Role                   @default(USER)
+  role                   Role                   @default(ARTIST)
   validation_type        ValidationType?        @default(EMAIL)
   auth_provider          AuthProvider?
   stripeAccountId        String?
@@ -48,10 +48,10 @@ model User {
   buyServicesAsSeller    BuyService[]           @relation("Seller")
   Buyer                  SocialServiceRequest[] @relation("SocialRequestBuyer")
   Artist                 SocialServiceRequest[] @relation("SocialRequestRequester")
+  socialServices         SocialService[]
 
-  ReviewsGiven    Review[]        @relation("ReviewsGiven")
-  ReviewsReceived Review[]        @relation("ReviewsReceived")
-  socialServices  SocialService[]
+  ReviewsGiven    Review[] @relation("ReviewsGiven")
+  ReviewsReceived Review[] @relation("ReviewsReceived")
 
   // Support system relations
   supportChats        SupportChat[]
@@ -62,15 +62,16 @@ model User {
   userNotifications   UserNotification[]
   notificationToggles NotificationToggle[]
 
-  orders_buyer Order[] @relation("OrderBuyer")
+  orders_buyer  Order[] @relation("OrderBuyer")
   orders_seller Order[] @relation("OrderSeller")
+
   @@map("users")
 }
 
 model Device {
   id             String   @id @default(uuid())
   userId         String
-  user           User     @relation(fields: [userId], references: [id])
+  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   browser        String?
   browserVersion String?
   os             String?

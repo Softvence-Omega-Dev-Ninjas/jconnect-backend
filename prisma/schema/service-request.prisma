@@ -25,5 +25,5 @@ model ServiceRequest {
 
   // Relations (Optional, but highly recommended)
   service Service @relation(fields: [serviceId], references: [id])
-  buyer   User    @relation(fields: [buyerId], references: [id])
+  buyer   User    @relation(fields: [buyerId], references: [id], onDelete: Cascade)
 }

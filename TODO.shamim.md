@@ -32,8 +32,15 @@
 - [ ] **waiting for chat/support area** waiting support session chate section then
       joy Vai consistently gives his best effort, and we learn from him gradually, step by step.
 
-## 15/11/2025 Monday
+## 15/11/2025 Satureday
 
 - [ ] **payment method error solved** escrow system enable but some error and bugg tomorrow
 
-              stripe listen --forward-to http://localhost:5050/payments/webhook
+                  stripe listen --forward-to http://localhost:5050/payments/webhook
+
+## 16/11/2025 Sunday
+
+- [ ] **ngrok enable for stripe platform** use production label
+- [ ] **follow figma and status update by payment with webhook** properly done the payment section
+- [ ] **setting update and permition controll** setup setting schema following the figma
+- [ ] **i will try to best polish in order section then learn the chat system** chat system learning

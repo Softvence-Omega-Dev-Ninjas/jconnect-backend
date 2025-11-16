@@ -13,7 +13,9 @@ model Order {
     id              String      @id @default(uuid())
     orderCode       String      @unique
     buyerId         String
+    sessionId       String      @unique() // Stripe Checkout Session ID
     sellerId        String
+    sellerIdStripe  String?
     serviceId       String
     paymentIntentId String?     @unique // Stripe Payment Intent ID
     amount          Float
@@ -32,7 +34,7 @@ model Order {
     proofSubmittedAt DateTime?
 
     // Relations
-    buyer   User    @relation("OrderBuyer", fields: [buyerId], references: [id])
-    seller  User    @relation("OrderSeller", fields: [sellerId], references: [id])
+    buyer   User    @relation("OrderBuyer", fields: [buyerId], references: [id], onDelete: Cascade)
+    seller  User    @relation("OrderSeller", fields: [sellerId], references: [id], onDelete: Cascade)
     service Service @relation(fields: [serviceId], references: [id])
 }

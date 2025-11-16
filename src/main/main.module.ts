@@ -14,6 +14,7 @@ import { UsersModule } from "./users/users.module";
 
 import { PaymentsModule } from "./payments/payments.module";
 import { StripepaymentModule } from "./stripepayment/stripepayment.module";
+import { OrdersModule } from "./order/order.module";
 
 @Module({
     imports: [
@@ -31,6 +32,7 @@ import { StripepaymentModule } from "./stripepayment/stripepayment.module";
         SharedModule,
         StripepaymentModule,
         PaymentsModule,
+        OrdersModule,
     ],
 })
 export class MainModule {}

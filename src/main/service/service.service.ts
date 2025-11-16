@@ -25,7 +25,13 @@ export class ServiceService {
         // 1. Check if seller has Stripe account
         if (!seller.sellerIDStripe) {
             // Create new Stripe connect account
-            const account = await this.stripe.accounts.create({ type: "express" });
+            const account = await this.stripe.accounts.create({
+                type: "express",
+                email: seller.email,
+                capabilities: {
+                    transfers: { requested: true },
+                },
+            });
 
             // Save account id
             await this.prisma.user.update({

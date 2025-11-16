@@ -3,248 +3,282 @@ import {
     HttpException,
     Inject,
     Injectable,
+    Logger,
     NotFoundException,
 } from "@nestjs/common";
+import { OrderStatus } from "@prisma/client";
 import { PrismaService } from "src/lib/prisma/prisma.service";
 import Stripe from "stripe";
 
 @Injectable()
 export class PaymentService {
+    private readonly logger = new Logger(PaymentService.name);
+
     constructor(
         private prisma: PrismaService,
         @Inject("STRIPE_CLIENT")
         private readonly stripe: Stripe,
     ) {}
 
-    // @HandleError("Failed to create payment")
-    // async createCheckoutSession(userId: string, payload: any) {
-    //     const service = await this.prisma.service.findUnique({
-    //         where: { id: payload.serviceId },
-    //     });
-    //     if (!service) throw new NotFoundException("Payment service not found");
-
-    //     const seller = await this.prisma.user.findUnique({
-    //         where: { id: service.creatorId },
-    //     });
-
-    //     if (!seller?.sellerIDStripe) {
-    //         throw new BadRequestException(
-    //             "Seller Stripe Account Missing – Connect account not created",
-    //         );
-    //     }
-
-    //     const frontendUrl = process.env.FRONTEND_URL!
-    //         ? process.env.FRONTEND_URL
-    //         : `https://${process.env.FRONTEND_URL}`;
-
-    //     const adminFee = service.price * 0.1;
-
-    //     const session = await this.stripe.checkout.sessions.create({
-    //         mode: "payment",
-    //         payment_method_types: ["card"],
-    //         payment_intent_data: {
-    //             capture_method: "manual",
-    //             application_fee_amount: Math.round(adminFee * 100),
-    //         },
-
-    //         line_items: [
-    //             {
-    //                 price_data: {
-    //                     currency: "usd",
-    //                     product_data: {
-    //                         name: service.serviceName,
-    //                         description: service.description || "",
-    //                     },
-    //                     unit_amount: service.price * 100,
-    //                 },
-    //                 quantity: 1,
-    //             },
-    //         ],
-
-    //         success_url: `${frontendUrl}/success-payment`,
-    //         cancel_url: `${frontendUrl}/cancel-payment`,
-    //         metadata: { userId, serviceId: service.id },
-    //     });
-
-    //     return { url: session.url };
-    // }
-
-    // 1️⃣ Checkout Session create
     async createCheckoutSession(userId: string, serviceId: string, frontendUrl: string) {
+        const user = await this.prisma.user.findUnique({ where: { id: userId } });
+        console.log("ami to asol user", user, userId);
         const service = await this.prisma.service.findUnique({ where: { id: serviceId } });
         if (!service) throw new NotFoundException("Service not found");
 
+        // create stripe checkout session with payment_intent expanded
         const session = await this.stripe.checkout.sessions.create({
             mode: "payment",
             payment_method_types: ["card"],
             payment_intent_data: {
-                capture_method: "manual", // hold
+                capture_method: "manual", // hold funds until capture
             },
             line_items: [
                 {
                     price_data: {
-                        currency: "usd",
-                        product_data: { name: service.serviceName },
-                        unit_amount: service.price * 100,
+                        currency: service.currency?.toLowerCase() || "usd",
+                        product_data: {
+                            name: service.serviceName,
+                            description: service.description || "",
+                        },
+                        unit_amount: Math.round(service.price * 100),
                     },
                     quantity: 1,
                 },
             ],
-            success_url: `${frontendUrl}/success-payment`,
+            success_url: `${frontendUrl}/success-payment?session_id={CHECKOUT_SESSION_ID}`,
             cancel_url: `${frontendUrl}/cancel-payment`,
-            metadata: { userId, serviceId: service.id },
+            metadata: { userId, serviceId },
             expand: ["payment_intent"],
+        });
+
+        const paymentIntent = session.payment_intent as Stripe.PaymentIntent | undefined;
+        const paymentIntentId =
+            typeof session.payment_intent === "string" ? session.payment_intent : paymentIntent?.id;
+
+        // create order record in DB (if not already created). status: PENDING
+        // use transaction to avoid race (optional)
+
+        const order = await this.prisma.order.create({
+            data: {
+                orderCode: `ORD-${Date.now()}`,
+                buyerId: userId,
+                sellerId: service.creatorId || "unknown",
+                sellerIdStripe: user?.sellerIDStripe || "",
+                sessionId: session.id,
+                serviceId: service.id,
+                paymentIntentId: paymentIntentId ?? undefined,
+                amount: service.price,
+                platformFee: 0, // set later (or compute here)
+                status: OrderStatus.PENDING,
+            },
         });
 
         return {
             url: session.url,
             sessionId: session.id,
-            indtent: session.payment_intent as Stripe.PaymentIntent,
+            paymentIntentId,
+            orderId: order.id,
         };
     }
 
-    // 2️⃣ Admin approve → seller transfer + fee calculate
-    async approvePayment(
-        paymentIntentId: string,
-        sellerStripeAccountId: string,
-        sellerAmount: number,
-    ) {
-        // Capture payment (hold → paid)
-        const intent = await this.stripe.paymentIntents.capture(paymentIntentId);
-
-        const totalReceived = (intent.amount_received || 0) / 100;
-
-        if (sellerAmount > totalReceived) {
+    async approvePayment(orderId: string) {
+        const order = await this.prisma.order.findUnique({ where: { id: orderId } });
+        const paymentIntentId = order?.paymentIntentId;
+        const sellerStripeAccountId = order?.sellerIdStripe;
+        if (!paymentIntentId)
             throw new BadRequestException(
-                "Seller amount cannot be more than total payment received",
+                "buyer not place the payment or Order does not have a paymentIntentId",
             );
+        if (!sellerStripeAccountId)
+            throw new BadRequestException("Order does not have a seller Stripe Account ID");
+
+        // const order = await this.prisma.order.findUnique({ where: { paymentIntentId } });
+        if (!order) throw new NotFoundException("Order not found for this payment intent");
+        if (order.status == OrderStatus.RELEASED)
+            throw new HttpException("Order already released", 404);
+        const intent = await this.stripe.paymentIntents.retrieve(paymentIntentId);
+
+        let capturedIntent: Stripe.PaymentIntent = intent;
+        if (intent.status !== "succeeded" && intent.capture_method === "manual") {
+            capturedIntent = await this.stripe.paymentIntents.capture(paymentIntentId);
+            this.logger.log(`Captured PaymentIntent ${paymentIntentId}`);
         }
 
-        // Transfer to seller
+        const setting = await this.prisma.setting.findUnique({
+            where: { id: "platform_settings" },
+        });
+
+        const platformFeePercent = Number(setting?.platformFee); // e.g. 10%
+        const amountCents = Math.floor(order.amount * 100);
+        const adminFeeCents = Math.floor((amountCents * platformFeePercent) / 100);
+        const transferableSellerAmount = amountCents - adminFeeCents;
         const transfer = await this.stripe.transfers.create({
-            amount: sellerAmount * 100,
-            currency: "usd",
+            amount: transferableSellerAmount,
+            currency: capturedIntent.currency || "usd",
             destination: sellerStripeAccountId,
             transfer_group: paymentIntentId,
         });
 
-        // Remaining amount is admin fee
-        const adminFee = totalReceived - sellerAmount;
-
-        return { transfer, adminFee };
-    }
-
-    async releasePayment(paymentIntentId: string, sellerId: string, amount: number) {
-        const transfer = await this.stripe.transfers.create({
-            amount: amount * 100, // cents
-            currency: "usd",
-            destination: sellerId,
-            transfer_group: paymentIntentId, // optional but recommended for tracking
+        // update order in DB
+        const updated = await this.prisma.order.update({
+            where: { id: order.id },
+            data: {
+                status: OrderStatus.RELEASED,
+                isReleased: true,
+                releasedAt: new Date(),
+                platformFee: setting?.platformFee,
+            },
         });
 
-        return { success: true, message: "Payment manually transferred", transfer };
+        return { transfer, platformFee: setting?.platformFee, order: updated };
     }
 
+    /**
+     * 3) Manual releasePayment (alias) — similar to approvePayment but given orderId & amount
+     */
+    async releasePaymentByOrder(orderId: string, sellerStripeAccountId: string, amount: number) {
+        const order = await this.prisma.order.findUnique({ where: { id: orderId } });
+        if (!order) throw new NotFoundException("Order not found");
+
+        if (!order.paymentIntentId) {
+            throw new BadRequestException("Order does not have a paymentIntentId");
+        }
+
+        // Capture intent if needed
+        const intent = await this.stripe.paymentIntents.retrieve(order.paymentIntentId);
+        if (intent.status !== "succeeded" && intent.capture_method === "manual") {
+            await this.stripe.paymentIntents.capture(order.paymentIntentId);
+        }
+
+        const transfer = await this.stripe.transfers.create({
+            amount: Math.round(amount * 100),
+            currency: intent.currency || "usd",
+            destination: sellerStripeAccountId,
+            transfer_group: order.paymentIntentId,
+        });
+
+        const totalReceived = (intent.amount_received || intent.amount || 0) / 100;
+        const adminFee = totalReceived - amount;
+
+        const updated = await this.prisma.order.update({
+            where: { id: orderId },
+            data: {
+                status: OrderStatus.RELEASED,
+                isReleased: true,
+                releasedAt: new Date(),
+                platformFee: adminFee,
+            },
+        });
+
+        return { transfer, adminFee, order: updated };
+    }
+
+    /**
+     * 4) Webhook handler
+     *
+     * - constructs stripe event and handles:
+     *   - checkout.session.completed: create order if missing OR attach paymentIntentId
+     *   - payment_intent.succeeded: set order status = PAID
+     *   - other useful events logged
+     */
     async handleWebhook(rawBody: Buffer, signature: string) {
         const endpointSecret = process.env.STRIPE_WEBHOOK_SECRET_LOCAL!;
-
         let event: Stripe.Event;
 
         try {
             event = this.stripe.webhooks.constructEvent(rawBody, signature, endpointSecret);
-        } catch (err) {
-            console.log("❌ Webhook signature verification failed");
-            throw new BadRequestException(`Webhook Error: ${err.message}`);
+        } catch (err: any) {
+            this.logger.error("Webhook signature verification failed", err?.message || err);
+            throw new BadRequestException(`Webhook Error: ${err?.message || err}`);
         }
 
-        console.log("📌 Webhook Received:", event.type);
+        this.logger.log(`Webhook received: ${event.type}`);
 
-        switch (event.type) {
-            // Checkout complete
-            // case "checkout.session.completed": {
-            //     const session = event.data.object as Stripe.Checkout.Session;
+        try {
+            switch (event.type) {
+                case "checkout.session.completed": {
+                    const session = event.data.object as Stripe.Checkout.Session;
 
-            //     // metadata থেকে fields আনো
-            //     const userId = session.metadata?.userId;
-            //     const serviceId = session.metadata?.serviceId;
+                    // get paymentIntent id
+                    const piId =
+                        typeof session.payment_intent === "string"
+                            ? session.payment_intent
+                            : (session.payment_intent as Stripe.PaymentIntent)?.id;
 
-            //     console.log("🎉 Checkout Completed");
-            //     console.log({ userId, serviceId });
+                    if (!piId) {
+                        this.logger.warn("checkout.session.completed without payment_intent");
+                        break;
+                    }
 
-            //     // এখানে Order Save করতে পারো
-            //     // await this.prisma.order.create({
-            //     //     data: {
-            //     //         buyerId: userId,
-            //     //         serviceId: serviceId,
-            //     //         amount: session.amount_total! / 100,
-            //     //         paymentIntentId: session.payment_intent as string,
-            //     //         status: "ACTIVE"
-            //     //     }
-            //     // });
+                    // If order already exists with this paymentIntentId, skip or update
+                    const existing = await this.prisma.order.findUnique({
+                        where: { paymentIntentId: piId },
+                    });
+                    if (existing?.paymentIntentId) {
+                        this.logger.log(`Order already exists for PI ${piId}, skipping create`);
+                        break;
+                    }
 
-            //     break;
-            // }
+                    // create order record (still PENDING — we'll mark PAID on payment_intent.succeeded)
+                    await this.prisma.order.update({
+                        where: { sessionId: session.id },
+                        data: {
+                            paymentIntentId: piId,
+                        },
+                    });
 
-            // Payment captured (Seller payout will happen)
-            case "payment_intent.succeeded": {
-                const intent = event.data.object as Stripe.PaymentIntent;
-
-                if (!intent) throw new HttpException("intent not found", 404);
-                // Save status
-                await this.prisma.order.update({
-                    where: { paymentIntentId: intent.id },
-                    data: { status: "PAID" },
-                });
-
-                console.log("ami intent id", intent.id);
-
-                console.log("Payment completed - Awaiting manual transfer");
-                break;
-            }
-
-            case "checkout.session.completed":
-                const session = event.data.object as Stripe.Checkout.Session;
-
-                // PaymentIntent ID safely get করা
-                const piId =
-                    typeof session.payment_intent === "string"
-                        ? session.payment_intent
-                        : (session.payment_intent as Stripe.PaymentIntent)?.id;
-
-                if (!piId) {
-                    console.log("❌ PaymentIntent ID not found in session");
+                    this.logger.log(`Order created for PaymentIntent ${piId}`);
                     break;
                 }
 
-                console.log("💳 PaymentIntent ID (from session):", piId);
+                case "payment_intent.succeeded": {
+                    const intent = event.data.object as Stripe.PaymentIntent;
+                    if (!intent?.id) {
+                        this.logger.warn("payment_intent.succeeded without id");
+                        break;
+                    }
 
-                // Manual capture
-                const capturedIntent = await this.stripe.paymentIntents.capture(piId);
-                console.log(
-                    "✅ Payment captured:",
-                    capturedIntent.id,
-                    "Amount:",
-                    capturedIntent.amount_received / 100,
-                );
+                    // find order and mark PAID
+                    const order = await this.prisma.order.findUnique({
+                        where: { paymentIntentId: intent.id },
+                    });
+                    if (!order) {
+                        this.logger.warn(`No order found for paymentIntent ${intent.id}`);
+                        break;
+                    }
 
-                // এখানে database update করতে পারেন
-                // await this.prisma.order.update({ ... })
+                    await this.prisma.order.update({
+                        where: { id: order.id },
+                        data: { status: OrderStatus.PAID },
+                    });
 
-                break;
+                    this.logger.log(`Order ${order.id} marked PAID`);
+                    break;
+                }
 
-            case "payment_intent.created":
-            case "payment_intent.amount_capturable_updated":
-            case "charge.succeeded":
-                const intent = event.data.object as Stripe.PaymentIntent;
-                console.log("💳 PaymentIntent ID (from intent):", intent.id);
-                break;
+                // optional other events
+                case "payment_intent.payment_failed":
+                    this.logger.warn("payment_intent.payment_failed", event.data.object);
+                    break;
+
+                default:
+                    this.logger.debug(`Unhandled event type ${event.type}`);
+            }
+        } catch (e) {
+            this.logger.error("Error handling webhook", e as any);
+            // don't throw — return 200 to Stripe after logging? but for now bubble up
+            throw e;
         }
-        // Payment refunded or canceled
-        // case "payment_intent.payment_failed": {
-        //     console.log("❌ Payment Failed");
-        //     break;
-        // }
 
         return { received: true };
+    }
+
+    /**
+     * helper: find service.creatorId (sellerId)
+     */
+    private async findServiceCreatorId(serviceId: string) {
+        const svc = await this.prisma.service.findUnique({ where: { id: serviceId } });
+        return svc?.creatorId ?? "unknown";
     }
 }
