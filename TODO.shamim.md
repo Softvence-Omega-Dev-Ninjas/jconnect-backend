@@ -36,7 +36,7 @@
 
 - [ ] **payment method error solved** escrow system enable but some error and bugg tomorrow
 
-                          stripe listen --forward-to http://localhost:5050/payments/webhook
+                              stripe listen --forward-to http://localhost:5050/payments/webhook
 
 ## 16/11/2025 Sunday
 
