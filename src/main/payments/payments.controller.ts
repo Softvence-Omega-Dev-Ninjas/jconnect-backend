@@ -3,7 +3,7 @@ import { Body, Controller, Headers, Post, Req } from "@nestjs/common";
 import { ApiBearerAuth, ApiBody, ApiExcludeEndpoint, ApiOperation, ApiTags } from "@nestjs/swagger";
 import { PaymentService } from "./payments.service";
 
-@ApiTags("Payment practise")
+@ApiTags("Payment")
 @Controller("payments")
 export class PaymentController {
     constructor(private readonly paymentService: PaymentService) {}
@@ -20,17 +20,13 @@ export class PaymentController {
             type: "object",
             properties: {
                 serviceId: { type: "string" },
-                frontendUrl: { type: "string" },
+                frontendUrl: { type: "string", example: "https://your-frontend.com" },
             },
             required: ["serviceId", "frontendUrl"],
         },
     })
     async createSession(@GetUser() user, @Body() body: { serviceId: string; frontendUrl: string }) {
-        return this.paymentService.createCheckoutSession(
-            user.userId,
-            body.serviceId,
-            body.frontendUrl,
-        );
+        return this.paymentService.createCheckoutSession(user, body.serviceId, body.frontendUrl);
     }
 
     // ----------------------------
@@ -42,7 +38,7 @@ export class PaymentController {
     @ApiOperation({
         summary: "Admin approves escrow payment & transfers money to seller",
         description: `
-This endpoint is used by Admin only.
+This endpoint is used by Admin/Buyer only.
 ✔ Finds the order using paymentIntentId  
 ✔ Captures the charge if still uncaptured  
 ✔ Calculates platform fee from Settings table  
@@ -69,29 +65,11 @@ This endpoint is used by Admin only.
         body: {
             orderID: string;
         },
+        @GetUser() user: any,
     ) {
-        return this.paymentService.approvePayment(body.orderID);
+        return this.paymentService.approvePayment(body.orderID, user);
     }
 
-    // ----------------------------
-    // Manual Escrow Release (Admin)
-    // ----------------------------
-    // @ApiBearerAuth()
-    // @ValidateUser()
-    // @Post("release-payment")
-    // @ApiOperation({ summary: "Release payment manually to seller" })
-    // async releasePayment(
-    //     @Body() body: { paymentIntentId: string; sellerId: string }
-    // ) {
-    //     return this.paymentService.releasePaymentByOrder(
-    //         body.paymentIntentId,
-    //         body.sellerId
-    //     );
-    // }
-
-    // ----------------------------
-    // Stripe Webhook (Hidden from Swagger)
-    // ----------------------------
     @ApiExcludeEndpoint()
     @Post("webhook")
     async stripeWebhook(@Req() req, @Headers("stripe-signature") signature: string) {

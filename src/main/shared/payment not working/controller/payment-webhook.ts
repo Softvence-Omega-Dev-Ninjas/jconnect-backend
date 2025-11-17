@@ -7,6 +7,7 @@ import {
     Req,
     Res,
 } from '@nestjs/common';
+import { ApiExcludeController } from '@nestjs/swagger';
 import { PaymentStatus } from '@prisma/client';
 import 'dotenv/config';
 import { MailService } from 'src/lib/mail/mail.service';
@@ -17,6 +18,7 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY as string, {
 
 });
 
+@ApiExcludeController()
 @Controller('stripe')
 export class PaymentWebhookController {
     constructor(

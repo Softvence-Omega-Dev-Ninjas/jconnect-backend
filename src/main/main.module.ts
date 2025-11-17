@@ -8,12 +8,8 @@ import { ReviewModule } from "./review/review.module";
 import { ServiceRequestModule } from "./service-request/service-request.module";
 import { ServiceModule } from "./service/service.module";
 import { SharedModule } from "./shared/shared.module";
-import { SocialServiceRequestModule } from "./social-service-request/social-service-request.module";
-import { SocialServiceModule } from "./social-service/social-service.module";
 import { UsersModule } from "./users/users.module";
-
 import { PaymentsModule } from "./payments/payments.module";
-import { StripepaymentModule } from "./stripepayment/stripepayment.module";
 import { OrdersModule } from "./order/order.module";
 
 @Module({
@@ -21,18 +17,15 @@ import { OrdersModule } from "./order/order.module";
         LibModule,
         AuthModule,
         UsersModule,
+        ProfileModule,
         ServiceModule,
         ServiceRequestModule,
         CustomServiceRequestModule,
-        ProfileModule,
-        SocialServiceModule,
-        SocialServiceRequestModule,
-        AdminDashboardStatsModule,
         ReviewModule,
         SharedModule,
-        StripepaymentModule,
         PaymentsModule,
         OrdersModule,
+        AdminDashboardStatsModule,
     ],
 })
 export class MainModule {}

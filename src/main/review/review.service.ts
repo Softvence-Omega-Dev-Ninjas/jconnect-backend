@@ -9,15 +9,15 @@ export class ReviewService {
     constructor(private prisma: PrismaService) {}
 
     // ** 1. CREATE (Create Review) - POST **
-    async create(createReviewDto: CreateReviewDto) {
+    async create(createReviewDto: CreateReviewDto, user: any) {
         // Prevent self-reviewing
-        if (createReviewDto.reviewerId === createReviewDto.artistId) {
+        if (user.userId === createReviewDto.artistId) {
             throw new BadRequestException("An artist cannot review themselves.");
         }
 
         try {
             return await this.prisma.review.create({
-                data: createReviewDto,
+                data: { ...createReviewDto, reviewerId: user.userId },
             });
         } catch (error) {
             // Handle Prisma unique constraint violation (P2002)

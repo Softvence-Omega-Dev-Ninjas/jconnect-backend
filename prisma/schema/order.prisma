@@ -30,8 +30,8 @@ model Order {
     releasedAt DateTime?
 
     // Proof
-    proofUrl         String?
-    proofSubmittedAt DateTime?
+    proofUrl         String[]
+    proofSubmittedAt DateTime @updatedAt
 
     // Relations
     buyer   User    @relation("OrderBuyer", fields: [buyerId], references: [id], onDelete: Cascade)

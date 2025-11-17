@@ -60,19 +60,19 @@ export class OrdersService {
     }
 
     // UPDATE ORDER STATUS
-    async updateStatus(id: string, status: OrderStatus, userId: string) {
+    async updateStatus(id: string, status: OrderStatus, user: any) {
         const order = await this.prisma.order.findUnique({ where: { id } });
         if (!order) throw new NotFoundException("Order not found");
 
         // Seller only allowed some statuses
         if (status === OrderStatus.IN_PROGRESS || status === OrderStatus.PROOF_SUBMITTED) {
-            if (order.sellerId !== userId)
+            if (order.sellerId !== user.userId)
                 throw new ForbiddenException("Only seller can update this status");
         }
 
         // Buyer confirms delivery
         if (status === OrderStatus.COMPLETED) {
-            if (order.buyerId !== userId)
+            if (order.buyerId !== user.userId)
                 throw new ForbiddenException("Only buyer can confirm delivery");
         }
 
@@ -113,5 +113,38 @@ export class OrdersService {
                 releasedAt: new Date(),
             },
         });
+    }
+
+    async submitProof(orderId: string, userFromReq: any, proofUrls: string[]) {
+        const order = await this.prisma.order.findUnique({
+            where: { id: orderId },
+        });
+
+        const user = await this.prisma.user.findUnique({
+            where: { id: userFromReq.userId },
+        });
+
+        if (!order) throw new NotFoundException("Order not found");
+
+        // Only seller can upload proof
+        if (order.sellerId !== user?.id) {
+            throw new ForbiddenException("Only seller can upload proof");
+        }
+
+        if (!proofUrls || proofUrls.length === 0) {
+            throw new BadRequestException("Proof URLs are required");
+        }
+
+        const updated = await this.prisma.order.update({
+            where: { id: orderId },
+            data: {
+                status: OrderStatus.PROOF_SUBMITTED,
+                proofUrl: {
+                    push: proofUrls, // <-- NEW URLs will be appended
+                },
+            },
+        });
+
+        return updated;
     }
 }

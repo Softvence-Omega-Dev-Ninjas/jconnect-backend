@@ -6,7 +6,7 @@ import {
     Logger,
     NotFoundException,
 } from "@nestjs/common";
-import { OrderStatus } from "@prisma/client";
+import { OrderStatus, Role } from "@prisma/client";
 import { PrismaService } from "src/lib/prisma/prisma.service";
 import Stripe from "stripe";
 
@@ -20,15 +20,20 @@ export class PaymentService {
         private readonly stripe: Stripe,
     ) {}
 
-    async createCheckoutSession(userId: string, serviceId: string, frontendUrl: string) {
-        const user = await this.prisma.user.findUnique({ where: { id: userId } });
-        console.log("ami to asol user", user, userId);
-        const service = await this.prisma.service.findUnique({ where: { id: serviceId } });
+    async createCheckoutSession(userFromReq: any, serviceId: string, frontendUrl: string) {
+        const user = await this.prisma.user.findUnique({ where: { id: userFromReq?.userId } });
+        console.log("ami to asol user", user, userFromReq.userId);
+        const service = await this.prisma.service.findUnique({
+            where: { id: serviceId },
+            include: { creator: { omit: { password: true } } },
+        });
+
         if (!service) throw new NotFoundException("Service not found");
 
         // create stripe checkout session with payment_intent expanded
         const session = await this.stripe.checkout.sessions.create({
             mode: "payment",
+            customer: user?.customerIdStripe || undefined,
             payment_method_types: ["card"],
             payment_intent_data: {
                 capture_method: "manual", // hold funds until capture
@@ -48,7 +53,7 @@ export class PaymentService {
             ],
             success_url: `${frontendUrl}/success-payment?session_id={CHECKOUT_SESSION_ID}`,
             cancel_url: `${frontendUrl}/cancel-payment`,
-            metadata: { userId, serviceId },
+            metadata: { userId: userFromReq.userId, serviceId },
             expand: ["payment_intent"],
         });
 
@@ -62,9 +67,9 @@ export class PaymentService {
         const order = await this.prisma.order.create({
             data: {
                 orderCode: `ORD-${Date.now()}`,
-                buyerId: userId,
+                buyerId: userFromReq.userId,
                 sellerId: service.creatorId || "unknown",
-                sellerIdStripe: user?.sellerIDStripe || "",
+                sellerIdStripe: service.creator?.sellerIDStripe || "",
                 sessionId: session.id,
                 serviceId: service.id,
                 paymentIntentId: paymentIntentId ?? undefined,
@@ -82,10 +87,21 @@ export class PaymentService {
         };
     }
 
-    async approvePayment(orderId: string) {
+    async approvePayment(orderId: string, user: any) {
         const order = await this.prisma.order.findUnique({ where: { id: orderId } });
         const paymentIntentId = order?.paymentIntentId;
         const sellerStripeAccountId = order?.sellerIdStripe;
+
+        console.log(user.roles.includes(Role.ADMIN));
+
+        if (
+            order?.buyerId !== user.userId &&
+            !user.roles.includes(Role.ADMIN) &&
+            !user.roles.includes(Role.SUPER_ADMIN)
+        ) {
+            throw new HttpException("Only buyer or admin can approve payment", 403);
+        }
+
         if (!paymentIntentId)
             throw new BadRequestException(
                 "buyer not place the payment or Order does not have a paymentIntentId",
@@ -109,8 +125,11 @@ export class PaymentService {
             where: { id: "platform_settings" },
         });
 
+        if (!setting?.platformFee)
+            throw new BadRequestException("Platform fee is not set in settings");
+
         const platformFeePercent = Number(setting?.platformFee); // e.g. 10%
-        const amountCents = Math.floor(order.amount * 100);
+        const amountCents = Math.floor(Number(order.amount) * 100);
         const adminFeeCents = Math.floor((amountCents * platformFeePercent) / 100);
         const transferableSellerAmount = amountCents - adminFeeCents;
         const transfer = await this.stripe.transfers.create({
@@ -183,7 +202,7 @@ export class PaymentService {
      *   - other useful events logged
      */
     async handleWebhook(rawBody: Buffer, signature: string) {
-        const endpointSecret = process.env.STRIPE_WEBHOOK_SECRET_LOCAL!;
+        const endpointSecret = process.env.STRIPE_WEBHOOK_SECRET_S!;
         let event: Stripe.Event;
 
         try {

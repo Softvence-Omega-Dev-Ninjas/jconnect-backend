@@ -1,9 +1,10 @@
 import { BadRequestException, Body, Controller, Get, Param, Post } from "@nestjs/common";
-import { ApiBearerAuth, ApiOperation } from "@nestjs/swagger";
+import { ApiBearerAuth, ApiExcludeController, ApiOperation } from "@nestjs/swagger";
 import { GetUser, ValidateAuth, ValidateSuperAdmin } from "src/common/jwt/jwt.decorator";
 import { CreatePaymentDto } from "../dto/create-payment.dto";
 import { PaymentService } from "../service/payment.service";
 
+@ApiExcludeController()
 @Controller("payment")
 export class PaymentController {
     constructor(private readonly paymentService: PaymentService) {}

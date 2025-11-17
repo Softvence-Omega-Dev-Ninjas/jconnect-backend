@@ -22,9 +22,66 @@ export class ServiceService {
         });
 
         if (!seller) return errorResponse("Seller not found");
-        // 1. Check if seller has Stripe account
+
+        // ------------------------------------------------------------
+        // STEP 1: CHECK IF SELLER HAS EXISTING STRIPE CONNECT ACCOUNT
+        // ------------------------------------------------------------
+        if (seller.sellerIDStripe) {
+            try {
+                // Fetch account info from Stripe
+                const account: any = await this.stripe.accounts.retrieve(seller.sellerIDStripe);
+
+                // Check account status conditions
+                const isDisabled = !!account.disabled_reason;
+                const isRequirementsPending = account.requirements?.currently_due?.length > 0;
+
+                if (isDisabled || isRequirementsPending) {
+                    // Need re-onboarding
+                    const link = await this.stripe.accountLinks.create({
+                        account: account.id,
+                        refresh_url: "http://localhost:3000/reauth",
+                        return_url: "http://localhost:3000/onboarding-success",
+                        type: "account_onboarding",
+                    });
+
+                    return {
+                        status: "re_onboarding_required",
+                        message: "Your Stripe account needs verification",
+                        url: link.url,
+                    };
+                }
+                // If everything OK → continue creating service
+            } catch (err) {
+                // If account retrieve fails → re-create new account
+                const newAccount = await this.stripe.accounts.create({
+                    type: "express",
+                    email: seller.email,
+                    capabilities: { transfers: { requested: true } },
+                });
+
+                await this.prisma.user.update({
+                    where: { id: seller.id },
+                    data: { sellerIDStripe: newAccount.id },
+                });
+
+                const link = await this.stripe.accountLinks.create({
+                    account: newAccount.id,
+                    refresh_url: "http://localhost:3000/reauth",
+                    return_url: "http://localhost:3000/onboarding-success",
+                    type: "account_onboarding",
+                });
+
+                return {
+                    status: "onboarding_required",
+                    url: link.url,
+                };
+            }
+        }
+
+        // ------------------------------------------------------------
+        // STEP 2: IF NO STRIPE ACCOUNT → CREATE NEW
+        // ------------------------------------------------------------
         if (!seller.sellerIDStripe) {
-            // Create new Stripe connect account
             const account = await this.stripe.accounts.create({
                 type: "express",
                 email: seller.email,
@@ -33,13 +90,11 @@ export class ServiceService {
                 },
             });
 
-            // Save account id
             await this.prisma.user.update({
                 where: { id: user.userId },
                 data: { sellerIDStripe: account.id },
             });
 
-            // Create onboarding link
             const link = await this.stripe.accountLinks.create({
                 account: account.id,
                 refresh_url: "http://localhost:3000/reauth",
@@ -53,16 +108,21 @@ export class ServiceService {
             };
         }
 
-        // Check for existing service
+        // ------------------------------------------------------------
+        // STEP 3: CHECK IF SERVICE EXISTS
+        // ------------------------------------------------------------
         const existingService = await this.prisma.service.findFirst({
             where: { serviceName: payload.serviceName, creatorId: user.userId },
         });
         if (existingService) return errorResponse("Service already exists");
 
-        // ----------Create new service-------------
+        // ------------------------------------------------------------
+        // STEP 4: CREATE NEW SERVICE
+        // ------------------------------------------------------------
         const service = await this.prisma.service.create({
             data: { ...payload, creatorId: user.userId },
         });
+
         return { message: "Service created successfully", service };
     }
 
