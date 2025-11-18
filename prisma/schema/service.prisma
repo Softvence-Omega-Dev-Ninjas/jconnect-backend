@@ -13,7 +13,7 @@ model Service {
   serviceRequests ServiceRequest[]
   payments        Payment[]
   buyServices     BuyService[]
+  orders Order[]
 
   @@map("services")
-  orders Order[]
 }

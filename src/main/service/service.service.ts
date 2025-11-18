@@ -136,6 +136,7 @@ export class ServiceService {
                         full_name: true,
                     },
                 },
+                serviceRequests: true,
             },
         });
     }

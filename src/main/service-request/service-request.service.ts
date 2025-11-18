@@ -10,11 +10,12 @@ export class ServiceRequestService {
     constructor(private prisma: PrismaService) {}
 
     // 1. CREATE
-    async create(createRequestDto: CreateServiceRequestDto): Promise<ServiceRequest> {
+    async create(createRequestDto: CreateServiceRequestDto, user: any): Promise<ServiceRequest> {
         // Note: In a real app, calculate price/fee and verify payment here.
         return this.prisma.serviceRequest.create({
             data: {
                 ...createRequestDto,
+                buyerId: user.userId,
                 promotionDate: createRequestDto.promotionDate
                     ? new Date(createRequestDto.promotionDate)
                     : null,

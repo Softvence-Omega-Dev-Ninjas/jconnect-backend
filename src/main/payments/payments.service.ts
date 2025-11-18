@@ -44,10 +44,6 @@ export class PaymentService {
                 {
                     price_data: {
                         currency: service.currency?.toLowerCase() || "usd",
-                        product_data: {
-                            name: service.serviceName,
-                            description: service.description || "",
-                        },
                         unit_amount: Math.round(service.price * 100),
                     },
                     quantity: 1,
@@ -96,9 +92,6 @@ export class PaymentService {
         const paymentIntent = session.payment_intent as Stripe.PaymentIntent | undefined;
         const paymentIntentId =
             typeof session.payment_intent === "string" ? session.payment_intent : paymentIntent?.id;
-
-        // create order record in DB (if not already created). status: PENDING
-        // use transaction to avoid race (optional)
 
         const order = await this.prisma.order.create({
             data: {
@@ -267,7 +260,9 @@ export class PaymentService {
         }
 
         if (!order.paymentIntentId)
-            throw new BadRequestException("PaymentIntent ID not found for this order");
+            throw new BadRequestException(
+                "buyer not paid yet/PaymentIntent ID not found for this order",
+            );
 
         if (order.status === OrderStatus.RELEASED)
             throw new BadRequestException("Order already released, refund not possible");
