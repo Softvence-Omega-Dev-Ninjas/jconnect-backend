@@ -22,14 +22,14 @@
 
 - [x] **probleme solving** user module add guard
 
-                              authGuard problem then solving and check again authentication then work start
+                                authGuard problem then solving and check again authentication then work start
 
 ## 11/11/2025
 
 - [x] **User Module:** Implemented pagination and active/inactive filtering using query parameters
 - [x] **file Upload in aws s3:** file uploader aws s3 global module/service create
 
-                          but i cant use this  file uploading module use from joy
+                            but i cant use this  file uploading module use from joy
 
 - [x] **User DTOs:** Added all fields from Prisma model with full validation and Swagger documentation
 - [x] **Profile Module:** Updated DTO, controller, and service structure for better consistency
@@ -76,26 +76,26 @@
 - [x] **solved service problem and reusable with guard** service create when he/she avalable for artist like minimum requirement is a seller account in stripe then create a service
 - [x] **payment system tesing done** payment system increment with escrow system like fiverr
 
-                   important things
-                   stripe listen --forward-to http://localhost:5050/payments/webhook
-                   testing purpuse use this card 4000 0000 0000 0077
-                   enable seller for transer :
-                          capabilities: {
-                                 transfers: { requested: true },
-                          }
+                     important things
+                     stripe listen --forward-to http://localhost:5050/payments/webhook
+                     testing purpuse use this card 4000 0000 0000 0077
+                     enable seller for transer :
+                            capabilities: {
+                                   transfers: { requested: true },
+                            }
 
 - [x] **payment with fee** stripe include self fee and admin platform fee
 
-                   admin platform fee to minus the stripe self fee
-                   like 10% platform fee
-                   70$ pay from buyer
-                   stripe fee 2.9% + 30 cent = 2.33$
-                   so seller get 63$
-                   admin platform fee 7 - 2.33 = 4.7
+                     admin platform fee to minus the stripe self fee
+                     like 10% platform fee
+                     70$ pay from buyer
+                     stripe fee 2.9% + 30 cent = 2.33$
+                     so seller get 63$
+                     admin platform fee 7 - 2.33 = 4.7
 
 - [x] **create a setting model for defaul platform fee and furure usable** increase next time
 
-# Project Updates – 16/11/2025
+# 16/11/2025
 
 ### Payment & Order Refactor
 
@@ -122,3 +122,14 @@
 
 - Test card: `4000 0000 0000 0077`
 - Webhook for local testing: `stripe listen --forward-to http://localhost:5050/payments/webhook`
+
+# 16/11/2025
+
+### Payment & Order Refactor
+
+- send proper email both buyer and seller
+- collabaration with shahriyar vai for best payment system like escrow system
+- payment refund
+- order delete filter with valid user and admin/superadmin
+- add payment method for future refund
+- findout proper need time for compleat this project

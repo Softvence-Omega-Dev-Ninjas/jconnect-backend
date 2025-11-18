@@ -1,6 +1,5 @@
 import {
     BadRequestException,
-    Body,
     Controller,
     Delete,
     Get,
@@ -9,16 +8,21 @@ import {
     Post,
     Query,
     UploadedFile,
-    UseGuards,
     UseInterceptors,
 } from "@nestjs/common";
 
 import { GetUser, ValidateUser } from "@common/jwt/jwt.decorator";
 import { AwsService } from "@main/aws/aws.service";
 import { FileInterceptor } from "@nestjs/platform-express";
-import { ApiBearerAuth, ApiBody, ApiConsumes, ApiOperation, ApiQuery } from "@nestjs/swagger";
+import {
+    ApiBearerAuth,
+    ApiBody,
+    ApiConsumes,
+    ApiOperation,
+    ApiParam,
+    ApiQuery,
+} from "@nestjs/swagger";
 import { OrderStatus } from "@prisma/client";
-import { CreateOrderDto } from "./dto/order.dto";
 import { OrdersService } from "./order.service";
 
 @Controller("orders")
@@ -28,17 +32,14 @@ export class OrdersController {
         private awsservice: AwsService,
     ) {}
 
-    // Create new order (Buyer)
-    @UseGuards(ValidateUser)
-    @Post()
-    createOrder(@GetUser() user: any, @Body() dto: CreateOrderDto) {
-        return this.ordersService.createOrder(user.userId, dto);
-    }
-
     // Get buyer all orders
-    @UseGuards(ValidateUser)
+
+    @ApiBearerAuth()
+    @ValidateUser()
     @Get("my-orders")
     getMyOrders(@GetUser() user: any) {
+        console.log("ami asol user", user);
+
         return this.ordersService.getOrdersByBuyer(user.userId);
     }
 
@@ -116,8 +117,23 @@ export class OrdersController {
 
     // Delete order (admin OR buyer before payment)
 
-    @Delete(":id")
-    deleteOrder(@Param("id") id: string) {
-        return this.ordersService.deleteOrder(id);
+    @Delete("delete/:orderId")
+    @ApiBearerAuth()
+    @ValidateUser()
+    @ApiOperation({
+        summary: "Delete an order (Buyer or Admin can delete)",
+        description: `
+                ✔ Buyer can delete OWN order  
+                ✔ Admin / Super Admin can delete ANY order  
+                ❌ Seller or other users cannot delete the order.  
+        `,
+    })
+    @ApiParam({
+        name: "orderId",
+        description: "ID of the order to delete",
+        example: "ord_123456789",
+    })
+    async deleteOrder(@Param("orderId") orderId: string, @GetUser() user: any) {
+        return this.ordersService.deleteOrder(orderId, user);
     }
 }

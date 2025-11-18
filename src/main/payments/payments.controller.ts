@@ -1,6 +1,14 @@
 import { GetUser, ValidateUser } from "@common/jwt/jwt.decorator";
-import { Body, Controller, Headers, Post, Req } from "@nestjs/common";
-import { ApiBearerAuth, ApiBody, ApiExcludeEndpoint, ApiOperation, ApiTags } from "@nestjs/swagger";
+import { Body, Controller, Headers, HttpCode, HttpStatus, Param, Post, Req } from "@nestjs/common";
+import {
+    ApiBearerAuth,
+    ApiBody,
+    ApiExcludeEndpoint,
+    ApiOperation,
+    ApiParam,
+    ApiResponse,
+    ApiTags,
+} from "@nestjs/swagger";
 import { PaymentService } from "./payments.service";
 
 @ApiTags("Payment")
@@ -30,7 +38,7 @@ export class PaymentController {
     }
 
     // ----------------------------
-    // Admin Approve Payment Release
+    // Admin/buyer Approve Payment Release
     // ----------------------------
     @ApiBearerAuth()
     @ValidateUser()
@@ -68,6 +76,21 @@ This endpoint is used by Admin/Buyer only.
         @GetUser() user: any,
     ) {
         return this.paymentService.approvePayment(body.orderID, user);
+    }
+
+    @ApiBearerAuth()
+    @ValidateUser()
+    @Post("refund/:orderId")
+    @ApiOperation({ summary: "Request a refund for an order" })
+    @ApiParam({ name: "orderId", description: "ID of the order to refund" })
+    @ApiBearerAuth()
+    @ApiResponse({ status: 200, description: "Refund issued successfully" })
+    @ApiResponse({ status: 403, description: "User not authorized to request refund" })
+    @ApiResponse({ status: 404, description: "Order not found" })
+    @ApiResponse({ status: 400, description: "Invalid request / PaymentIntent missing" })
+    @HttpCode(HttpStatus.OK)
+    async refundPayment(@Param("orderId") orderId: string, @GetUser() user: any) {
+        return await this.paymentService.refundPayment(orderId, user);
     }
 
     @ApiExcludeEndpoint()

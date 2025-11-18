@@ -5,7 +5,7 @@ import {
     NotFoundException,
 } from "@nestjs/common";
 
-import { OrderStatus } from "@prisma/client";
+import { OrderStatus, Role } from "@prisma/client";
 import { PrismaService } from "src/lib/prisma/prisma.service";
 
 @Injectable()
@@ -41,6 +41,8 @@ export class OrdersService {
 
     // GET ALL ORDERS OF BUYER
     async getOrdersByBuyer(buyerId: string) {
+        console.log("ami buyer id", buyerId);
+
         return this.prisma.order.findMany({
             where: { buyerId },
             include: { service: true },
@@ -85,14 +87,40 @@ export class OrdersService {
     }
 
     // DELETE ORDER
-    async deleteOrder(id: string) {
-        const order = await this.prisma.order.findUnique({ where: { id } });
+    async deleteOrder(orderId: string, user: any) {
+        // 1) Load order
+        const order = await this.prisma.order.findUnique({
+            where: { id: orderId },
+        });
+
         if (!order) throw new NotFoundException("Order not found");
 
-        if (order.status !== OrderStatus.PENDING)
-            throw new BadRequestException("Only pending orders can be deleted");
+        // 2) Access Rules:
+        // Buyer → can delete own order
+        const isBuyer = order.buyerId === user.userId;
 
-        return this.prisma.order.delete({ where: { id } });
+        // Admin / SuperAdmin → can delete any order
+        const isAdmin = user.roles.includes(Role.ADMIN);
+        const isSuperAdmin = user.roles.includes(Role.SUPER_ADMIN);
+
+        if (!isBuyer && !isAdmin && !isSuperAdmin) {
+            throw new ForbiddenException("You are not allowed to delete this order.");
+        }
+
+        // Optional rule: If order already released, block delete
+        if (order.isReleased) {
+            throw new ForbiddenException("Released orders cannot be deleted.");
+        }
+
+        // 3) Delete the order
+        await this.prisma.order.delete({
+            where: { id: orderId },
+        });
+
+        return {
+            message: "Order deleted successfully",
+            orderId,
+        };
     }
 
     // STRIPE WEBHOOK → PAYMENT SUCCESS → AUTO UPDATE

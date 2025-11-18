@@ -36,7 +36,7 @@
 
 - [ ] **payment method error solved** escrow system enable but some error and bugg tomorrow
 
-                              stripe listen --forward-to http://localhost:5050/payments/webhook
+                                stripe listen --forward-to http://localhost:5050/payments/webhook
 
 ## 16/11/2025 Sunday
 
@@ -48,6 +48,12 @@
 
 ## 16/11/2025 Sunday
 
-- [ ] **webhook problem** connect from stripe webhook with ngrok
+- [x] **webhook problem** connect from stripe webhook with ngrok
+- [ ] **setting update and permition controll** setup setting schema following the figma
+- [ ] **i will try to best polish in order section then learn the chat system** chat system learning
+
+## 17/11/2025 Sunday
+
+- [ ] **Dashboard Clean** setup setting schema following the figma
 - [ ] **setting update and permition controll** setup setting schema following the figma
 - [ ] **i will try to best polish in order section then learn the chat system** chat system learning
