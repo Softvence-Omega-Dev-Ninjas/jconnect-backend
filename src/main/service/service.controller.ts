@@ -16,8 +16,11 @@ export class ServiceController {
     @Post()
     @ApiOperation({ summary: "Create a new service listing" })
     @ApiResponse({ status: 201, description: "Service created successfully" })
-    async create(@Body() createServiceDto: CreateServiceDto): Promise<Service> {
-        return this.serviceService.create(createServiceDto);
+    async create(
+        @Body() createServiceDto: CreateServiceDto,
+        @GetUser() user: any,
+    ): Promise<Service> {
+        return this.serviceService.create(createServiceDto, user);
     }
 
     @ApiBearerAuth()
