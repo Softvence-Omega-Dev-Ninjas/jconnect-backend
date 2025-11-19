@@ -9,12 +9,31 @@ import {
     ApiResponse,
     ApiTags,
 } from "@nestjs/swagger";
+import { ConfirmSetupIntentDto, CreateSetupIntentDto } from "./dto/confirm-setup-intent.dto";
 import { PaymentService } from "./payments.service";
 
 @ApiTags("Payment")
 @Controller("payments")
 export class PaymentController {
     constructor(private readonly paymentService: PaymentService) {}
+
+    @ApiBearerAuth()
+    @ValidateUser()
+    @Post("create-setup-intent")
+    @ApiOperation({ summary: "Create SetupIntent for buyer to save card" })
+    @ApiBody({ type: CreateSetupIntentDto })
+    async createSetupIntent(@Body() body: CreateSetupIntentDto, @GetUser() user: any) {
+        return this.paymentService.createSetupIntent(body, user);
+    }
+
+    @ApiBearerAuth()
+    @ValidateUser()
+    @Post("confirm-setup-intent")
+    @ApiOperation({ summary: "Confirm SetupIntent (Swagger test mode)" })
+    @ApiBody({ type: ConfirmSetupIntentDto })
+    async confirmSetupIntent(@Body() body: ConfirmSetupIntentDto, @GetUser() user: any) {
+        return this.paymentService.confirmSetupIntent(body, user);
+    }
 
     // ----------------------------
     // Create Checkout Session
@@ -34,7 +53,11 @@ export class PaymentController {
         },
     })
     async createSession(@GetUser() user, @Body() body: { serviceId: string; frontendUrl: string }) {
-        return this.paymentService.createCheckoutSession(user, body.serviceId, body.frontendUrl);
+        return this.paymentService.createOrderWithPaymentMethod(
+            user,
+            body.serviceId,
+            body.frontendUrl,
+        );
     }
 
     // ----------------------------

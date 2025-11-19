@@ -10,6 +10,7 @@ import { OrderStatus, Role } from "@prisma/client";
 import { MailService } from "src/lib/mail/mail.service";
 import { PrismaService } from "src/lib/prisma/prisma.service";
 import Stripe from "stripe";
+import { ConfirmSetupIntentDto, CreateSetupIntentDto } from "./dto/confirm-setup-intent.dto";
 
 @Injectable()
 export class PaymentService {
@@ -22,76 +23,212 @@ export class PaymentService {
         private readonly mail: MailService,
     ) {}
 
-    async createCheckoutSession(userFromReq: any, serviceId: string, frontendUrl: string) {
-        const user: any = await this.prisma.user.findUnique({ where: { id: userFromReq?.userId } });
-        // console.log("ami to asol user", user, userFromReq.userId);
+    async createSetupIntent(body: CreateSetupIntentDto, userReq: any) {
+        const user = await this.prisma.user.findUnique({ where: { id: userReq?.userId } });
+        if (!user?.customerIdStripe)
+            throw new BadRequestException("User does not have a Stripe Customer ID");
+        const setupIntent = await this.stripe.setupIntents.create({
+            customer: user.customerIdStripe,
+            automatic_payment_methods: {
+                enabled: true,
+                allow_redirects: "never",
+            },
+        });
+        return { client_secret: setupIntent.client_secret };
+    }
+
+    async confirmSetupIntent(body: ConfirmSetupIntentDto, ReqUser: any) {
+        const setupIntentId = body.clientSecret.split("_secret")[0];
+
+        const paymentMethod = await this.stripe.paymentMethods.create({
+            type: "card",
+
+            card: {
+                token: body.token,
+            },
+        });
+
+        const useGET = await this.prisma.user.findUnique({ where: { id: ReqUser.userId } });
+
+        if (!useGET?.customerIdStripe)
+            throw new BadRequestException("User does not have a Stripe Customer ID");
+        await this.stripe.paymentMethods.attach(paymentMethod.id, {
+            customer: useGET.customerIdStripe,
+        });
+
+        console.log("etay to customer id");
+
+        const result = await this.stripe.setupIntents.confirm(setupIntentId, {
+            payment_method: paymentMethod.id,
+        });
+
+        await this.prisma.user.update({
+            where: { id: ReqUser.userId },
+            data: {
+                paymentMethod: {
+                    create: {
+                        paymentMethod: paymentMethod.id,
+                        cardBrand: paymentMethod.card?.brand || "unknown",
+                        last4: paymentMethod.card?.last4 || "0000",
+                        expMonth: paymentMethod.card?.exp_month || 0,
+                        expYear: paymentMethod.card?.exp_year || 0,
+                    },
+                },
+            },
+        });
+
+        return {
+            status: "success",
+            paymentMethodId: result.payment_method,
+        };
+    }
+
+    // async createCheckoutSession(userFromReq: any, serviceId: string, frontendUrl: string) {
+    //     const user: any = await this.prisma.user.findUnique({ where: { id: userFromReq?.userId } });
+    //     // console.log("ami to asol user", user, userFromReq.userId);
+    //     const service = await this.prisma.service.findUnique({
+    //         where: { id: serviceId },
+    //         include: { creator: { omit: { password: true } } },
+    //     });
+
+    //     if (!service) throw new NotFoundException("Service not found");
+
+    //     // create stripe checkout session with payment_intent expanded
+    //     const session = await this.stripe.checkout.sessions.create({
+    //         mode: "payment",
+    //         customer: user?.customerIdStripe || undefined,
+    //         payment_method_types: ["card"],
+    //         payment_intent_data: {
+    //             capture_method: "manual", // hold funds until capture
+    //         },
+    //         line_items: [
+    //             {
+    //                 price_data: {
+    //                     currency: service.currency?.toLowerCase() || "usd",
+    //                     unit_amount: Math.round(service.price * 100),
+    //                 },
+    //                 quantity: 1,
+    //             },
+    //         ],
+    //         success_url: `${frontendUrl}/success-payment?session_id={CHECKOUT_SESSION_ID}`,
+    //         cancel_url: `${frontendUrl}/cancel-payment`,
+    //         metadata: { userId: userFromReq.userId, serviceId },
+    //         expand: ["payment_intent"],
+    //     });
+
+    //     // ******* if you want to include application fee and transfer to connected account
+    //     //  then you need to instant payment you cant use manual capture
+    //     // -----------------------------
+    //     // const session = await this.stripe.checkout.sessions.create({
+    //     //     mode: "payment",
+    //     //     customer: user.customerIdStripe || undefined,
+    //     //     payment_method_types: ["card"],
+    //     //     payment_intent_data: {
+    //     //         capture_method: "manual", //
+    //     //         application_fee_amount: Math.round(service.price * 100 * 0.1),
+    //     //         transfer_data: {
+    //     //             // seller's Stripe account ID
+    //     //             destination: service.creator?.sellerIDStripe,
+    //     //         },
+    //     //     },
+    //     //     line_items: [
+    //     //         {
+    //     //             price_data: {
+    //     //                 currency: service.currency?.toLowerCase() ?? "usd",
+    //     //                 product_data: {
+    //     //                     name: service.serviceName,
+    //     //                     description: service.description || "",
+    //     //                 },
+    //     //                 unit_amount: Math.round(service.price * 100),
+    //     //             },
+    //     //             quantity: 1,
+    //     //         },
+    //     //     ],
+    //     //     success_url: `${frontendUrl}/success-payment?session_id={CHECKOUT_SESSION_ID}`,
+    //     //     cancel_url: `${frontendUrl}/cancel-payment`,
+    //     //     metadata: { userId: userFromReq.userId, serviceId },
+    //     //     expand: ["payment_intent"],
+    //     // });
+
+    //     const paymentIntent = session.payment_intent as Stripe.PaymentIntent | undefined;
+    //     const paymentIntentId =
+    //         typeof session.payment_intent === "string" ? session.payment_intent : paymentIntent?.id;
+
+    //     const order = await this.prisma.order.create({
+    //         data: {
+    //             orderCode: `ORD-${Date.now()}`,
+    //             buyerId: userFromReq.userId,
+    //             sellerId: service.creatorId || "unknown",
+    //             sellerIdStripe: service.creator?.sellerIDStripe || "",
+    //             sessionId: session.id,
+    //             serviceId: service.id,
+    //             paymentIntentId: paymentIntentId ?? undefined,
+    //             amount: service.price,
+    //             platformFee: 0, // set later (or compute here)
+    //             status: OrderStatus.PENDING,
+    //         },
+    //     });
+
+    //     await this.mail.sendEmail(
+    //         service.creator?.email,
+    //         "Order Placed Successfully",
+    //         `
+    //     <h1>Your order is successfully placed!</h1>
+    //     <p>Order Code: ${order.orderCode}</p>
+    //     <p>Amount: $${order.amount}</p>
+    //      <p>Buyer: ${userFromReq.email}</p>
+    //     <p>Status: ${order.status}</p>
+    //     `,
+    //     );
+
+    //     await this.mail.sendEmail(
+    //         userFromReq.email,
+    //         "You Got a New Order",
+    //         `
+    //     <h1>New Order Received!</h1>
+    //     <p>Order Code: ${order.orderCode}</p>
+    //     <p>Service: ${service.serviceName}</p>
+    //     <p>Seller: ${service.creator?.email}</p>
+    //     <p>Amount: $${order.amount}</p>
+    //     `,
+    //     );
+
+    //     return {
+    //         url: session.url,
+    //         sessionId: session.id,
+    //         paymentIntentId,
+    //         orderId: order.id,
+    //     };
+    // }
+
+    async createOrderWithPaymentMethod(userFromReq: any, serviceId: string, frontendUrl: string) {
+        const user = await this.prisma.user.findUnique({
+            where: { id: userFromReq.userId },
+            include: { paymentMethod: true },
+        });
         const service = await this.prisma.service.findUnique({
             where: { id: serviceId },
             include: { creator: { omit: { password: true } } },
         });
 
+        if (!user) throw new NotFoundException("User not found");
+        if (!user.customerIdStripe)
+            throw new BadRequestException("User does not have a Stripe Customer ID");
         if (!service) throw new NotFoundException("Service not found");
 
-        // create stripe checkout session with payment_intent expanded
-        const session = await this.stripe.checkout.sessions.create({
-            mode: "payment",
-            customer: user?.customerIdStripe || undefined,
-            payment_method_types: ["card"],
-            payment_intent_data: {
-                capture_method: "manual", // hold funds until capture
+        const paymentIntent = await this.stripe.paymentIntents.create({
+            amount: Math.round(service.price * 100),
+            currency: service.currency?.toLowerCase() || "usd",
+            customer: user?.customerIdStripe,
+            payment_method: user.paymentMethod?.[0]?.paymentMethod,
+            off_session: true,
+            confirm: true,
+            capture_method: "manual",
+            metadata: {
+                userId: userFromReq.userId,
+                serviceId: service.id,
             },
-            line_items: [
-                {
-                    price_data: {
-                        currency: service.currency?.toLowerCase() || "usd",
-                        unit_amount: Math.round(service.price * 100),
-                    },
-                    quantity: 1,
-                },
-            ],
-            success_url: `${frontendUrl}/success-payment?session_id={CHECKOUT_SESSION_ID}`,
-            cancel_url: `${frontendUrl}/cancel-payment`,
-            metadata: { userId: userFromReq.userId, serviceId },
-            expand: ["payment_intent"],
         });
-
-        // ******* if you want to include application fee and transfer to connected account
-        //  then you need to instant payment you cant use manual capture
-        // -----------------------------
-        // const session = await this.stripe.checkout.sessions.create({
-        //     mode: "payment",
-        //     customer: user.customerIdStripe || undefined,
-        //     payment_method_types: ["card"],
-        //     payment_intent_data: {
-        //         capture_method: "manual", //
-        //         application_fee_amount: Math.round(service.price * 100 * 0.1),
-        //         transfer_data: {
-        //             // seller's Stripe account ID
-        //             destination: service.creator?.sellerIDStripe,
-        //         },
-        //     },
-        //     line_items: [
-        //         {
-        //             price_data: {
-        //                 currency: service.currency?.toLowerCase() ?? "usd",
-        //                 product_data: {
-        //                     name: service.serviceName,
-        //                     description: service.description || "",
-        //                 },
-        //                 unit_amount: Math.round(service.price * 100),
-        //             },
-        //             quantity: 1,
-        //         },
-        //     ],
-        //     success_url: `${frontendUrl}/success-payment?session_id={CHECKOUT_SESSION_ID}`,
-        //     cancel_url: `${frontendUrl}/cancel-payment`,
-        //     metadata: { userId: userFromReq.userId, serviceId },
-        //     expand: ["payment_intent"],
-        // });
-
-        const paymentIntent = session.payment_intent as Stripe.PaymentIntent | undefined;
-        const paymentIntentId =
-            typeof session.payment_intent === "string" ? session.payment_intent : paymentIntent?.id;
 
         const order = await this.prisma.order.create({
             data: {
@@ -99,11 +236,10 @@ export class PaymentService {
                 buyerId: userFromReq.userId,
                 sellerId: service.creatorId || "unknown",
                 sellerIdStripe: service.creator?.sellerIDStripe || "",
-                sessionId: session.id,
+                paymentIntentId: paymentIntent.id,
                 serviceId: service.id,
-                paymentIntentId: paymentIntentId ?? undefined,
                 amount: service.price,
-                platformFee: 0, // set later (or compute here)
+                platformFee: 0,
                 status: OrderStatus.PENDING,
             },
         });
@@ -112,31 +248,30 @@ export class PaymentService {
             service.creator?.email,
             "Order Placed Successfully",
             `
-        <h1>Your order is successfully placed!</h1>
-        <p>Order Code: ${order.orderCode}</p>
-        <p>Amount: $${order.amount}</p>
-         <p>Buyer: ${userFromReq.email}</p>
-        <p>Status: ${order.status}</p>
-        `,
+    <h1>Your order is successfully placed!</h1>
+    <p>Order Code: ${order.orderCode}</p>
+    <p>Amount: $${order.amount}</p>
+    <p>Buyer: ${userFromReq.email}</p>
+    <p>Status: ${order.status}</p>
+    `,
         );
 
         await this.mail.sendEmail(
             userFromReq.email,
             "You Got a New Order",
             `
-        <h1>New Order Received!</h1>
-        <p>Order Code: ${order.orderCode}</p>
-        <p>Service: ${service.serviceName}</p>
-        <p>Seller: ${service.creator?.email}</p>
-        <p>Amount: $${order.amount}</p>
-        `,
+    <h1>New Order Received!</h1>
+    <p>Order Code: ${order.orderCode}</p>
+    <p>Service: ${service.serviceName}</p>
+    <p>Seller: ${service.creator?.email}</p>
+    <p>Amount: $${order.amount}</p>
+    `,
         );
 
         return {
-            url: session.url,
-            sessionId: session.id,
-            paymentIntentId,
+            paymentIntentId: paymentIntent.id,
             orderId: order.id,
+            amount: service.price,
         };
     }
 

@@ -13,7 +13,7 @@ model Order {
     id              String      @id @default(uuid())
     orderCode       String      @unique
     buyerId         String
-    sessionId       String      @unique() // Stripe Checkout Session ID
+    sessionId       String?      @unique() // Stripe Checkout Session ID
     sellerId        String
     sellerIdStripe  String?
     serviceId       String

@@ -174,6 +174,7 @@ export class UsersService {
                 socialServices: true,
                 orders_buyer: true,
                 orders_seller: true,
+                paymentMethod: true,
             },
         });
 
