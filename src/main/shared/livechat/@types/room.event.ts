@@ -1,4 +1,3 @@
-
 import { BaseSocketEvent } from "./base.type";
 import { SocketRoom } from "./socket.type";
 export type RoomEventAction = "join" | "leave" | "create" | "delete";

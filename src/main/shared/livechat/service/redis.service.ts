@@ -33,7 +33,7 @@ export class RedisService implements OnModuleInit, OnModuleDestroy {
     private redisSubscriber: Redis;
     private redisPublisher: Redis;
 
-    constructor(private readonly configService: ConfigService) { }
+    constructor(private readonly configService: ConfigService) {}
 
     async onModuleInit() {
         await this.connect();
@@ -55,9 +55,7 @@ export class RedisService implements OnModuleInit, OnModuleDestroy {
             this.redisSubscriber = new Redis(REDIS_PORT, REDIS_HOST);
             this.redisPublisher = new Redis(REDIS_PORT, REDIS_HOST);
 
-            await Promise.all([
-
-            ]);
+            await Promise.all([]);
 
             this.logger.log("Redis connected successfully");
 

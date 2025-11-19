@@ -7,19 +7,12 @@ import { UpdateServiceDto } from "./dto/update-service.dto";
 export class ServiceService {
     constructor(private prisma: PrismaService) {}
 
-    @HandleError('Failed to create service')
-    async create(payload: CreateServiceDto, userId: string): Promise<any> {
-        if (!userId) return errorResponse('User ID is missing');
-
-        // Check for existing service
-        const existingService = await this.prisma.service.findFirst({
-            where: { serviceName: payload.serviceName, creatorId: userId },
-        });
-        if (existingService) return errorResponse('Service already exists');
-
-        // ----------Create new service-------------
-        const service = await this.prisma.service.create({
-            data: { ...payload, creatorId: userId },
+    async create(createServiceDto: CreateServiceDto, user: any): Promise<Service> {
+        return this.prisma.service.create({
+            data: {
+                ...createServiceDto,
+                creatorId: user.userId,
+            },
         });
     }
 

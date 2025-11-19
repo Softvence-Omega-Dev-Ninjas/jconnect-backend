@@ -39,7 +39,7 @@ const uploadFileToS3 = async (filePath: string): Promise<{ url: string; key: str
             url: result.Location as string,
             key: fileName,
         };
-    } catch (err) {              
+    } catch (err) {
         fs.unlinkSync(filePath);
         console.error("❌ Failed to upload file to S3:", err);
         throw err;

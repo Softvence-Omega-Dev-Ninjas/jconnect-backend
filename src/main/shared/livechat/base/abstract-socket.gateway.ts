@@ -1,4 +1,3 @@
-
 import { Logger, UseGuards } from "@nestjs/common";
 import {
     OnGatewayConnection,
@@ -28,7 +27,8 @@ import { RedisService } from "../service/redis.service";
 })
 @UseGuards(SocketAuthGuard)
 export abstract class BaseSocketGateway
-    implements OnGatewayInit, OnGatewayConnection, OnGatewayDisconnect {
+    implements OnGatewayInit, OnGatewayConnection, OnGatewayDisconnect
+{
     @WebSocketServer() protected server: Server;
     protected readonly logger = new Logger(this.constructor.name);
     private readonly clients = new Map<string, Set<Socket>>();
@@ -36,7 +36,7 @@ export abstract class BaseSocketGateway
     constructor(
         protected readonly redisService: RedisService,
         private readonly socketMiddleware: SocketMiddleware,
-    ) { }
+    ) {}
 
     async afterInit() {
         this.logger.verbose(`(${this.constructor.name}) Gateway initialized`);
@@ -121,11 +121,13 @@ export abstract class BaseSocketGateway
     // Get connected users in a room
     protected async getRoomUsers(roomId: string): Promise<SocketUser[]> {
         const room = await this.redisService.getRoomData(roomId);
-        return room?.users ? room.users.map(user => ({ 
-            ...user, 
-            email: user.email || "",
-            role: user.role as any
-        })) : [];
+        return room?.users
+            ? room.users.map((user) => ({
+                  ...user,
+                  email: user.email || "",
+                  role: user.role as any,
+              }))
+            : [];
     }
 
     protected async joinRoom(
@@ -244,7 +246,7 @@ export abstract class BaseSocketGateway
         return {
             ...user,
             email: user.email || "",
-            role: user.role as any
+            role: user.role as any,
         };
     }
 

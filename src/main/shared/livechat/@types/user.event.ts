@@ -1,6 +1,5 @@
 import { BaseSocketEvent } from "./base.type";
 
-
 export type UserStatus = "online" | "away" | "busy" | "offline";
 
 // User Events

@@ -1,4 +1,3 @@
-
 import { BadGatewayException, Injectable, UnauthorizedException } from "@nestjs/common";
 
 import { Socket } from "socket.io";
@@ -10,7 +9,7 @@ export class AuthValidatorService {
     constructor(
         private readonly jwtService: JwtServices,
         private readonly prisma: PrismaService,
-    ) { }
+    ) {}
 
     async validateSocketToken(socket: Socket) {
         // const parsed = cookie.parse(rawCookie);

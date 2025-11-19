@@ -4,4 +4,4 @@ import { BaseSocketGateway } from "./abstract-socket.gateway";
 
 @Injectable()
 @WebSocketGateway()
-export class RootGetway extends BaseSocketGateway { }
+export class RootGetway extends BaseSocketGateway {}

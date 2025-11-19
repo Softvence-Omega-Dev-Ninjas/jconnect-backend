@@ -1,10 +1,10 @@
 import {
     MessageMeta,
     PostMeta,
+    ReviewMeta,
+    ServiceCreateMeta,
     UserRegistrationMeta,
-    serviceCreateMeta
-} from "./events-meta";
-import { ReviewMeta } from "./events-name";
+} from "./events.name";
 
 // Generic Base Event
 export interface BaseEvent<TMeta> {
@@ -28,6 +28,7 @@ export interface UserRegistration extends BaseEvent<UserRegistrationMeta> {
         id: string;
         name: string;
         role: string;
+        recipients: { id: string; email: string }[];
     };
 }
 
@@ -52,7 +53,7 @@ export interface Message extends BaseEvent<MessageMeta> {
 }
 
 // Service Create Event
-export interface ServiceCreateEvent extends BaseEvent<serviceCreateMeta> {
+export interface ServiceCreateEvent extends BaseEvent<ServiceCreateMeta> {
     info: {
         serviceName: string;
         creatorId: string;

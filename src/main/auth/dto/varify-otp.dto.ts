@@ -1,12 +1,12 @@
-import { ApiProperty } from '@nestjs/swagger';
-import { IsString } from 'class-validator';
+import { ApiProperty } from "@nestjs/swagger";
+import { IsString } from "class-validator";
 
 export class VerifyOtpAuthDto {
-    @ApiProperty({ example: 'token' })
+    @ApiProperty({ example: "token" })
     @IsString()
     resetToken: string;
 
-    @ApiProperty({ example: 'otp' })
+    @ApiProperty({ example: "otp" })
     @IsString()
     emailOtp: string;
 }

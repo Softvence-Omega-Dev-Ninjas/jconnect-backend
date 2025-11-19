@@ -1,6 +1,5 @@
 import { BaseSocketEvent } from "./base.type";
 
-
 type MessageType = "text" | "image" | "file" | "voice" | "video";
 // Chat Events
 export interface ChatMessage extends BaseSocketEvent {

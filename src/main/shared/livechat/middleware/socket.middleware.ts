@@ -4,7 +4,6 @@ import chalk from "chalk";
 import { Socket } from "socket.io";
 import { SocketUtils } from "../utils/socket.utils";
 
-
 @Injectable()
 export class SocketMiddleware {
     private readonly logger = new Logger(SocketMiddleware.name);
@@ -19,7 +18,7 @@ export class SocketMiddleware {
                 socket.join(user.id);
 
                 this.logger.log(
-                    `✅ Socket (${chalk.yellow(socket.id)}) authenticated as user (${chalk.yellow(user.full_name?? user.email)})`,
+                    `✅ Socket (${chalk.yellow(socket.id)}) authenticated as user (${chalk.yellow(user.full_name ?? user.email)})`,
                 );
                 next();
             } catch (error) {

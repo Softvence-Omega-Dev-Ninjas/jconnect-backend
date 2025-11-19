@@ -1,11 +1,9 @@
-
 import { ReqUser } from "@common/decorators/req-user.decorator";
 import { JwtAuthGuard } from "@common/jwt/jwt.gurd";
 import { Body, Controller, Get, Param, Post, Query, UseGuards } from "@nestjs/common";
 import { ApiTags } from "@nestjs/swagger";
 import { StartPrivateChatDto } from "../dto/start-private.dto";
 import { ChatService } from "../service/livechat.service";
-
 
 // interface AuthRequest extends Request {
 //     user: { id: string };
@@ -15,7 +13,7 @@ import { ChatService } from "../service/livechat.service";
 @Controller("chat")
 @UseGuards(JwtAuthGuard)
 export class ChatController {
-    constructor(private chatService: ChatService) { }
+    constructor(private chatService: ChatService) {}
 
     @Post("private")
     async startPrivateChat(@ReqUser() me: { id: string }, @Body() dto: StartPrivateChatDto) {

@@ -1,12 +1,9 @@
-
-
 import { SOCKET_EVENTS } from "../constants/socket.constant";
 import { ChatMessage, ChatTyping } from "./chat.event";
 import { NotificationEvent } from "./notificaiton.event";
 import { RoomEvent } from "./room.event";
 import { SocketUser } from "./socket.type";
 import { UserStatusEvent } from "./user.event";
-
 
 // Type helpers for event handling
 export type SocketEventMap = {
@@ -19,8 +16,6 @@ export type SocketEventMap = {
     [SOCKET_EVENTS.CHAT.MESSAGE_SEND]: ChatMessage;
     [SOCKET_EVENTS.CHAT.MESSAGE_RECEIVE]: ChatMessage;
     [SOCKET_EVENTS.CHAT.MESSAGE_TYPING]: ChatTyping;
-
-
 
     // Room Events
     [SOCKET_EVENTS.ROOM.JOIN]: RoomEvent;

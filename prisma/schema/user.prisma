@@ -46,9 +46,14 @@ model User {
   Buyer                  SocialServiceRequest[] @relation("SocialRequestBuyer")
   Artist                 SocialServiceRequest[] @relation("SocialRequestRequester")
 
-  ReviewsGiven    Review[]        @relation("ReviewsGiven")
-  ReviewsReceived Review[]        @relation("ReviewsReceived")
-  socialServices  SocialService[]
+  ReviewsGiven         Review[]               @relation("ReviewsGiven")
+  ReviewsReceived      Review[]               @relation("ReviewsReceived")
+  socialServices       SocialService[]
+  // ------message relation---
+  privateConversation1 PrivateConversation[]  @relation("User1Conversations")
+  privateConversation2 PrivateConversation[]  @relation("User2Conversations")
+  privateMessage       PrivateMessage[]
+  privateMessageStatus PrivateMessageStatus[]
 
   // Support system relations
   supportChats        SupportChat[]

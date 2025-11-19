@@ -17,7 +17,7 @@ import { UtilsModule } from "./utils/utils.module";
         DeviceModule,
         SeedModule,
         MulterModule,
-        NotificationModule
+        NotificationModule,
     ],
     controllers: [],
     exports: [
@@ -28,7 +28,7 @@ import { UtilsModule } from "./utils/utils.module";
         DeviceModule,
         SeedModule,
         MulterModule,
-        NotificationModule
+        NotificationModule,
     ],
     providers: [],
 })

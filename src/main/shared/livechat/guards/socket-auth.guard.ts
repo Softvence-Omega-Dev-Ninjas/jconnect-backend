@@ -3,7 +3,6 @@ import { CanActivate, ExecutionContext, Injectable } from "@nestjs/common";
 import { Socket } from "socket.io";
 import { SocketUser } from "../@types/socket.type";
 
-
 @Injectable()
 export class SocketAuthGuard implements CanActivate {
     constructor(private readonly authValidator: AuthValidatorService) {}

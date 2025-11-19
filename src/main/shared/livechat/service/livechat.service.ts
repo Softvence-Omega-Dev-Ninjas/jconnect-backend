@@ -1,14 +1,12 @@
-
 import { Injectable } from "@nestjs/common";
 
 import { LiveChat } from "@prisma/client";
 import { PrismaService } from "src/lib/prisma/prisma.service";
 import { CreateMessageDto } from "../dto/create-livechat.dto";
 
-
 @Injectable()
 export class ChatService {
-    constructor(private prisma: PrismaService) { }
+    constructor(private prisma: PrismaService) {}
 
     /** Find or create 1-to-1 chat */
     async getOrCreatePrivateChat(userA: string, userB: string): Promise<LiveChat> {
@@ -91,7 +89,9 @@ export class ChatService {
                             select: {
                                 id: true,
                                 profile: {
-                                    select: { user: { select: { full_name: true, profilePhoto: true } } },
+                                    select: {
+                                        user: { select: { full_name: true, profilePhoto: true } },
+                                    },
                                 },
                             },
                         },
@@ -128,7 +128,10 @@ export class ChatService {
             cursor: cursor ? { id: cursor } : undefined,
             include: {
                 sender: {
-                    select: { id: true, profile: { select: { user: true, profile_image_url: true } } },
+                    select: {
+                        id: true,
+                        profile: { select: { user: true, profile_image_url: true } },
+                    },
                 },
                 readBy: { select: { userId: true } },
             },

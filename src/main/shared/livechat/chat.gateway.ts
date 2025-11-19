@@ -16,7 +16,6 @@ import { SocketMiddleware } from "./middleware/socket.middleware";
 import { ChatService } from "./service/livechat.service";
 import { RedisService } from "./service/redis.service";
 
-
 interface SocketUser {
     id: string;
 }

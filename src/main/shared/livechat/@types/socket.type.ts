@@ -1,8 +1,6 @@
-
 import { Role } from "@constant/enums";
 import { SocketEventMap } from "./socket.event.map";
 import { UserStatus } from "./user.event";
-
 
 export type SocketUser = {
     id: string;

@@ -37,6 +37,4 @@ export class CreateServiceDto {
     @IsOptional()
     @IsString()
     currency?: string = "USD";
-
-    
 }

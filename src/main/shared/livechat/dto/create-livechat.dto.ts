@@ -1,4 +1,3 @@
-
 import { LiveMediaType } from "@prisma/client";
 import { IsEnum, IsOptional, IsString, IsUrl } from "class-validator";
 
