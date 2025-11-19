@@ -14,7 +14,16 @@ CREATE TYPE "LiveMediaType" AS ENUM ('IMAGE', 'VIDEO', 'AUDIO', 'DOCUMENT');
 CREATE TYPE "PaymentStatus" AS ENUM ('PENDING', 'COMPLETED', 'CANCELLED');
 
 -- CreateEnum
+CREATE TYPE "MessageDeliveryStatus" AS ENUM ('SENT', 'DELIVERED', 'READ');
+
+-- CreateEnum
 CREATE TYPE "PlatformName" AS ENUM ('Instagram', 'Facebook', 'YouTube', 'TikTok');
+
+-- CreateEnum
+CREATE TYPE "SupportStatus" AS ENUM ('OPEN', 'IN_PROGRESS', 'RESOLVED', 'CLOSED');
+
+-- CreateEnum
+CREATE TYPE "SupportPriority" AS ENUM ('LOW', 'MEDIUM', 'HIGH');
 
 -- CreateEnum
 CREATE TYPE "Role" AS ENUM ('USER', 'MODERATOR', 'ADMIN', 'SUPER_ADMIN', 'MEMBER', 'ARTIST');
@@ -96,6 +105,48 @@ CREATE TABLE "live_message_reads" (
 );
 
 -- CreateTable
+CREATE TABLE "notification-toggle" (
+    "id" TEXT NOT NULL,
+    "email" BOOLEAN NOT NULL DEFAULT true,
+    "userUpdates" BOOLEAN NOT NULL DEFAULT true,
+    "serviceCreate" BOOLEAN NOT NULL DEFAULT true,
+    "review" BOOLEAN NOT NULL DEFAULT true,
+    "post" BOOLEAN NOT NULL DEFAULT true,
+    "message" BOOLEAN NOT NULL DEFAULT true,
+    "userRegistration" BOOLEAN NOT NULL DEFAULT true,
+    "userId" TEXT NOT NULL,
+
+    CONSTRAINT "notification-toggle_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "notifications" (
+    "id" TEXT NOT NULL,
+    "userId" TEXT NOT NULL,
+    "title" TEXT NOT NULL,
+    "message" TEXT NOT NULL,
+    "entityId" TEXT,
+    "read" BOOLEAN NOT NULL DEFAULT false,
+    "metadata" JSONB,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+
+    CONSTRAINT "notifications_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "UserNotification" (
+    "id" TEXT NOT NULL,
+    "userId" TEXT NOT NULL,
+    "notificationId" TEXT NOT NULL,
+    "read" BOOLEAN NOT NULL DEFAULT false,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT "UserNotification_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
 CREATE TABLE "payments" (
     "id" TEXT NOT NULL,
     "sessionId" TEXT NOT NULL,
@@ -124,6 +175,42 @@ CREATE TABLE "BuyService" (
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
     CONSTRAINT "BuyService_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "PrivateConversation" (
+    "id" TEXT NOT NULL,
+    "user1Id" TEXT NOT NULL,
+    "user2Id" TEXT NOT NULL,
+    "lastMessageId" TEXT,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+
+    CONSTRAINT "PrivateConversation_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "PrivateMessage" (
+    "id" TEXT NOT NULL,
+    "content" TEXT NOT NULL,
+    "isRead" BOOLEAN NOT NULL DEFAULT false,
+    "files" TEXT[],
+    "conversationId" TEXT NOT NULL,
+    "senderId" TEXT NOT NULL,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT "PrivateMessage_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "PrivateMessageStatus" (
+    "id" TEXT NOT NULL,
+    "messageId" TEXT NOT NULL,
+    "userId" TEXT NOT NULL,
+    "status" "MessageDeliveryStatus" NOT NULL,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+
+    CONSTRAINT "PrivateMessageStatus_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
@@ -227,6 +314,33 @@ CREATE TABLE "social_service" (
 );
 
 -- CreateTable
+CREATE TABLE "support_chats" (
+    "id" TEXT NOT NULL,
+    "userId" TEXT NOT NULL,
+    "adminId" TEXT,
+    "subject" TEXT,
+    "status" "SupportStatus" NOT NULL DEFAULT 'OPEN',
+    "priority" "SupportPriority" NOT NULL DEFAULT 'MEDIUM',
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+
+    CONSTRAINT "support_chats_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "support_messages" (
+    "id" TEXT NOT NULL,
+    "chatId" TEXT NOT NULL,
+    "senderId" TEXT NOT NULL,
+    "content" TEXT NOT NULL,
+    "isAdmin" BOOLEAN NOT NULL DEFAULT false,
+    "isRead" BOOLEAN NOT NULL DEFAULT false,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT "support_messages_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
 CREATE TABLE "users" (
     "id" TEXT NOT NULL,
     "full_name" TEXT NOT NULL,
@@ -317,7 +431,25 @@ CREATE INDEX "live_message_reads_liveChatId_idx" ON "live_message_reads"("liveCh
 CREATE UNIQUE INDEX "live_message_reads_messageId_userId_key" ON "live_message_reads"("messageId", "userId");
 
 -- CreateIndex
+CREATE INDEX "notifications_userId_idx" ON "notifications"("userId");
+
+-- CreateIndex
+CREATE INDEX "notifications_read_idx" ON "notifications"("read");
+
+-- CreateIndex
+CREATE INDEX "notifications_createdAt_idx" ON "notifications"("createdAt");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "UserNotification_userId_notificationId_key" ON "UserNotification"("userId", "notificationId");
+
+-- CreateIndex
 CREATE UNIQUE INDEX "payments_sessionId_key" ON "payments"("sessionId");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "PrivateConversation_user1Id_user2Id_key" ON "PrivateConversation"("user1Id", "user2Id");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "PrivateMessageStatus_messageId_userId_key" ON "PrivateMessageStatus"("messageId", "userId");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "user_profiles_user_id_key" ON "user_profiles"("user_id");
@@ -368,6 +500,18 @@ ALTER TABLE "live_message_reads" ADD CONSTRAINT "live_message_reads_userId_fkey"
 ALTER TABLE "live_message_reads" ADD CONSTRAINT "live_message_reads_liveChatId_fkey" FOREIGN KEY ("liveChatId") REFERENCES "live_chats"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
+ALTER TABLE "notification-toggle" ADD CONSTRAINT "notification-toggle_userId_fkey" FOREIGN KEY ("userId") REFERENCES "users"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "notifications" ADD CONSTRAINT "notifications_userId_fkey" FOREIGN KEY ("userId") REFERENCES "users"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "UserNotification" ADD CONSTRAINT "UserNotification_userId_fkey" FOREIGN KEY ("userId") REFERENCES "users"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "UserNotification" ADD CONSTRAINT "UserNotification_notificationId_fkey" FOREIGN KEY ("notificationId") REFERENCES "notifications"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
 ALTER TABLE "payments" ADD CONSTRAINT "payments_userId_fkey" FOREIGN KEY ("userId") REFERENCES "users"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
@@ -384,6 +528,27 @@ ALTER TABLE "BuyService" ADD CONSTRAINT "BuyService_serviceId_fkey" FOREIGN KEY 
 
 -- AddForeignKey
 ALTER TABLE "BuyService" ADD CONSTRAINT "BuyService_paymentId_fkey" FOREIGN KEY ("paymentId") REFERENCES "payments"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "PrivateConversation" ADD CONSTRAINT "PrivateConversation_user1Id_fkey" FOREIGN KEY ("user1Id") REFERENCES "users"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "PrivateConversation" ADD CONSTRAINT "PrivateConversation_user2Id_fkey" FOREIGN KEY ("user2Id") REFERENCES "users"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "PrivateConversation" ADD CONSTRAINT "PrivateConversation_lastMessageId_fkey" FOREIGN KEY ("lastMessageId") REFERENCES "PrivateMessage"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "PrivateMessage" ADD CONSTRAINT "PrivateMessage_conversationId_fkey" FOREIGN KEY ("conversationId") REFERENCES "PrivateConversation"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "PrivateMessage" ADD CONSTRAINT "PrivateMessage_senderId_fkey" FOREIGN KEY ("senderId") REFERENCES "users"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "PrivateMessageStatus" ADD CONSTRAINT "PrivateMessageStatus_messageId_fkey" FOREIGN KEY ("messageId") REFERENCES "PrivateMessage"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "PrivateMessageStatus" ADD CONSTRAINT "PrivateMessageStatus_userId_fkey" FOREIGN KEY ("userId") REFERENCES "users"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "user_profiles" ADD CONSTRAINT "user_profiles_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "users"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
@@ -411,6 +576,18 @@ ALTER TABLE "social_service_request" ADD CONSTRAINT "social_service_request_arti
 
 -- AddForeignKey
 ALTER TABLE "social_service" ADD CONSTRAINT "social_service_artistID_fkey" FOREIGN KEY ("artistID") REFERENCES "users"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "support_chats" ADD CONSTRAINT "support_chats_userId_fkey" FOREIGN KEY ("userId") REFERENCES "users"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "support_chats" ADD CONSTRAINT "support_chats_adminId_fkey" FOREIGN KEY ("adminId") REFERENCES "users"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "support_messages" ADD CONSTRAINT "support_messages_chatId_fkey" FOREIGN KEY ("chatId") REFERENCES "support_chats"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "support_messages" ADD CONSTRAINT "support_messages_senderId_fkey" FOREIGN KEY ("senderId") REFERENCES "users"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "devices" ADD CONSTRAINT "devices_userId_fkey" FOREIGN KEY ("userId") REFERENCES "users"("id") ON DELETE RESTRICT ON UPDATE CASCADE;

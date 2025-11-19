@@ -31,7 +31,7 @@ enum PrivateChatEvents {
 
 @WebSocketGateway({
     cors: { origin: "*" },
-    namespace: "/pv/message",
+    namespace: "/dj/chat",
 })
 export class PrivateChatGateway implements OnGatewayInit, OnGatewayConnection, OnGatewayDisconnect {
     private readonly logger = new Logger(PrivateChatGateway.name);

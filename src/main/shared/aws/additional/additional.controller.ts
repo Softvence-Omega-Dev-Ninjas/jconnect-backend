@@ -10,13 +10,14 @@ import {
 } from "@nestjs/common";
 
 import { FileInterceptor, FilesInterceptor } from "@nestjs/platform-express";
-import { ApiConsumes } from "@nestjs/swagger";
+import { ApiConsumes, ApiTags } from "@nestjs/swagger";
 import { FileType, MulterService } from "src/lib/multer/multer.service";
 
 import { Additionaldto, AdditionalMultipleDto } from "@main/shared/aws/dto/uploadadditional.dto";
-import uploadFileToS3 from "src/lib/utils/uploadImageAws";
-import { AdditionalS3Service } from "./additional.service";
 
+import uploadFileToS3 from "@common/aws/uploadImageAws";
+import { AdditionalS3Service } from "./additional.service";
+@ApiTags("AWS - File- upload")
 @Controller("aws-additional")
 export class AdditionalS3Controller {
     constructor(private readonly AdditionalS3Service: AdditionalS3Service) {}

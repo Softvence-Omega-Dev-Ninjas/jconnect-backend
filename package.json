@@ -26,11 +26,12 @@
         "prepare": "husky"
     },
     "dependencies": {
-        "@aws-sdk/client-s3": "^3.927.0",
+        "@aws-sdk/client-s3": "^3.929.0",
         "@aws-sdk/lib-storage": "^3.927.0",
         "@nestjs/common": "^11.1.8",
         "@nestjs/config": "^4.0.2",
         "@nestjs/core": "^11.1.8",
+        "@nestjs/event-emitter": "^3.0.1",
         "@nestjs/jwt": "^11.0.1",
         "@nestjs/mapped-types": "^2.1.0",
         "@nestjs/passport": "^11.0.5",
@@ -50,6 +51,7 @@
         "class-validator": "^0.14.2",
         "express": "^5.1.0",
         "google-auth-library": "^10.5.0",
+        "ioredis": "^5.8.2",
         "mime-types": "^3.0.1",
         "multer": "^2.0.2",
         "nodemailer": "^7.0.10",
@@ -63,7 +65,8 @@
         "stripe": "^19.3.0",
         "twilio": "^5.10.4",
         "twilio-cli": "^6.2.0",
-        "ua-parser-js": "^2.0.6"
+        "ua-parser-js": "^2.0.6",
+        "uuid": "^13.0.0"
     },
     "devDependencies": {
         "@eslint/eslintrc": "^3.3.1",

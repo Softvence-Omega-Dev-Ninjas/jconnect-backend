@@ -16,10 +16,7 @@ export type TPaginatedResponse<T = unknown> = {
     };
 };
 
-export const successResponse = <T>(
-    data: T,
-    message = 'Request Success',
-): TResponse<T> => ({
+export const successResponse = <T>(data: T, message = "Request Success"): TResponse<T> => ({
     success: true,
     message,
     data,
@@ -32,7 +29,7 @@ export const successPaginatedResponse = <T>(
         limit: number;
         total: number;
     },
-    message = 'Request Success',
+    message = "Request Success",
 ): TPaginatedResponse<T> => ({
     success: true,
     message,
@@ -45,10 +42,7 @@ export const successPaginatedResponse = <T>(
     },
 });
 
-export const errorResponse = <T>(
-    data: T,
-    message = 'Request Failed',
-): TResponse<T> => ({
+export const errorResponse = <T>(data: T, message = "Request Failed"): TResponse<T> => ({
     success: false,
     message,
     data,

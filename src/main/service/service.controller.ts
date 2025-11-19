@@ -6,7 +6,7 @@ import { CreateServiceDto } from "./dto/create-service.dto";
 import { UpdateServiceDto } from "./dto/update-service.dto";
 import { ServiceService } from "./service.service";
 
-@ApiTags("Services")
+@ApiTags("Services-all -details")
 @Controller("services")
 export class ServiceController {
     constructor(private readonly serviceService: ServiceService) {}
@@ -62,7 +62,7 @@ export class ServiceController {
     @ApiOperation({ summary: "Delete a service listing by ID" })
     @ApiResponse({ status: 200, description: "Service deleted successfully" })
     @ApiResponse({ status: 404, description: "Service not found" })
-    remove(@Param("id") id: string): Promise<Service> {
+    remove(@Param("id") id: string, @GetUser() user: any): Promise<Service> {
         return this.serviceService.remove(id);
     }
 }

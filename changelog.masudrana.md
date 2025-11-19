@@ -25,3 +25,11 @@
 
 - [x] Working on **Service Module**, **Service Request Module**, and **Custom Service Request Module** — verified their relations and partially integrated guards.
 - [x] Working on **role-based access issue** — some roles are functioning correctly, but full implementation is still in progress.
+
+## 11/11/2025 — Admin Dashboard Stats Module
+
+- [x] Implemented **Total Users**, **Total Revenue**, **Total Disputes**, and **Total Refunds** statistics.
+- [x] Developed **Revenue Trend API** to track income growth over time.
+- [x] Implemented **Top Sellers API** to identify highest-earning users.
+- [x] Implemented **Top Performing Users API** for performance-based user ranking.
+- [x] Developed **User Activity API** to monitor and visualize active user metrics.
