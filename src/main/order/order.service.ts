@@ -8,6 +8,14 @@ import {
 import { OrderStatus, Role } from "@prisma/client";
 import { PrismaService } from "src/lib/prisma/prisma.service";
 
+const orderStatusFilter = {
+    active: [OrderStatus.IN_PROGRESS],
+    pending: [OrderStatus.PENDING],
+    paymentConfirm: [OrderStatus.PROOF_SUBMITTED],
+    complete: [OrderStatus.RELEASED],
+    cancelled: [OrderStatus.CANCELLED],
+};
+
 @Injectable()
 export class OrdersService {
     constructor(private prisma: PrismaService) {}
@@ -39,21 +47,25 @@ export class OrdersService {
         return order;
     }
 
-    // GET ALL ORDERS OF BUYER
-    async getOrdersByBuyer(buyerId: string) {
-        console.log("ami buyer id", buyerId);
+    // // GET ALL ORDERS OF BUYER
+    // async getOrdersByBuyer(buyerId: string) {
+    //     console.log("ami buyer id", buyerId);
 
-        return this.prisma.order.findMany({
-            where: { buyerId },
-            include: { service: true },
-        });
-    }
+    //     return this.prisma.order.findMany({
+    //         where: { buyerId },
+    //         include: { service: true },
+    //     });
+    // }
 
     // GET ONE ORDER
     async getOrder(id: string) {
         const order = await this.prisma.order.findUnique({
             where: { id },
-            include: { service: true, buyer: true, seller: true },
+            include: {
+                service: true,
+                buyer: { select: { full_name: true, id: true, email: true } },
+                seller: { select: { full_name: true, id: true, email: true } },
+            },
         });
 
         if (!order) throw new NotFoundException("Order not found");
@@ -73,7 +85,7 @@ export class OrdersService {
         }
 
         // Buyer confirms delivery
-        if (status === OrderStatus.COMPLETED) {
+        if (status === OrderStatus.RELEASED) {
             if (order.buyerId !== user.userId)
                 throw new ForbiddenException("Only buyer can confirm delivery");
         }
@@ -124,12 +136,12 @@ export class OrdersService {
     }
 
     // STRIPE WEBHOOK → PAYMENT SUCCESS → AUTO UPDATE
-    async markPaid(paymentIntentId: string) {
-        return this.prisma.order.update({
-            where: { paymentIntentId },
-            data: { status: OrderStatus.PAID },
-        });
-    }
+    // async markPaid(paymentIntentId: string) {
+    //     return this.prisma.order.update({
+    //         where: { paymentIntentId },
+    //         data: { status: OrderStatus.PAID },
+    //     });
+    // }
 
     // RELEASE PAYMENT
     async releasePayment(orderId: string) {
@@ -174,5 +186,92 @@ export class OrdersService {
         });
 
         return updated;
+    }
+
+    async updateDeliveryDate(orderId: string, user: any, deliveryDate: string) {
+        const order = await this.prisma.order.findUnique({ where: { id: orderId } });
+
+        if (!order) throw new NotFoundException("Order not found");
+
+        // Only seller or admin can update delivery date
+        const isSeller = order.sellerId === user.userId;
+        const isAdmin = user.roles.includes("ADMIN");
+        const isSuperAdmin = user.roles.includes("SUPER_ADMIN");
+
+        if (!isSeller && !isAdmin && !isSuperAdmin) {
+            throw new ForbiddenException(
+                "You cannot update delivery date for this order permission only seller or admin",
+            );
+        }
+
+        const updated = await this.prisma.order.update({
+            where: { id: orderId },
+            data: {
+                deliveryDate: new Date(deliveryDate),
+            },
+        });
+
+        return updated;
+    }
+
+    async getOrdersByBuyer(
+        buyerId: string,
+        filter?: "active" | "paymentConfirm" | "complete" | "cancelled" | "pending",
+    ) {
+        console.log("ami call hoychi buyer order ", buyerId);
+
+        const where: any = { buyerId };
+
+        if (filter && orderStatusFilter[filter]) {
+            where.status = { in: orderStatusFilter[filter] };
+        }
+
+        return this.prisma.order.findMany({
+            where,
+            include: {
+                service: true,
+                seller: { select: { full_name: true, email: true } },
+            },
+            orderBy: { createdAt: "desc" },
+        });
+    }
+
+    // Get seller earnings summary
+    async getMyEarnings(sellerId: string) {
+        // 1️⃣ Total earning: released orders - cancelled
+        const totalReleased = await this.prisma.order.aggregate({
+            where: { sellerId },
+            _sum: { seller_amount: true },
+        });
+
+        const totalCancelled = await this.prisma.order.aggregate({
+            where: { sellerId, status: OrderStatus.CANCELLED },
+            _sum: { seller_amount: true },
+        });
+
+        const totalEarning =
+            (totalReleased._sum.seller_amount || 0) - (totalCancelled._sum.seller_amount || 0);
+
+        // 2️⃣ Pending Clearance: IN_PROGRESS + PENDING + PROOF_SUBMITTED
+        const pendingOrders = await this.prisma.order.aggregate({
+            where: {
+                sellerId,
+                status: {
+                    in: [OrderStatus.IN_PROGRESS, OrderStatus.PENDING, OrderStatus.PROOF_SUBMITTED],
+                },
+            },
+            _sum: { seller_amount: true },
+        });
+
+        const pendingClearance = pendingOrders._sum.seller_amount || 0;
+
+        // 3️⃣ Available balance
+        const availableBalance = totalEarning - pendingClearance;
+
+        return {
+            totalEarning,
+            pendingClearance,
+            availableBalance,
+        };
     }
 }

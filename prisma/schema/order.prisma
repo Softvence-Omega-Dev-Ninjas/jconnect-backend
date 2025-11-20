@@ -2,28 +2,28 @@ enum OrderStatus {
     PENDING // buyer placed order
     IN_PROGRESS // seller started working
     PROOF_SUBMITTED // seller submitted proof to buyer
-    WAITING_CONFIRM // buyer must press Confirm Delivery
-    COMPLETED // order done
     CANCELLED
-    PAID // webhook: payment succeeded
     RELEASED // admin manually transferred money
 }
 
 model Order {
-    id              String      @id @default(uuid())
-    orderCode       String      @unique
-    buyerId         String
-    sessionId       String?      @unique() // Stripe Checkout Session ID
-    sellerId        String
-    sellerIdStripe  String?
-    serviceId       String
-    paymentIntentId String?     @unique // Stripe Payment Intent ID
-    amount          Float
-    platformFee     Float
-    status          OrderStatus @default(PENDING)
-    deliveryDate    DateTime?
-    createdAt       DateTime    @default(now())
-    updatedAt       DateTime    @updatedAt
+    id                   String      @id @default(uuid())
+    orderCode            String      @unique
+    buyerId              String
+    sessionId            String?     @unique() // Stripe Checkout Session ID
+    sellerId             String
+    sellerIdStripe       String?
+    serviceId            String
+    paymentIntentId      String?     @unique // Stripe Payment Intent ID
+    amount               Int
+    seller_amount        Int         @default(0)
+    platformFee          Int
+    platformFee_percents Int         @default(0)
+    stripeFee            Int         @default(0)
+    status               OrderStatus @default(PENDING)
+    deliveryDate         DateTime?
+    createdAt            DateTime    @default(now())
+    updatedAt            DateTime    @updatedAt
 
     // For Escrow Manual Release
     isReleased Boolean   @default(false)

@@ -25,6 +25,7 @@ import { LoggerMiddleware } from "./common/middleware/logger.middleware";
 import { LibModule } from "./lib/lib.module";
 import { MainModule } from "./main/main.module";
 import { JwtServices } from "@global/auth-validator/jwt.service";
+import { TestModule } from "./test/test.module";
 
 @Module({
     imports: [
@@ -57,6 +58,7 @@ import { JwtServices } from "@global/auth-validator/jwt.service";
 
         MainModule,
         LibModule,
+        TestModule,
     ],
     controllers: [AppController],
     providers: [JwtStrategy],

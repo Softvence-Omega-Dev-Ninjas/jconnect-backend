@@ -56,8 +56,6 @@ export class PaymentService {
             customer: useGET.customerIdStripe,
         });
 
-        console.log("etay to customer id");
-
         const result = await this.stripe.setupIntents.confirm(setupIntentId, {
             payment_method: paymentMethod.id,
         });
@@ -229,6 +227,11 @@ export class PaymentService {
                 serviceId: service.id,
             },
         });
+        const setting = await this.prisma.setting.findUnique({
+            where: { id: "platform_settings" },
+        });
+        if (!setting?.platformFee)
+            throw new BadRequestException("Platform fee is not set in settings");
 
         const order = await this.prisma.order.create({
             data: {
@@ -238,32 +241,32 @@ export class PaymentService {
                 sellerIdStripe: service.creator?.sellerIDStripe || "",
                 paymentIntentId: paymentIntent.id,
                 serviceId: service.id,
-                amount: service.price,
-                platformFee: 0,
+                platformFee: 0.0,
+                amount: service.price * 100,
                 status: OrderStatus.PENDING,
             },
         });
 
         await this.mail.sendEmail(
-            service.creator?.email,
+            userFromReq.email,
             "Order Placed Successfully",
             `
     <h1>Your order is successfully placed!</h1>
     <p>Order Code: ${order.orderCode}</p>
     <p>Amount: $${order.amount}</p>
-    <p>Buyer: ${userFromReq.email}</p>
+    <p>seller: ${service.creator?.email}</p>
     <p>Status: ${order.status}</p>
     `,
         );
 
         await this.mail.sendEmail(
-            userFromReq.email,
+            service.creator?.email,
             "You Got a New Order",
             `
     <h1>New Order Received!</h1>
     <p>Order Code: ${order.orderCode}</p>
     <p>Service: ${service.serviceName}</p>
-    <p>Seller: ${service.creator?.email}</p>
+    <p>Buyer: ${userFromReq.email}</p>
     <p>Amount: $${order.amount}</p>
     `,
         );
@@ -308,40 +311,64 @@ export class PaymentService {
         if (!order) throw new NotFoundException("Order not found for this payment intent");
         if (order.status == OrderStatus.RELEASED)
             throw new HttpException("Order already released", 404);
-        const intent = await this.stripe.paymentIntents.retrieve(paymentIntentId);
+        // const intent = await this.stripe.paymentIntents.retrieve(paymentIntentId);
 
-        let capturedIntent: Stripe.PaymentIntent = intent;
-        if (intent.status !== "succeeded" && intent.capture_method === "manual") {
-            capturedIntent = await this.stripe.paymentIntents.capture(paymentIntentId);
-            this.logger.log(`Captured PaymentIntent ${paymentIntentId}`);
-        }
+        // let capturedIntent: Stripe.PaymentIntent = intent;
+        // if (intent.status !== "succeeded" && intent.capture_method === "manual") {
+        //     capturedIntent = await this.stripe.paymentIntents.capture(paymentIntentId);
+        //     this.logger.log(`Captured PaymentIntent ${paymentIntentId}`);
+        // }
 
         const setting = await this.prisma.setting.findUnique({
             where: { id: "platform_settings" },
         });
-
         if (!setting?.platformFee)
             throw new BadRequestException("Platform fee is not set in settings");
 
-        const platformFeePercent = Number(setting?.platformFee); // e.g. 10%
-        const amountCents = Math.floor(Number(order.amount) * 100);
-        const adminFeeCents = Math.floor((amountCents * platformFeePercent) / 100);
-        const transferableSellerAmount = amountCents - adminFeeCents;
-        const transfer = await this.stripe.transfers.create({
-            amount: transferableSellerAmount,
-            currency: capturedIntent.currency || "usd",
-            destination: sellerStripeAccountId,
-            transfer_group: paymentIntentId,
+        // PaymentIntent রিটারিভ করা
+        const intent = await this.stripe.paymentIntents.retrieve(paymentIntentId);
+
+        // যদি ম্যানুয়াল ক্যাপচার হয়, তাহলে ক্যাপচার করা
+        let capturedIntent: Stripe.PaymentIntent = intent;
+        if (intent.status !== "succeeded" && intent.capture_method === "manual") {
+            capturedIntent = (await this.stripe.paymentIntents.capture(
+                paymentIntentId,
+            )) as Stripe.PaymentIntent;
+            this.logger.log(`Captured PaymentIntent ${paymentIntentId}`);
+        }
+
+        // PaymentIntent‑এর সাথে যুক্ত চার্জগুলোর লিস্ট পাওয়া
+        const chargesList = await this.stripe.charges.list({
+            payment_intent: capturedIntent.id,
         });
 
-        // update order in DB
+        // প্রথম চার্জ (যদি থাকে) পাওয়া
+        const charge = chargesList.data[0];
+        this.logger.log("চার্জ তথ্য:", charge);
+        if (!charge) {
+            this.logger.log("এই PaymentIntent‑এর সাথে কোনো চার্জ পাওয়া যায়নি।");
+            return;
+        }
+
+        // ব্যালান্স ট্রানজ্যাকশন থেকে ফি ও নেট অ্যামাউন্ট পাওয়া
+        const balanceTransaction = await this.stripe.balanceTransactions.retrieve(
+            charge.balance_transaction as string,
+        );
+
+        this.logger.log("Stripe ফি:", balanceTransaction.fee);
+        this.logger.log("নেট অ্যামাউন্ট:", balanceTransaction.net);
+
         const updated = await this.prisma.order.update({
             where: { id: order.id },
             data: {
                 status: OrderStatus.RELEASED,
                 isReleased: true,
                 releasedAt: new Date(),
-                platformFee: setting?.platformFee,
+                seller_amount:
+                    Number(balanceTransaction.net) -
+                    balanceTransaction.net * (Number(setting.platformFee) / 100),
+                platformFee: balanceTransaction.net * (Number(setting.platformFee) / 100),
+                stripeFee: Number(balanceTransaction.fee),
             },
         });
 
@@ -349,10 +376,9 @@ export class PaymentService {
             order.buyer.email,
             "Order Payment Successfully",
             `
-        <h1>Your order is successfully Paid!</h1>
+        <h1>Your ${order.service.serviceName} order is successfully Paid!</h1>
         <p>Order Code: ${order.orderCode}</p>
         <p>Amount: $${order.amount}</p>
-        <p>Status: ${order.status}</p>
         `,
         );
 
@@ -360,15 +386,20 @@ export class PaymentService {
             order?.seller.email,
             "Order Payment Released",
             `
-        <h1>Your Order Released!</h1>
+        <h1>Your ${order.service.serviceName}  Order Released!</h1>
         <p>Order Code: ${order.orderCode}</p>
         <p>Service: ${order.service.serviceName}</p>
-        <p>Buyer: ${order.service.creator?.email}</p>
+        <p>buyer: ${order.buyer.email}</p>
         <p>Amount: $${order.amount}</p>
         `,
         );
 
-        return { transfer, platformFee: setting?.platformFee, order: updated };
+        return {
+            platformFee: setting?.platformFee,
+            order: updated,
+            stripefee: balanceTransaction.fee,
+            stripeneet: balanceTransaction.net,
+        };
     }
 
     async refundPayment(orderId: string, user: any) {
@@ -616,7 +647,7 @@ export class PaymentService {
 
                     await this.prisma.order.update({
                         where: { id: order.id },
-                        data: { status: OrderStatus.PAID },
+                        data: { status: OrderStatus.RELEASED },
                     });
 
                     this.logger.log(`Order ${order.id} marked PAID`);

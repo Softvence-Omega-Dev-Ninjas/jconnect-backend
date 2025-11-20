@@ -40,8 +40,8 @@ export class PaymentController {
     // ----------------------------
     @ApiBearerAuth()
     @ValidateUser()
-    @Post("create-session")
-    @ApiOperation({ summary: "Create Stripe Checkout Session for a service" })
+    @Post("make-payment")
+    @ApiOperation({ summary: "buyer make payment with payment-methode" })
     @ApiBody({
         schema: {
             type: "object",

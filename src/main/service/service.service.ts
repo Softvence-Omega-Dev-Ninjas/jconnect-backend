@@ -128,6 +128,7 @@ export class ServiceService {
 
     async findAll(): Promise<Service[]> {
         return this.prisma.service.findMany({
+            where: { isCustom: false },
             include: {
                 creator: {
                     select: {

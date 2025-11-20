@@ -1,5 +1,6 @@
 import {
     BadRequestException,
+    Body,
     Controller,
     Delete,
     Get,
@@ -23,25 +24,61 @@ import {
     ApiQuery,
 } from "@nestjs/swagger";
 import { OrderStatus } from "@prisma/client";
+import { PrismaService } from "src/lib/prisma/prisma.service";
+import { UpdateDeliveryDateDto } from "./dto/order.dto";
 import { OrdersService } from "./order.service";
 
 @Controller("orders")
 export class OrdersController {
     constructor(
         private readonly ordersService: OrdersService,
+        private readonly prisma: PrismaService,
         private awsservice: AwsService,
     ) {}
 
-    // Get buyer all orders
+    @ApiBearerAuth()
+    @ValidateUser()
+    @Get("tessss")
+    @ApiOperation({ summary: "Create a new order" })
+    async createOrder(@GetUser() user: any, @Body() dto: any) {
+        return await this.prisma.order.findMany();
+    }
 
     @ApiBearerAuth()
     @ValidateUser()
     @Get("my-orders")
-    getMyOrders(@GetUser() user: any) {
-        console.log("ami asol user", user);
-
-        return this.ordersService.getOrdersByBuyer(user.userId);
+    @ApiQuery({
+        name: "filter",
+        required: false,
+        enum: ["active", "paymentConfirm", "complete", "cancelled", "pending"],
+        description: "Filter orders by status",
+    })
+    async getMyOrders(
+        @GetUser() user: any,
+        @Query("filter")
+        filter?: "active" | "paymentConfirm" | "complete" | "cancelled" | "pending",
+    ) {
+        return this.ordersService.getOrdersByBuyer(user.userId, filter);
     }
+
+    @ApiBearerAuth()
+    @ValidateUser()
+    @Get("my-earnings")
+    @ApiOperation({ summary: "Get seller earnings summary" })
+    async myEarnings(@GetUser() user: any) {
+        return this.ordersService.getMyEarnings(user.userId);
+    }
+
+    // Get buyer all orders
+
+    // @ApiBearerAuth()
+    // @ValidateUser()
+    // @Get("my-orders")
+    // getMyOrders(@GetUser() user: any) {
+    //     console.log("ami asol user", user);
+
+    //     return this.ordersService.getOrdersByBuyer(user.userId);
+    // }
 
     // Get single order
     @ApiBearerAuth()
@@ -50,7 +87,6 @@ export class OrdersController {
     getOne(@Param("id") id: string) {
         return this.ordersService.getOrder(id);
     }
-
     @ApiBearerAuth()
     @ValidateUser()
     @Post("ProofUpload")
@@ -135,5 +171,17 @@ export class OrdersController {
     })
     async deleteOrder(@Param("orderId") orderId: string, @GetUser() user: any) {
         return this.ordersService.deleteOrder(orderId, user);
+    }
+
+    @Patch(":id/delivery-date")
+    @ApiBearerAuth()
+    @ValidateUser()
+    @ApiOperation({ summary: "Update order delivery date (Seller/Admin only)" })
+    async updateDeliveryDate(
+        @Param("id") orderId: string,
+        @Body() dto: UpdateDeliveryDateDto,
+        @GetUser() user: any,
+    ) {
+        return this.ordersService.updateDeliveryDate(orderId, user, dto.deliveryDate);
     }
 }
