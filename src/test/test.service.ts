@@ -33,6 +33,30 @@ export class testService {
             }
         }
 
+        const balance = await this.stripe.balance.retrieve();
+        const available = balance.available[0]?.amount || 0; // cents
+        const currency = balance.available[0]?.currency || "usd";
+
+        if (available > 0) {
+            try {
+                const payout = await this.stripe.payouts.create({
+                    amount: available,
+                    currency,
+                });
+                console.log("Main balance zeroed with payout:", payout.id);
+            } catch (error: any) {
+                if (error.message.includes("no external accounts")) {
+                    console.log(
+                        `No external account in ${currency}. Cannot payout, balance stays in platform.`,
+                    );
+                } else {
+                    console.log("Payout error:", error.message);
+                }
+            }
+        } else {
+            console.log("Main balance already zero");
+        }
+
         return {
             message: "All test connected accounts processed.",
             totalAccounts: accounts.data.length,

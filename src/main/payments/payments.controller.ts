@@ -1,5 +1,15 @@
 import { GetUser, ValidateUser } from "@common/jwt/jwt.decorator";
-import { Body, Controller, Headers, HttpCode, HttpStatus, Param, Post, Req } from "@nestjs/common";
+import {
+    BadRequestException,
+    Body,
+    Controller,
+    Headers,
+    HttpCode,
+    HttpStatus,
+    Param,
+    Post,
+    Req,
+} from "@nestjs/common";
 import {
     ApiBearerAuth,
     ApiBody,
@@ -10,6 +20,7 @@ import {
     ApiTags,
 } from "@nestjs/swagger";
 import { ConfirmSetupIntentDto, CreateSetupIntentDto } from "./dto/confirm-setup-intent.dto";
+import { WithdrawDto } from "./dto/withdraw.dto";
 import { PaymentService } from "./payments.service";
 
 @ApiTags("Payment")
@@ -41,13 +52,16 @@ export class PaymentController {
     @ApiBearerAuth()
     @ValidateUser()
     @Post("make-payment")
-    @ApiOperation({ summary: "buyer make payment with payment-methode" })
+    @ApiOperation({ summary: "buyer make payment with payment-methode with 5% vat charge" })
     @ApiBody({
         schema: {
             type: "object",
             properties: {
                 serviceId: { type: "string" },
-                frontendUrl: { type: "string", example: "https://your-frontend.com" },
+                frontendUrl: {
+                    type: "string",
+                    example: "https://shamimrana2006.github.io/shamimrana2006",
+                },
             },
             required: ["serviceId", "frontendUrl"],
         },
@@ -120,5 +134,21 @@ This endpoint is used by Admin/Buyer only.
     @Post("webhook")
     async stripeWebhook(@Req() req, @Headers("stripe-signature") signature: string) {
         return this.paymentService.handleWebhook(req.body, signature);
+    }
+
+    @ApiBearerAuth()
+    @ValidateUser()
+    @Post()
+    @ApiOperation({ summary: "Request withdrawal to seller Stripe account" })
+    @ApiBody({
+        description: "Withdraw amount",
+        type: WithdrawDto,
+    })
+    async withdraw(@Body() body: WithdrawDto, @GetUser() user: any) {
+        if (!body.amount) {
+            throw new BadRequestException("Withdraw amount is required");
+        }
+
+        return this.paymentService.transferToSeller(user.userId, body.amount);
     }
 }

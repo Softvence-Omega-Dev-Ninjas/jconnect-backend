@@ -16,6 +16,7 @@ model User {
   isDeleted              Boolean                @default(false)
   isActive               Boolean                @default(true)
   login_attempts         Int?                   @default(0)
+  withdrawn_amount       Int?            @default(0)
   // OTP sent to phone for phone verification
   phoneOtp               Int?
   phoneOtpExpiresAt      DateTime?

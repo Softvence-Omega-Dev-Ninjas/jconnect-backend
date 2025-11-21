@@ -1,3 +1,4 @@
+import { errorResponse } from "@common/utilsResponse/response.util";
 import {
     BadRequestException,
     HttpException,
@@ -199,6 +200,226 @@ export class PaymentService {
     //     };
     // }
 
+    async transferToSeller(userID: string, amount: number) {
+        const user = await this.prisma.user.findUnique({
+            where: { id: userID },
+            omit: { password: true },
+        });
+
+        if (!user) {
+            throw new NotFoundException("User not found");
+        }
+
+        const seller = user;
+
+        //  seller account create
+        //  seller account create
+        // const seller = await this.prisma.user.findUnique({
+        //     where: { id: userID },
+        // });
+
+        if (!seller) return errorResponse("Seller not found");
+
+        // ------------------------------------------------------------
+        // STEP 1: CHECK IF SELLER HAS EXISTING STRIPE CONNECT ACCOUNT
+        // ------------------------------------------------------------
+        if (seller.sellerIDStripe) {
+            try {
+                // Fetch account info from Stripe
+                const account: any = await this.stripe.accounts.retrieve(seller.sellerIDStripe);
+
+                // Check account status conditions
+                const isDisabled = !!account.disabled_reason;
+                const isRequirementsPending = account.requirements?.currently_due?.length > 0;
+
+                if (isDisabled || isRequirementsPending) {
+                    // Need re-onboarding
+                    const link = await this.stripe.accountLinks.create({
+                        account: account.id,
+                        refresh_url: "http://localhost:3000/reauth",
+                        return_url: "http://localhost:3000/onboarding-success",
+                        type: "account_onboarding",
+                    });
+
+                    return {
+                        status: "re_onboarding_required",
+                        message: "Your Stripe account needs verification",
+                        url: link.url,
+                    };
+                }
+                // If everything OK → continue creating service
+            } catch (err) {
+                // If account retrieve fails → re-create new account
+                const newAccount = await this.stripe.accounts.create({
+                    type: "express",
+                    email: seller.email,
+                    capabilities: { transfers: { requested: true } },
+                });
+
+                await this.prisma.user.update({
+                    where: { id: seller.id },
+                    data: { sellerIDStripe: newAccount.id },
+                });
+
+                const link = await this.stripe.accountLinks.create({
+                    account: newAccount.id,
+                    refresh_url: "http://localhost:3000/reauth",
+                    return_url: "http://localhost:3000/onboarding-success",
+                    type: "account_onboarding",
+                });
+
+                return {
+                    status: "onboarding_required",
+                    url: link.url,
+                };
+            }
+        }
+
+        // ------------------------------------------------------------
+        // STEP 2: IF NO STRIPE ACCOUNT → CREATE NEW
+        // ------------------------------------------------------------
+        if (!seller.sellerIDStripe) {
+            const account = await this.stripe.accounts.create({
+                type: "express",
+                email: seller.email,
+                capabilities: {
+                    transfers: { requested: true },
+                },
+            });
+
+            await this.prisma.user.update({
+                where: { id: userID },
+                data: { sellerIDStripe: account.id },
+            });
+
+            const link = await this.stripe.accountLinks.create({
+                account: account.id,
+                refresh_url: "http://localhost:3000/reauth",
+                return_url: "http://localhost:3000/onboarding-success",
+                type: "account_onboarding",
+            });
+
+            return {
+                status: "onboarding_required",
+                url: link.url,
+            };
+        }
+        //  seller account create
+        //  seller account create
+
+        // --------------------------------------------
+        const totalReleased = await this.prisma.order.aggregate({
+            where: { sellerId: userID },
+            _sum: { seller_amount: true },
+        });
+
+        const totalCancelled = await this.prisma.order.aggregate({
+            where: { sellerId: userID, status: OrderStatus.CANCELLED },
+            _sum: { seller_amount: true },
+        });
+
+        // const user = await this.prisma.user.findUnique({
+        //     where: { id: sellerId },
+        // });
+
+        // 2️⃣ Pending Clearance: IN_PROGRESS + PENDING + PROOF_SUBMITTED
+        const onlyPending = await this.prisma.order.aggregate({
+            where: {
+                sellerId: userID,
+                status: {
+                    in: [OrderStatus.PENDING],
+                },
+            },
+            _sum: { seller_amount: true },
+        });
+
+        const onlyPedningSum = onlyPending._sum.seller_amount || 0;
+        const totalEarning =
+            (totalReleased._sum.seller_amount || 0) -
+            (totalCancelled._sum.seller_amount || 0) -
+            (onlyPending._sum.seller_amount || 0);
+
+        // 2️⃣ Pending Clearance: IN_PROGRESS + PENDING + PROOF_SUBMITTED
+        const pendingOrders = await this.prisma.order.aggregate({
+            where: {
+                sellerId: userID,
+                status: {
+                    in: [OrderStatus.IN_PROGRESS, OrderStatus.PROOF_SUBMITTED],
+                },
+            },
+            _sum: { seller_amount: true },
+        });
+
+        const pendingClearance = pendingOrders._sum.seller_amount || 0;
+
+        // 3️⃣ Available balance
+        const availableBalance = totalEarning - pendingClearance - user?.withdrawn_amount!;
+
+        // --------------------------------------------
+
+        const setting = await this.prisma.setting.findUnique({
+            where: { id: "platform_settings" },
+        });
+
+        const sellerStripeAccountId = user?.sellerIDStripe;
+
+        if (!sellerStripeAccountId) {
+            throw new BadRequestException("Seller Stripe account not found");
+        }
+
+        amount = amount * 100;
+
+        if (!amount || amount < setting?.minimum_payout!) {
+            throw new BadRequestException(
+                `Invalid transfer amount please follow minimum payout : ${setting?.minimum_payout! / 100}`,
+            );
+        }
+
+        if (amount > availableBalance) {
+            throw new BadRequestException(`Insufficient balance to transfer`);
+        }
+        const balance = await this.stripe.balance.retrieve();
+
+        const available = balance.available[0].amount;
+
+        if (amount > available) {
+            throw new Error(
+                `Cannot transfer ${amount / 100}, Platform balance only ${available / 100} is available. please wait and try again later`,
+            );
+        }
+
+        const amountInCents = Math.round(amount);
+
+        // Transfer money from your platform balance → seller’s connected account
+        const transfer = await this.stripe.transfers.create({
+            amount: amountInCents,
+            currency: "usd",
+            destination: sellerStripeAccountId,
+        });
+
+        // const payout = await this.stripe.payouts.create( { amount: amountInCents, currency: "usd", }, { stripeAccount: sellerStripeAccountId, } );
+
+        await this.prisma.user.update({
+            where: { id: userID },
+            data: { withdrawn_amount: { increment: amountInCents } },
+        });
+        await this.mail.sendEmail(
+            user.email,
+            "Withdrawal Successfully",
+            `
+    <h1>Your withdrawal successfully added in your stripe account</h1>
+    <p>Amount: $${amountInCents / 100}</p>
+    <p>Status: It will be payout in your external account within 48 hour</p>
+    `,
+        );
+
+        return {
+            success: true,
+            message: "Transfer completed",
+            transfer,
+        };
+    }
+
     async createOrderWithPaymentMethod(userFromReq: any, serviceId: string, frontendUrl: string) {
         const user = await this.prisma.user.findUnique({
             where: { id: userFromReq.userId },
@@ -214,8 +435,22 @@ export class PaymentService {
             throw new BadRequestException("User does not have a Stripe Customer ID");
         if (!service) throw new NotFoundException("Service not found");
 
+        const setting = await this.prisma.setting.findUnique({
+            where: { id: "platform_settings" },
+        });
+        if (!setting?.platformFee_percents)
+            throw new BadRequestException("Platform fee is not set in settings");
+
+        service.price = service.price * 100;
+
+        // Calculate fee amount
+        const feeAmount = service.price * (setting?.platformFee_percents / 100);
+
+        // Final price = original price + random fee
+        const finalPrice = service.price + feeAmount;
+
         const paymentIntent = await this.stripe.paymentIntents.create({
-            amount: Math.round(service.price * 100),
+            amount: finalPrice,
             currency: service.currency?.toLowerCase() || "usd",
             customer: user?.customerIdStripe,
             payment_method: user.paymentMethod?.[0]?.paymentMethod,
@@ -227,12 +462,9 @@ export class PaymentService {
                 serviceId: service.id,
             },
         });
-        const setting = await this.prisma.setting.findUnique({
-            where: { id: "platform_settings" },
-        });
-        if (!setting?.platformFee)
-            throw new BadRequestException("Platform fee is not set in settings");
 
+        const priceInCents = Math.round(service.price);
+        const sellerAmount = priceInCents - (priceInCents * setting.platformFee_percents) / 100;
         const order = await this.prisma.order.create({
             data: {
                 orderCode: `ORD-${Date.now()}`,
@@ -242,7 +474,8 @@ export class PaymentService {
                 paymentIntentId: paymentIntent.id,
                 serviceId: service.id,
                 platformFee: 0.0,
-                amount: service.price * 100,
+                amount: service.price,
+                seller_amount: sellerAmount,
                 status: OrderStatus.PENDING,
             },
         });
@@ -253,7 +486,7 @@ export class PaymentService {
             `
     <h1>Your order is successfully placed!</h1>
     <p>Order Code: ${order.orderCode}</p>
-    <p>Amount: $${order.amount}</p>
+    <p>Amount: $${order.amount / 100}</p>
     <p>seller: ${service.creator?.email}</p>
     <p>Status: ${order.status}</p>
     `,
@@ -267,7 +500,7 @@ export class PaymentService {
     <p>Order Code: ${order.orderCode}</p>
     <p>Service: ${service.serviceName}</p>
     <p>Buyer: ${userFromReq.email}</p>
-    <p>Amount: $${order.amount}</p>
+    <p>Amount: $${order.amount / 100}</p>
     `,
         );
 
@@ -304,25 +537,14 @@ export class PaymentService {
             throw new BadRequestException(
                 "buyer not place the payment or Order does not have a paymentIntentId",
             );
-        if (!sellerStripeAccountId)
-            throw new BadRequestException("Order does not have a seller Stripe Account ID");
-
-        // const order = await this.prisma.order.findUnique({ where: { paymentIntentId } });
         if (!order) throw new NotFoundException("Order not found for this payment intent");
         if (order.status == OrderStatus.RELEASED)
             throw new HttpException("Order already released", 404);
-        // const intent = await this.stripe.paymentIntents.retrieve(paymentIntentId);
-
-        // let capturedIntent: Stripe.PaymentIntent = intent;
-        // if (intent.status !== "succeeded" && intent.capture_method === "manual") {
-        //     capturedIntent = await this.stripe.paymentIntents.capture(paymentIntentId);
-        //     this.logger.log(`Captured PaymentIntent ${paymentIntentId}`);
-        // }
 
         const setting = await this.prisma.setting.findUnique({
             where: { id: "platform_settings" },
         });
-        if (!setting?.platformFee)
+        if (!setting?.platformFee_percents)
             throw new BadRequestException("Platform fee is not set in settings");
 
         // PaymentIntent রিটারিভ করা
@@ -364,10 +586,7 @@ export class PaymentService {
                 status: OrderStatus.RELEASED,
                 isReleased: true,
                 releasedAt: new Date(),
-                seller_amount:
-                    Number(balanceTransaction.net) -
-                    balanceTransaction.net * (Number(setting.platformFee) / 100),
-                platformFee: balanceTransaction.net * (Number(setting.platformFee) / 100),
+                platformFee: (order.amount * setting.platformFee_percents) / 100,
                 stripeFee: Number(balanceTransaction.fee),
             },
         });
@@ -378,7 +597,7 @@ export class PaymentService {
             `
         <h1>Your ${order.service.serviceName} order is successfully Paid!</h1>
         <p>Order Code: ${order.orderCode}</p>
-        <p>Amount: $${order.amount}</p>
+        <p>Amount: $${order.amount / 100}</p>
         `,
         );
 
@@ -390,12 +609,12 @@ export class PaymentService {
         <p>Order Code: ${order.orderCode}</p>
         <p>Service: ${order.service.serviceName}</p>
         <p>buyer: ${order.buyer.email}</p>
-        <p>Amount: $${order.amount}</p>
+        <p>Amount: $${order.amount / 100}</p>
         `,
         );
 
         return {
-            platformFee: setting?.platformFee,
+            platformFee: setting?.platformFee_percents,
             order: updated,
             stripefee: balanceTransaction.fee,
             stripeneet: balanceTransaction.net,

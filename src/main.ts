@@ -24,18 +24,14 @@ async function bootstrap() {
         }),
     );
     app.useGlobalFilters(new AllExceptionsFilter());
-    // Swagger config
-    // const config = new DocumentBuilder()
-    //     .setTitle("J-connect Backend API")
-    //     .setDescription("API documentation for J-connect backend")
-    //     .setVersion("1.0")
-    //     .build();
 
     const document = SwaggerModule.createDocument(app, config);
-    SwaggerModule.setup("api-docs", app, document);
-    // ---------------webhook raw body parser----------------
-    // Stripe requires the raw body to construct the event.
-    // app.use('/stripe/webhook', bodyParser.raw({ type: 'application/json' }));
+    SwaggerModule.setup("api-docs", app, document, {
+        swaggerOptions: {
+            persistAuthorization: true,
+        },
+    });
+
     const configService = app.get(ConfigService);
     const PORT = process.env.PORT ?? 8080;
 

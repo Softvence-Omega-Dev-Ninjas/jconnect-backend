@@ -249,15 +249,32 @@ export class OrdersService {
             _sum: { seller_amount: true },
         });
 
+        const user = await this.prisma.user.findUnique({
+            where: { id: sellerId },
+        });
+
+        const onlyPending = await this.prisma.order.aggregate({
+            where: {
+                sellerId,
+                status: {
+                    in: [OrderStatus.PENDING],
+                },
+            },
+            _sum: { seller_amount: true },
+        });
+
+        const onlyPedningSum = onlyPending._sum.seller_amount || 0;
         const totalEarning =
-            (totalReleased._sum.seller_amount || 0) - (totalCancelled._sum.seller_amount || 0);
+            (totalReleased._sum.seller_amount || 0) -
+            (totalCancelled._sum.seller_amount || 0) -
+            (onlyPending._sum.seller_amount || 0);
 
         // 2️⃣ Pending Clearance: IN_PROGRESS + PENDING + PROOF_SUBMITTED
         const pendingOrders = await this.prisma.order.aggregate({
             where: {
                 sellerId,
                 status: {
-                    in: [OrderStatus.IN_PROGRESS, OrderStatus.PENDING, OrderStatus.PROOF_SUBMITTED],
+                    in: [OrderStatus.IN_PROGRESS, OrderStatus.PROOF_SUBMITTED],
                 },
             },
             _sum: { seller_amount: true },
@@ -266,12 +283,13 @@ export class OrdersService {
         const pendingClearance = pendingOrders._sum.seller_amount || 0;
 
         // 3️⃣ Available balance
-        const availableBalance = totalEarning - pendingClearance;
+        const availableBalance = totalEarning - pendingClearance - user?.withdrawn_amount!;
 
         return {
-            totalEarning,
-            pendingClearance,
-            availableBalance,
+            totalEarning: totalEarning / 100,
+            pendingClearance: pendingClearance / 100,
+            availableBalance: availableBalance / 100,
+            withdrawn_amount: user?.withdrawn_amount! / 100,
         };
     }
 }
