@@ -11,7 +11,7 @@ model Payment {
 
   // ----------- Relations ----------------------
   userId String
-  user   User   @relation(fields: [userId], references: [id])
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   serviceId String
   service   Service @relation(fields: [serviceId], references: [id])
@@ -38,8 +38,8 @@ model BuyService {
   createdAt DateTime @default(now())
 
   // ---------- Relations ----------
-  buyer   User    @relation("Buyer", fields: [buyerId], references: [id])
-  seller  User    @relation("Seller", fields: [sellerId], references: [id])
+  buyer   User    @relation("Buyer", fields: [buyerId], references: [id], onDelete: Cascade)
+  seller  User    @relation("Seller", fields: [sellerId], references: [id], onDelete: Cascade)
   service Service @relation(fields: [serviceId], references: [id])
   payment Payment @relation("PaymentToBuyServices", fields: [paymentId], references: [id])
 }

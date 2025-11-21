@@ -1,7 +1,7 @@
-import { Injectable, Logger } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
-import * as nodemailer from 'nodemailer';
-import { ENVEnum } from 'src/common/enum/env.enum';
+import { Injectable, Logger } from "@nestjs/common";
+import { ConfigService } from "@nestjs/config";
+import * as nodemailer from "nodemailer";
+import { ENVEnum } from "src/common/enum/env.enum";
 
 @Injectable()
 export class MailService {
@@ -19,39 +19,36 @@ export class MailService {
         // Validate required environment variables
         if (!mailUser || !mailPass) {
             this.logger.warn(
-                '⚠️  Email configuration is incomplete. Email functionality will be disabled.',
+                "⚠️  Email configuration is incomplete. Email functionality will be disabled.",
             );
-            this.logger.warn('Required: MAIL_USER, MAIL_PASS');
+            this.logger.warn("Required: MAIL_USER, MAIL_PASS");
             return;
         }
 
         try {
             this.transporter = nodemailer.createTransport({
-                service: 'gmail',
+                service: "gmail",
                 auth: {
                     user: mailUser,
                     pass: mailPass,
                 },
             });
 
-            this.logger.log('✅ Email transporter initialized successfully');
+            this.logger.log("✅ Email transporter initialized successfully");
         } catch (error) {
-            this.logger.error('❌ Failed to initialize email transporter:', error);
+            this.logger.error("❌ Failed to initialize email transporter:", error);
         }
     }
 
-    async sendLoginCodeEmail(
-        email: string,
-        code: string,
-    ): Promise<nodemailer.SentMessageInfo> {
+    async sendLoginCodeEmail(email: string, code: string): Promise<nodemailer.SentMessageInfo> {
         if (!this.transporter) {
-            throw new Error('Email service is not configured. Please contact support.');
+            throw new Error("Email service is not configured. Please contact support.");
         }
 
         const mailOptions = {
             from: `"No Reply" <${this.configService.get<string>(ENVEnum.MAIL_USER)}>`,
             to: email,
-            subject: 'Login Code',
+            subject: "Login Code",
             html: `
                 <h3>Welcome!</h3>
                 <p>Please login by using the code below:</p>
@@ -65,7 +62,7 @@ export class MailService {
             return info;
         } catch (error) {
             this.logger.error(`❌ Failed to send login code to ${email}:`, error);
-            throw new Error('Failed to send email. Please try again later.');
+            throw new Error("Failed to send email. Please try again later.");
         }
     }
 
@@ -75,8 +72,9 @@ export class MailService {
         message: string,
     ): Promise<nodemailer.SentMessageInfo> {
         if (!this.transporter) {
-            throw new Error('Email service is not configured. Please contact support.');
+            throw new Error("Email service is not configured. Please contact support.");
         }
+        console.log("ami sendMail function ................................");
 
         const mailOptions = {
             from: `"No Reply" <${this.configService.get<string>(ENVEnum.MAIL_USER)}>`,
@@ -91,7 +89,7 @@ export class MailService {
             return info;
         } catch (error) {
             this.logger.error(`❌ Failed to send email to ${email}:`, error);
-            throw new Error('Failed to send email. Please try again later.');
+            throw new Error("Failed to send email. Please try again later.");
         }
     }
 
@@ -181,7 +179,7 @@ export class MailService {
                         <h1>📧 Email Verification</h1>
                     </div>
                     <div class="content">
-                        <h2>Hi ${userName || 'there'}! 👋</h2>
+                        <h2>Hi ${userName || "there"}! 👋</h2>
                         <p>Thank you for registering with us. To complete your registration, please verify your email address using the OTP code below:</p>
                         
                         <div class="otp-box">
@@ -199,14 +197,14 @@ export class MailService {
                     
                     <div class="footer">
                         <p>This is an automated email. Please do not reply to this message.</p>
-                        <p>&copy; ${new Date().getFullYear()} ${this.configService.get<string>('APP_NAME') || 'Your App'}. All rights reserved.</p>
+                        <p>&copy; ${new Date().getFullYear()} ${this.configService.get<string>("APP_NAME") || "Your App"}. All rights reserved.</p>
                     </div>
                 </div>
             </body>
             </html>
         `;
 
-        return this.sendEmail(email, 'Verify Your Email Address', html);
+        return this.sendEmail(email, "Verify Your Email Address", html);
     }
 
     // Password reset email with better styling
@@ -293,7 +291,7 @@ export class MailService {
                         <h1>🔐 Password Reset Request</h1>
                     </div>
                     <div class="content">
-                        <h2>Hi ${userName || 'there'}!</h2>
+                        <h2>Hi ${userName || "there"}!</h2>
                         <p>We received a request to reset the password for your account. Use the OTP code below to proceed with resetting your password:</p>
                         
                         <div class="otp-box">
@@ -313,29 +311,29 @@ export class MailService {
                     
                     <div class="footer">
                         <p>This is an automated email. Please do not reply to this message.</p>
-                        <p>&copy; ${new Date().getFullYear()} ${this.configService.get<string>('APP_NAME') || 'Your App'}. All rights reserved.</p>
+                        <p>&copy; ${new Date().getFullYear()} ${this.configService.get<string>("APP_NAME") || "Your App"}. All rights reserved.</p>
                     </div>
                 </div>
             </body>
             </html>
         `;
 
-        return this.sendEmail(email, 'Reset Your Password', html);
+        return this.sendEmail(email, "Reset Your Password", html);
     }
 
     // Test email connection
     async testConnection(): Promise<boolean> {
         if (!this.transporter) {
-            this.logger.error('❌ Email transporter not initialized');
+            this.logger.error("❌ Email transporter not initialized");
             return false;
         }
 
         try {
             await this.transporter.verify();
-            this.logger.log('✅ Email connection test successful');
+            this.logger.log("✅ Email connection test successful");
             return true;
         } catch (error) {
-            this.logger.error('❌ Email connection test failed:', error);
+            this.logger.error("❌ Email connection test failed:", error);
             return false;
         }
     }

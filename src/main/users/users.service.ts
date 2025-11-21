@@ -3,8 +3,8 @@ import { HttpException, Injectable, NotFoundException } from "@nestjs/common";
 import agoron2 from "argon2";
 import { PrismaService } from "src/lib/prisma/prisma.service";
 import { UtilsService } from "src/lib/utils/utils.service";
+import { FindArtistDto } from "./dto/findArtist.dto";
 import { CreateUserDto, UpdateUserDto } from "./dto/user.dto";
-
 @Injectable()
 export class UsersService {
     constructor(
@@ -76,16 +76,74 @@ export class UsersService {
         };
     }
 
-    async findMe(Id: string) {
-        // ---------------------------
+    // async findMe(Id: string) {
+    //     // ---------------------------
+    //     const user = await this.prisma.user.findUnique({
+    //         where: { id: Id },
+    //         omit: { password: true },
+    //         include: {
+    //             profile: true,
+    //             devices: true,
+
+    //             //  Service relations
+    //             services: true,
+    //             serviceRequests: {
+    //                 include: {
+    //                     buyer: true,
+    //                     service: true,
+    //                 },
+    //             },
+
+    //             //  LiveChat relations
+    //             LiveChatsCreated: true,
+    //             chatParticipations: {
+    //                 include: {
+    //                     chat: true,
+    //                 },
+    //             },
+    //             liveMessages: true,
+    //             liveMessageReads: {
+    //                 include: {
+    //                     message: true,
+    //                 },
+    //             },
+
+    //             //  Custom service requests
+    //             customRequestsMade: {
+    //                 include: {
+    //                     buyer: true,
+    //                     targetCreator: true,
+    //                 },
+    //             },
+    //             customRequestsReceived: {
+    //                 include: {
+    //                     buyer: true,
+    //                     targetCreator: true,
+    //                 },
+    //             },
+
+    //             //  Social services
+    //             socialServices: {
+    //                 include: {},
+    //             },
+    //         },
+    //     });
+
+    //     // ---------------------------
+
+    //     // return await this.prisma.user.findUnique({ where: { id: Id }, omit: { password: true }, });
+
+    //     return user;
+    // }
+
+    async findMe(id: string) {
+        // 🔹 Step 1: User full data আগের মতো
         const user = await this.prisma.user.findUnique({
-            where: { id: Id },
+            where: { id },
             omit: { password: true },
             include: {
                 profile: true,
                 devices: true,
-
-                //  Service relations
                 services: true,
                 serviceRequests: {
                     include: {
@@ -93,22 +151,14 @@ export class UsersService {
                         service: true,
                     },
                 },
-
-                //  LiveChat relations
                 LiveChatsCreated: true,
                 chatParticipations: {
-                    include: {
-                        chat: true,
-                    },
+                    include: { chat: true },
                 },
                 liveMessages: true,
                 liveMessageReads: {
-                    include: {
-                        message: true,
-                    },
+                    include: { message: true },
                 },
-
-                //  Custom service requests
                 customRequestsMade: {
                     include: {
                         buyer: true,
@@ -121,32 +171,161 @@ export class UsersService {
                         targetCreator: true,
                     },
                 },
+                socialServices: true,
+                orders_buyer: true,
+                orders_seller: true,
+                paymentMethod: true,
+            },
+        });
 
-                //  Social services
-                socialServices: {
-                    include: {},
+        if (!user) throw new Error("User not found");
+
+        // 🔹 Step 2: এই মাসের শুরু আর শেষ (pure JS)
+        const now = new Date();
+        const startDate = new Date(now.getFullYear(), now.getMonth(), 1); // এই মাসের ১ তারিখ
+        const endDate = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59, 999); // এই মাসের শেষ দিন
+
+        // 🔹 Step 3: Total completed deals (এই মাসে)
+        const totalDeals = await this.prisma.payment.count({
+            where: {
+                userId: id,
+                status: "COMPLETED",
+                createdAt: { gte: startDate, lte: endDate },
+            },
+        });
+
+        // 🔹 Step 4: Total earnings (sum of completed payments এই মাসে)
+        const totalEarningsResult = await this.prisma.payment.aggregate({
+            _sum: { amount: true },
+            where: {
+                userId: id,
+                status: "COMPLETED",
+                createdAt: { gte: startDate, lte: endDate },
+            },
+        });
+        const totalEarnings = totalEarningsResult._sum.amount ?? 0;
+
+        // 🔹 Step 5: Average rating (এই মাসে পাওয়া reviews)
+        const avgRatingResult = await this.prisma.review.aggregate({
+            _avg: { rating: true },
+            where: {
+                artistId: id,
+            },
+        });
+        const avgRating = avgRatingResult._avg.rating ?? 0;
+
+        // 🔹 Step 6: সব একসাথে রিটার্ন (আগের ডেটা + stats)
+        return {
+            ...user,
+            stats: {
+                totalDeals,
+                totalEarnings,
+                avgRating: parseFloat(avgRating.toFixed(2)),
+                monthRange: {
+                    start: startDate.toISOString(),
+                    end: endDate.toISOString(),
                 },
             },
-        });
-
-        // ---------------------------
-
-        // return await this.prisma.user.findUnique({ where: { id: Id }, omit: { password: true }, });
-
-        return user;
+        };
     }
 
-    async findAllArtist() {
-        return await this.prisma.user.findMany({
-            where: {
-                role: "ARTIST",
-                isDeleted: false,
-                isActive: true,
-            },
-            omit: {
-                password: true,
-            },
-        });
+    async findAllArtist({ page = 1, limit = 10, filter, search }: FindArtistDto) {
+        const skip = (page - 1) * limit;
+
+        const baseWhere: any = {
+            isDeleted: false,
+            isActive: true,
+        };
+
+        // 🔹 Add search system (artist_name OR service_name)
+        if (search) {
+            baseWhere.OR = [
+                {
+                    full_name: {
+                        contains: search,
+                        mode: "insensitive",
+                    },
+                },
+                {
+                    services: {
+                        some: {
+                            serviceName: {
+                                contains: search,
+                                mode: "insensitive",
+                            },
+                        },
+                    },
+                },
+            ];
+        }
+
+        // 🔹 Default pagination (with included services)
+        const [artists, total] = await this.prisma.$transaction([
+            this.prisma.user.findMany({
+                where: baseWhere,
+                include: {
+                    services: {
+                        orderBy: { updatedAt: "desc" },
+                    },
+                    ReviewsGiven: true,
+                    ReviewsReceived: true,
+                },
+                skip,
+                take: limit,
+                omit: { password: true },
+                orderBy: { created_at: "desc" },
+            }),
+            this.prisma.user.count({ where: baseWhere }),
+        ]);
+
+        let sortedArtists = artists;
+
+        if (filter === "top-rated") {
+            artists.sort((a, b) => {
+                const avgA =
+                    a.ReviewsReceived.length > 0
+                        ? a.ReviewsReceived.reduce((sum, r) => sum + r.rating, 0) /
+                          a.ReviewsReceived.length
+                        : 0;
+                const avgB =
+                    b.ReviewsReceived.length > 0
+                        ? b.ReviewsReceived.reduce((sum, r) => sum + r.rating, 0) /
+                          b.ReviewsReceived.length
+                        : 0;
+                return avgB - avgA;
+            });
+        }
+
+        // 🔹 Filter for recently updated artists
+        if (filter === "recently-updated") {
+            sortedArtists = artists
+                .map((artist) => ({
+                    ...artist,
+                    latestServiceUpdate: artist.services?.[0]?.updatedAt ?? artist.updated_at,
+                }))
+                .sort(
+                    (a, b) =>
+                        new Date(b.latestServiceUpdate).getTime() -
+                        new Date(a.latestServiceUpdate).getTime(),
+                );
+        }
+
+        // 🔹 Suggested artists (example: most services)
+        if (filter === "suggested") {
+            sortedArtists = artists.sort(
+                (a, b) => (b.services?.length ?? 0) - (a.services?.length ?? 0),
+            );
+        }
+
+        // 🔹 Apply pagination after sort
+        const paginated = sortedArtists.slice(skip, skip + limit);
+
+        return {
+            total,
+            currentPage: page,
+            totalPages: Math.ceil(total / limit),
+            data: paginated,
+        };
     }
 
     async findOne(id: string) {

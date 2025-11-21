@@ -17,11 +17,6 @@ export class CreateServiceRequestDto {
             "The ID of the user initiating the purchase (buyer). Must be obtained securely from the authentication context.",
         example: "clx0j2h8j000101a1bc3de4g",
     })
-    @IsString()
-    @IsNotEmpty()
-    // If you use UUIDs, you should use @IsUUID() instead of @IsString()
-    buyerId: string;
-
     @ApiProperty({
         description:
             "Detailed instructions from the buyer to the seller, required for service execution.",

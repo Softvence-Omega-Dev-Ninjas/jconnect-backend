@@ -3,15 +3,15 @@ import { ValidationPipe } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
 import { NestFactory } from "@nestjs/core";
 import { DocumentBuilder, SwaggerModule } from "@nestjs/swagger";
-import * as bodyParser from 'body-parser';
+import * as express from "express";
 import { AppModule } from "./app.module";
 async function bootstrap() {
-    const app = await NestFactory.create(AppModule);
+    const app = await NestFactory.create(AppModule, { cors: true });
     // --------------Swagger config with Bearer Auth------------------
     const config = new DocumentBuilder()
-        .setTitle('J-connect Backend API')
-        .setDescription('Team j-connect API description')
-        .setVersion('1.0')
+        .setTitle("J-connect Backend API")
+        .setDescription("Team j-connect API description")
+        .setVersion("1.0")
         .addBearerAuth()
         .build();
 
@@ -24,20 +24,22 @@ async function bootstrap() {
         }),
     );
     app.useGlobalFilters(new AllExceptionsFilter());
-    // Swagger config
-    // const config = new DocumentBuilder()
-    //     .setTitle("J-connect Backend API")
-    //     .setDescription("API documentation for J-connect backend")
-    //     .setVersion("1.0")
-    //     .build();
 
     const document = SwaggerModule.createDocument(app, config);
-    SwaggerModule.setup("api-docs", app, document);
-    // ---------------webhook raw body parser----------------
-    // Stripe requires the raw body to construct the event.
-    app.use('/stripe/webhook', bodyParser.raw({ type: 'application/json' }));
+    SwaggerModule.setup("api-docs", app, document, {
+        swaggerOptions: {
+            persistAuthorization: true,
+        },
+    });
+
     const configService = app.get(ConfigService);
     const PORT = process.env.PORT ?? 8080;
+
+    app.use("/payments/webhook", express.raw({ type: "application/json" }));
+
+    // Other routes normal JSON
+    app.use(express.json());
+
     await app.listen(PORT);
 
     console.log(`🚀 Server running at: http://localhost:${PORT}`);
