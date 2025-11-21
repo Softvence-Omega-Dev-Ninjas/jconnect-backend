@@ -1,40 +1,42 @@
 enum OrderStatus {
-    PENDING // buyer placed order
-    IN_PROGRESS // seller started working
-    PROOF_SUBMITTED // seller submitted proof to buyer
+    PENDING 
+    IN_PROGRESS 
+    PROOF_SUBMITTED 
     CANCELLED
-    RELEASED // admin manually transferred money
+    RELEASED 
 }
 
 model Order {
-    id                   String      @id @default(uuid())
-    orderCode            String      @unique
-    buyerId              String
-    sessionId            String?     @unique() // Stripe Checkout Session ID
-    sellerId             String
-    sellerIdStripe       String?
-    serviceId            String
-    paymentIntentId      String?     @unique // Stripe Payment Intent ID
-    amount               Int
-    seller_amount        Int         @default(0)
-    platformFee          Int
-    platformFee_percents Int         @default(0)
-    stripeFee            Int         @default(0)
-    status               OrderStatus @default(PENDING)
-    deliveryDate         DateTime?
-    createdAt            DateTime    @default(now())
-    updatedAt            DateTime    @updatedAt
+  id                   String       @id @default(uuid())
+  orderCode            String       @unique
+  buyerId              String
+  sessionId            String?      @unique() // Stripe Checkout Session ID
+  sellerId             String
+  sellerIdStripe       String?
+  serviceId            String
+  paymentIntentId      String?      @unique // Stripe Payment Intent ID
+  amount               Int
+  seller_amount        Int          @default(0)
+  buyerPay             Int          @default(0)
+  PlatfromRevinue        Int          @default(0)
+  platformFee          Int
+  platformFee_percents Int          @default(0)
+  stripeFee            Int          @default(0)
+  status               OrderStatus  @default(PENDING)
+  deliveryDate         DateTime?
+  createdAt            DateTime     @default(now())
+  updatedAt            DateTime     @updatedAt
+  disposts  Dispute[]
+  // For Escrow Manual Release
+  isReleased           Boolean      @default(false)
+  releasedAt           DateTime?
 
-    // For Escrow Manual Release
-    isReleased Boolean   @default(false)
-    releasedAt DateTime?
+  //                   Proof
+  proofUrl             String[]
+  proofSubmittedAt     DateTime     @updatedAt
 
-    // Proof
-    proofUrl         String[]
-    proofSubmittedAt DateTime @updatedAt
-
-    // Relations
-    buyer   User    @relation("OrderBuyer", fields: [buyerId], references: [id], onDelete: Cascade)
-    seller  User    @relation("OrderSeller", fields: [sellerId], references: [id], onDelete: Cascade)
-    service Service @relation(fields: [serviceId], references: [id], onDelete: Cascade)
+  //                   Relations
+  buyer                User        @relation("OrderBuyer", fields: [buyerId], references: [id], onDelete: Cascade)
+  seller               User        @relation("OrderSeller", fields: [sellerId], references: [id], onDelete: Cascade)
+  service              Service     @relation(fields: [serviceId], references: [id], onDelete: Cascade)
 }

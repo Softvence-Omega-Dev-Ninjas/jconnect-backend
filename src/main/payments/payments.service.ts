@@ -586,6 +586,8 @@ export class PaymentService {
                 status: OrderStatus.RELEASED,
                 isReleased: true,
                 releasedAt: new Date(),
+                PlatfromRevinue: balanceTransaction.net - order.seller_amount,
+                buyerPay: balanceTransaction.net,
                 platformFee: (order.amount * setting.platformFee_percents) / 100,
                 stripeFee: Number(balanceTransaction.fee),
             },

@@ -50,7 +50,6 @@ model User {
   Buyer                  SocialServiceRequest[] @relation("SocialRequestBuyer")
   Artist                 SocialServiceRequest[] @relation("SocialRequestRequester")
   socialServices         SocialService[]
-
   ReviewsGiven    Review[] @relation("ReviewsGiven")
   ReviewsReceived Review[] @relation("ReviewsReceived")
 
@@ -67,6 +66,7 @@ model User {
   orders_seller Order[] @relation("OrderSeller")
 
   paymentMethod PaymentMethod[]
+  Disputes  Dispute[]
 
   @@map("users")
 }
