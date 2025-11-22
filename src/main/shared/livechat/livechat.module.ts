@@ -1,5 +1,6 @@
 import { AuthValidatorService } from "@global/auth-validator/auth-validator.service";
 import { Module } from "@nestjs/common";
+import { PrismaService } from "src/lib/prisma/prisma.service";
 import { ChatGateway } from "./chat.gateway";
 import { ChatController } from "./controller/livechat.controller";
 import { SocketMiddleware } from "./middleware/socket.middleware";

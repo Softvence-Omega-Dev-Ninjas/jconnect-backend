@@ -1,9 +1,11 @@
-import { EVENT_TYPES } from "@common/interface/events-name";
+import type { UserRegistration } from "@common/interface/events-payload";
 import { Notification } from "@common/interface/events-payload";
+import { EVENT_TYPES } from "@common/interface/events.name";
 import { PayloadForSocketClient } from "@common/interface/socket-client-payload";
 import { JWTPayload } from "@common/jwt/jwt.interface";
 import { Injectable, Logger } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
+import { OnEvent } from "@nestjs/event-emitter";
 import { JwtService } from "@nestjs/jwt";
 import {
     OnGatewayConnection,
@@ -153,8 +155,62 @@ export class NotificationGateway
         client.emit("pong");
     }
 
-    @SubscribeMessage(EVENT_TYPES.POST_UPDATE)
+    @SubscribeMessage(EVENT_TYPES.USERREGISTRATION_CREATE)
     handlePostUpdate(purpose: string, client: Socket) {
         client.broadcast.emit(purpose, {});
+    }
+
+    // ------LISTEN TO CREATE REGISTER----------------
+    @OnEvent(EVENT_TYPES.USERREGISTRATION_CREATE)
+    async handleUserRegistrationCreated(payload: UserRegistration) {
+        this.logger.log("User Registration EVENT RECEIVED");
+        this.logger.log(`Payload: ${JSON.stringify(payload, null, 2)}`);
+
+        if (!payload.info?.recipients?.length) {
+            this.logger.warn("No recipients found → skipping");
+            return;
+        }
+
+        this.logger.log(`Total recipients: ${payload.info.recipients.length}`);
+
+        for (const recipient of payload.info.recipients) {
+            this.logger.log(`--- Processing recipient: ${recipient.id} (${recipient.email}) ---`);
+
+            const clients = this.getClientsForUser(recipient.id);
+            this.logger.log(`  → Connected sockets: ${clients.size}`);
+
+            if (clients.size === 0) {
+                this.logger.warn(
+                    `  No active socket for user ${recipient.id} → notification skipped`,
+                );
+                continue;
+            }
+
+            for (const client of clients) {
+                this.logger.log(`  Sending notification to socket ${client.id}`);
+
+                client.emit(EVENT_TYPES.USERREGISTRATION_CREATE, {
+                    type: EVENT_TYPES.USERREGISTRATION_CREATE,
+                    title: "New User Registered",
+                    message: `${payload.info.name} has registered as ${payload.info.role}`,
+                    createdAt: new Date(),
+
+                    meta: {
+                        id: payload.info.id,
+                        email: payload.info.email,
+                        name: payload.info.name,
+                        role: payload.info.role,
+                        action: payload.action,
+                        ...payload.meta,
+                    },
+                } satisfies Notification);
+
+                this.logger.log(
+                    `  ✔ Notification sent to ${recipient.id} via socket ${client.id}`,
+                );
+            }
+        }
+
+        this.logger.log("USERREGISTRATION_CREATE event processing complete");
     }
 }
