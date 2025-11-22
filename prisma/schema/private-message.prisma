@@ -24,7 +24,8 @@ model PrivateMessage {
 
   isRead Boolean @default(false)
 
-  files String[]
+  files   String[]
+  service String[]
 
   PrivateLastMessage PrivateConversation[] @relation("PrivateLastMessage")
 

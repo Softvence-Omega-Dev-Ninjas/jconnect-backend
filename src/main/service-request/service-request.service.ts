@@ -7,14 +7,18 @@ import { UpdateServiceRequestDto } from "./dto/update-service-request.dto";
 
 @Injectable()
 export class ServiceRequestService {
-    constructor(private prisma: PrismaService) { }
+    constructor(private prisma: PrismaService) {}
 
     async create(createRequestDto: CreateServiceRequestDto, user: any): Promise<ServiceRequest> {
         // Validate referenced Service exists to avoid foreign key constraint errors
         if (createRequestDto.serviceId) {
-            const service = await this.prisma.service.findUnique({ where: { id: createRequestDto.serviceId } });
+            const service = await this.prisma.service.findUnique({
+                where: { id: createRequestDto.serviceId },
+            });
             if (!service) {
-                throw new NotFoundException(`Service with ID "${createRequestDto.serviceId}" not found.`);
+                throw new NotFoundException(
+                    `Service with ID "${createRequestDto.serviceId}" not found.`,
+                );
             }
         }
 

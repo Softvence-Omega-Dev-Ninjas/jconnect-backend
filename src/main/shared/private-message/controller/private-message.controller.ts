@@ -8,14 +8,10 @@ import {
     OnModuleInit,
     Param,
     Post,
-    UseInterceptors,
 } from "@nestjs/common";
-import { FilesInterceptor } from "@nestjs/platform-express";
-import { ApiBearerAuth, ApiBody, ApiConsumes, ApiOperation, ApiTags } from "@nestjs/swagger";
+import { ApiBearerAuth, ApiOperation, ApiTags } from "@nestjs/swagger";
 import { GetUser, ValidateAuth } from "src/common/jwt/jwt.decorator";
-import { FileType, MulterService } from "src/lib/multer/multer.service";
 import { SendPrivateMessageDto } from "../dto/privateChatGateway.dto";
-import { sendPrivateMessageSwaggerSchema } from "../dto/sendPrivateMessageSwaggerSchema";
 import { PrivateChatGateway } from "../privateChatGateway/privateChatGateway";
 import { PrivateChatService } from "../service/private-message.service";
 
@@ -54,22 +50,6 @@ export class PrivateChatController implements OnModuleInit {
 
     @Post("send-message/:recipientId")
     @ApiOperation({ summary: "Sending Private message" })
-    @ApiConsumes("multipart/form-data")
-    @ApiBody({
-        schema: {
-            type: "object",
-            properties: sendPrivateMessageSwaggerSchema.properties,
-        },
-    })
-    // @UseInterceptors(FileInterceptor('file'))
-    @ApiConsumes("multipart/form-data")
-    @UseInterceptors(
-        FilesInterceptor(
-            "file",
-            5,
-            new MulterService().createMulterOptions("./uploads", "content", FileType.ANY),
-        ),
-    )
     async sendTeamMessage(
         @Param("recipientId") recipientId: string,
         @Body() dto: SendPrivateMessageDto,
