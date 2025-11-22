@@ -115,6 +115,10 @@ This endpoint is used by Admin/Buyer only.
         return this.paymentService.approvePayment(body.orderID, user);
     }
 
+    // ----------------------------
+    // Refund Payment
+    // ----------------------------
+    @ApiExcludeEndpoint()
     @ApiBearerAuth()
     @ValidateUser()
     @Post("refund/:orderId")
