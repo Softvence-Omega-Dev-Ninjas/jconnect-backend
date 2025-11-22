@@ -1,6 +1,6 @@
 // /src/servicerequest/dto/create-servicerequest.dto.ts
-import { ApiProperty } from "@nestjs/swagger";
-import { IsDateString, IsNotEmpty, IsNumber, IsOptional, IsString, Min } from "class-validator";
+import { ApiProperty, PartialType } from "@nestjs/swagger";
+import { IsArray, IsDateString, IsNotEmpty, IsOptional, IsString } from "class-validator";
 
 export class CreateServiceRequestDto {
     @ApiProperty({
@@ -17,6 +17,7 @@ export class CreateServiceRequestDto {
             "The ID of the user initiating the purchase (buyer). Must be obtained securely from the authentication context.",
         example: "clx0j2h8j000101a1bc3de4g",
     })
+    // Note: buyer/user id comes from authentication context and is not part of the request body.
     @ApiProperty({
         description:
             "Detailed instructions from the buyer to the seller, required for service execution.",
@@ -55,16 +56,35 @@ export class CreateServiceRequestDto {
         example: "https://cdn.yourplatform.com/assets/req/track-id-123.mp3",
     })
     @IsOptional()
-    @IsString() // Using IsString for a generic URL storage, but IsUrl() could be more strict
-    uploadedFileUrl?: string;
-
-    // --- CRITICAL GUARDRAIL NOTE ---
+    @IsArray()
+    @IsString({ each: true }) // array of string URLs
     @ApiProperty({
-        description:
-            "The **final total** charged to the buyer (Service Price + Platform Fee). This value MUST be verified or recalculated on the server side using the serviceId to prevent fraud.",
-        example: 82.5,
+        description: 'Server-generated URLs for uploaded files',
+        readOnly: true,
+        required: false,
+        type: 'array',
+        items: { type: 'string' },
     })
-    @IsNumber()
-    @Min(0.01)
-    totalAmount: number;
+    uploadedFileUrl?: string[];
+
+    // // --- CRITICAL GUARDRAIL NOTE ---
+    // @ApiProperty({
+    //     description:
+    //         "The **final total** charged to the buyer (Service Price + Platform Fee). This value MUST be verified or recalculated on the server side using the serviceId to prevent fraud.",
+    //     example: 82.5,
+    // })
+    // @IsNumber()
+    // @Min(0.01)
+    // totalAmount: number;
+}
+
+
+export class CreateServiceRequestWithFilesDto extends PartialType(CreateServiceRequestDto) {
+    @ApiProperty({
+        description: "Upload one or multiple files",
+        required: false,
+        type: 'array',
+        items: { type: 'string', format: 'binary' },
+    })
+    files?: any[];
 }

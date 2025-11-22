@@ -10,16 +10,16 @@ import { AdminStatsDto, RevenueByMonthDto, TopSellerDto } from "./dto/admin-stat
 export class AdminDashboardStatsController {
     constructor(private readonly adminStatsService: AdminDashboardStatsService) {}
 
-    @ApiBearerAuth()
-    @ValidateSuperAdmin()
-    @Get("overview")
-    @ApiOperation({
-        summary: "Get admin dashboard overview stats (Users, Revenue, Disputes, Refunds)",
-    })
-    @ApiResponse({ status: 200, type: AdminStatsDto })
-    async getOverviewStats(): Promise<AdminStatsDto> {
-        return this.adminStatsService.getAdminStats();
-    }
+    // @ApiBearerAuth()
+    // @ValidateSuperAdmin()
+    // @Get("overview")
+    // @ApiOperation({
+    //     summary: "Get admin dashboard overview stats (Users, Revenue, Disputes, Refunds)",
+    // })
+    // @ApiResponse({ status: 200, type: AdminStatsDto })
+    // async getOverviewStats(): Promise<AdminStatsDto> {
+    //     return this.adminStatsService.getAdminStats();
+    // }
 
     @ApiBearerAuth()
     @ValidateSuperAdmin()

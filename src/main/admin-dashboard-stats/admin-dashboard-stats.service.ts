@@ -7,11 +7,10 @@ export class AdminDashboardStatsService {
     constructor(private prisma: PrismaService) {}
 
     // Aggregate key metrics for the dashboard overview cards
-    async getAdminStats(): Promise<AdminStatsDto> {
-        const [totalUsers, totalRevenue, totalDisputes, totalRefunds] = await Promise.all([
+    async getAdminStats(){
+        const [totalUsers, totalRevenue, totalDisputes] = await Promise.all([
             this.prisma.user.count({ where: { isDeleted: false, isActive: true } }),
             this.getTotalRevenue(),
-            this.getTotalDisputes(),
             this.getTotalRefunds(),
         ]);
 
@@ -19,7 +18,6 @@ export class AdminDashboardStatsService {
             totalUsers,
             totalRevenue,
             totalDisputes,
-            totalRefunds,
         };
     }
 
@@ -209,12 +207,7 @@ export class AdminDashboardStatsService {
         return (result._sum.amount || 0) / 100;
     }
 
-    private async getTotalDisputes(): Promise<number> {
-        // Disputes are tracked in ServiceRequest with status 'DISPUTED'
-        return this.prisma.serviceRequest.count({
-            where: { status: "DISPUTED" },
-        });
-    }
+
 
     private async getTotalRefunds(): Promise<number> {
         // Refunds are tracked as CANCELLED payments
