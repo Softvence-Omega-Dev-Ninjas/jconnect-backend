@@ -1,4 +1,5 @@
 import { Module } from "@nestjs/common";
+import { awsModule } from "./aws/aws.module";
 
 import { ChatModule } from "./livechat/livechat.module";
 

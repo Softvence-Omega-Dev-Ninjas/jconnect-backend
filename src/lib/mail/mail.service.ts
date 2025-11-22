@@ -46,7 +46,7 @@ export class MailService {
         }
 
         const mailOptions = {
-            from: `"No Reply" <${this.configService.get<string>(ENVEnum.MAIL_USER)}>`,
+            from: `"DJconnect" <${this.configService.get<string>(ENVEnum.MAIL_USER)}>`,
             to: email,
             subject: "Login Code",
             html: `
@@ -77,7 +77,7 @@ export class MailService {
         console.log("ami sendMail function ................................");
 
         const mailOptions = {
-            from: `"No Reply" <${this.configService.get<string>(ENVEnum.MAIL_USER)}>`,
+            from: `"DJconnect"" <${this.configService.get<string>(ENVEnum.MAIL_USER)}>`,
             to: email,
             subject,
             html: message,
