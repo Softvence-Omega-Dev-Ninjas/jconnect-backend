@@ -8,6 +8,7 @@ import {
     ForbiddenException,
     Get,
     Param,
+    Patch,
     Post,
     Put,
     Query,
@@ -24,6 +25,7 @@ import {
     ApiResponse,
     ApiTags,
 } from "@nestjs/swagger";
+import { Role } from "@prisma/client";
 import { FindArtistDto } from "./dto/findArtist.dto";
 import { reset_password, UpdateUserDto } from "./dto/user.dto";
 import { UsersService } from "./users.service";
@@ -165,5 +167,35 @@ export class UsersController {
             throw new ForbiddenException("You are not authorized to update this user");
         }
         return this.usersService.remove(id);
+    }
+
+    @ApiBearerAuth()
+    @ValidateAdmin()
+    @Patch(":id/role")
+    @ApiOperation({ summary: "Update user role" })
+    @ApiQuery({
+        name: "role",
+        required: true,
+        enum: Role,
+        description: "New role for the user",
+        example: Role.ADMIN,
+    })
+    @ApiResponse({ status: 200, description: "User role updated successfully" })
+    @ApiResponse({ status: 404, description: "User not found" })
+    async updateRole(@Param("id") id: string, @Query("role") role: string) {
+        // // 🔹 Enum validation
+        // if (!Object.values(Role).includes(role as Role)) {
+        //     throw new BadRequestException(
+        //         `Invalid role. Valid roles: ${Object.values(Role).join(", ")}`
+        //     );
+        // }
+
+        const updatedUser = await this.usersService.updateRole(id, role as Role);
+
+        return {
+            success: true,
+            message: "User role updated successfully",
+            data: updatedUser,
+        };
     }
 }

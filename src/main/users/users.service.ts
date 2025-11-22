@@ -5,6 +5,7 @@ import { PrismaService } from "src/lib/prisma/prisma.service";
 import { UtilsService } from "src/lib/utils/utils.service";
 import { FindArtistDto } from "./dto/findArtist.dto";
 import { CreateUserDto, UpdateUserDto } from "./dto/user.dto";
+import { Role } from "@prisma/client";
 @Injectable()
 export class UsersService {
     constructor(
@@ -365,6 +366,30 @@ export class UsersService {
             data: { password: hash },
             omit: { password: true },
         });
+    }
+
+    async updateRole(id: string, role: Role) {
+        // 🔹 Check if user exists
+        const user = await this.prisma.user.findUnique({ where: { id } });
+
+        if (!user) throw new NotFoundException("User not found");
+        if (user.isDeleted) throw new NotFoundException("User already deleted");
+
+        // 🔹 Update role
+        const updatedUser = await this.prisma.user.update({
+            where: { id },
+            data: { role },
+            omit: { password: true },
+        });
+
+        return {
+            id: updatedUser.id,
+            full_name: updatedUser.full_name,
+            email: updatedUser.email,
+            role: updatedUser.role,
+            isActive: updatedUser.isActive,
+            isVerified: updatedUser.isVerified,
+        };
     }
 
     async remove(id: string) {

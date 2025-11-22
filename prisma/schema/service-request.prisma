@@ -7,15 +7,9 @@ model ServiceRequest {
   captionOrInstructions String?
   promotionDate         DateTime?
   specialNotes          String?
+  price Int? 
+  uploadedFileUrl String[]
 
-  uploadedFileUrl String?
-
-  servicePrice      Float
-  platformFeeRate   Float
-  platformFeeAmount Float
-  totalAmount       Float
-
-  status    String   @default("PENDING")
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 

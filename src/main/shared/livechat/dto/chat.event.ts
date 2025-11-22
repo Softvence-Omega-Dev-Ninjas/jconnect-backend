@@ -1,6 +1,0 @@
-export enum ChatEvents {
-    SEND_MESSAGE = "SEND_MESSAGE",
-    RECEIVE_MESSAGE = "RECEIVE_MESSAGE",
-    JOIN_P2P = "JOIN_P2P",
-    SIGNAL = "SIGNAL",
-}

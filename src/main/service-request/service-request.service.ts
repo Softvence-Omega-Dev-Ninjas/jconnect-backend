@@ -9,9 +9,19 @@ import { UpdateServiceRequestDto } from "./dto/update-service-request.dto";
 export class ServiceRequestService {
     constructor(private prisma: PrismaService) {}
 
-    // 1. CREATE
     async create(createRequestDto: CreateServiceRequestDto, user: any): Promise<ServiceRequest> {
-        // Note: In a real app, calculate price/fee and verify payment here.
+        // Validate referenced Service exists to avoid foreign key constraint errors
+        if (createRequestDto.serviceId) {
+            const service = await this.prisma.service.findUnique({
+                where: { id: createRequestDto.serviceId },
+            });
+            if (!service) {
+                throw new NotFoundException(
+                    `Service with ID "${createRequestDto.serviceId}" not found.`,
+                );
+            }
+        }
+
         return this.prisma.serviceRequest.create({
             data: {
                 ...createRequestDto,
@@ -19,13 +29,6 @@ export class ServiceRequestService {
                 promotionDate: createRequestDto.promotionDate
                     ? new Date(createRequestDto.promotionDate)
                     : null,
-
-                // Placeholder values (MUST be calculated securely)
-                platformFeeRate: 0.1,
-                servicePrice: createRequestDto.totalAmount / 1.1,
-                platformFeeAmount:
-                    createRequestDto.totalAmount - createRequestDto.totalAmount / 1.1,
-                status: "PENDING_CONFIRMATION",
             },
         });
     }

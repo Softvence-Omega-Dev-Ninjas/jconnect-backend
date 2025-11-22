@@ -640,7 +640,6 @@ export class PaymentService {
         const isBuyer = order.buyerId === user.userId;
         const isAdmin = user.roles.includes(Role.ADMIN);
         const isSuperAdmin = user.roles.includes(Role.SUPER_ADMIN);
-        console.log(isBuyer, isAdmin, isSuperAdmin, user);
 
         if (!isBuyer && !isAdmin && !isSuperAdmin) {
             throw new HttpException("You cannot request a refund for this order.", 403);
@@ -664,7 +663,14 @@ export class PaymentService {
 
             await this.prisma.order.update({
                 where: { id: order.id },
-                data: { status: OrderStatus.CANCELLED },
+                data: {
+                    status: OrderStatus.CANCELLED,
+                    seller_amount: 0,
+                    buyerPay: 0,
+                    stripeFee: 0,
+                    PlatfromRevinue: 0,
+                    platformFee: 0,
+                },
             });
 
             await this.mail.sendEmail(
@@ -693,6 +699,10 @@ export class PaymentService {
                 status: OrderStatus.CANCELLED,
                 isReleased: false,
                 platformFee: 0,
+                PlatfromRevinue: 0,
+                seller_amount: 0,
+                buyerPay: 0,
+                stripeFee: 0,
             },
         });
 
@@ -703,7 +713,7 @@ export class PaymentService {
             `
         <h1>Your refund has been processed!</h1>
         <p>Order Code: ${order.orderCode}</p>
-        <p>Amount Refunded: $${order.amount}</p>
+        <p>Amount Refunded: $${order.amount / 100}</p>
         <p>Status: CANCELLED</p>
     `,
         );

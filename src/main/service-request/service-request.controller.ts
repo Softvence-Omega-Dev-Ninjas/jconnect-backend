@@ -1,7 +1,26 @@
 // /src/servicerequest/servicerequest.controller.ts
 import { GetUser, ValidateUser } from "@common/jwt/jwt.decorator";
-import { Body, Controller, Delete, Get, Param, Patch, Post } from "@nestjs/common";
-import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from "@nestjs/swagger";
+import { AwsService } from "@main/aws/aws.service";
+import {
+    Body,
+    Controller,
+    Delete,
+    Get,
+    Param,
+    Patch,
+    Post,
+    UploadedFiles,
+    UseInterceptors,
+} from "@nestjs/common";
+import { AnyFilesInterceptor } from "@nestjs/platform-express";
+import {
+    ApiBearerAuth,
+    ApiBody,
+    ApiConsumes,
+    ApiOperation,
+    ApiResponse,
+    ApiTags,
+} from "@nestjs/swagger";
 import { ServiceRequest } from "@prisma/client";
 import { CreateServiceRequestDto } from "./dto/create-service-request.dto";
 import { UpdateServiceRequestDto } from "./dto/update-service-request.dto";
@@ -10,21 +29,51 @@ import { ServiceRequestService } from "./service-request.service";
 @ApiTags("Service Requests (Orders)")
 @Controller("requests")
 export class ServiceRequestController {
-    constructor(private readonly serviceRequestService: ServiceRequestService) {}
+    constructor(
+        private readonly serviceRequestService: ServiceRequestService,
+        private readonly awsService: AwsService,
+    ) {}
 
     @ApiBearerAuth()
     @ValidateUser()
     @Post()
     @ApiOperation({ summary: "Create a new service request/order" })
-    @ApiResponse({
-        status: 201,
-        description: "Request created successfully (Awaiting payment confirmation)",
+    @ApiConsumes("multipart/form-data")
+    @ApiBody({
+        description: "Service request with file upload",
+        schema: {
+            type: "object",
+            properties: {
+                files: { type: "array", items: { type: "string", format: "binary" } },
+                serviceId: { type: "string" },
+                captionOrInstructions: { type: "string" },
+                promotionDate: { type: "string", format: "date" },
+                specialNotes: { type: "string" },
+            },
+        },
     })
+    @UseInterceptors(AnyFilesInterceptor())
     async create(
         @Body() createRequestDto: CreateServiceRequestDto,
+        @UploadedFiles() files: Express.Multer.File[],
         @GetUser() user: any,
-    ): Promise<ServiceRequest> {
-        return this.serviceRequestService.create(createRequestDto, user);
+    ) {
+        const uploadedUrls: string[] = [];
+
+        if (files && files.length > 0) {
+            for (const file of files) {
+                const uploaded = await this.awsService.upload(file);
+                uploadedUrls.push(uploaded.url);
+            }
+        }
+
+        return this.serviceRequestService.create(
+            {
+                ...createRequestDto,
+                uploadedFileUrl: uploadedUrls,
+            },
+            user,
+        );
     }
 
     @ApiBearerAuth()

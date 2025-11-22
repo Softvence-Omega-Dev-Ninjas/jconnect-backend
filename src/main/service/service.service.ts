@@ -51,6 +51,22 @@ export class ServiceService {
         });
     }
 
+    async Myservice(user: any): Promise<Service[]> {
+        return this.prisma.service.findMany({
+            where: { creatorId: user.userId },
+            include: {
+                creator: {
+                    select: {
+                        sellerIDStripe: true,
+                        email: true,
+                        full_name: true,
+                    },
+                },
+                serviceRequests: true,
+            },
+        });
+    }
+
     async findOne(id: string): Promise<Service> {
         const service = await this.prisma.service.findUnique({
             where: { id },
