@@ -8,8 +8,7 @@ import { TopSellerFilterDto } from "./dto/topSelletFilter.dto";
 @ApiBearerAuth()
 @Controller("admin/dashboard-stats")
 export class AdminDashboardStatsController {
-    constructor(private readonly adminStatsService: AdminDashboardStatsService) { }
-
+    constructor(private readonly adminStatsService: AdminDashboardStatsService) {}
 
     @ValidateSuperAdmin()
     @Get("overview")
@@ -22,14 +21,12 @@ export class AdminDashboardStatsController {
             return {
                 status: HttpStatus.OK,
                 message: "Admin Stats",
-                data: res
-            }
+                data: res,
+            };
         } catch (error) {
-            throw new InternalServerErrorException(error.message, error.status)
+            throw new InternalServerErrorException(error.message, error.status);
         }
-
     }
-
 
     @ApiBearerAuth()
     @ValidateSuperAdmin()
@@ -41,13 +38,12 @@ export class AdminDashboardStatsController {
             return {
                 status: HttpStatus.OK,
                 message: "Fetch Revenue of last 2 year",
-                data: res
-            }
+                data: res,
+            };
         } catch (error) {
-            throw new InternalServerErrorException(error.message, error.status)
+            throw new InternalServerErrorException(error.message, error.status);
         }
     }
-
 
     @ValidateSuperAdmin()
     @Get("top-sellers")
@@ -58,13 +54,12 @@ export class AdminDashboardStatsController {
             return {
                 status: HttpStatus.OK,
                 message: "Top Sellers",
-                data: res
-            }
+                data: res,
+            };
         } catch (error) {
-            throw new InternalServerErrorException(error.message, error.status)
+            throw new InternalServerErrorException(error.message, error.status);
         }
     }
-
 
     @ValidateSuperAdmin()
     @Get("top-performing-users")
@@ -75,14 +70,13 @@ export class AdminDashboardStatsController {
             return {
                 status: HttpStatus.OK,
                 message: "Top Performing Users",
-                data: res
-            }
+                data: res,
+            };
         } catch (error) {
-            throw new InternalServerErrorException(error.message, error.status)
+            throw new InternalServerErrorException(error.message, error.status);
         }
     }
 
-    
     @ValidateSuperAdmin()
     @Get("user-activity-weekly")
     @ApiOperation({
@@ -94,10 +88,10 @@ export class AdminDashboardStatsController {
             return {
                 status: HttpStatus.OK,
                 message: "Fetch User Activity Weekly",
-                data: res
-            }
+                data: res,
+            };
         } catch (error) {
-            throw new InternalServerErrorException(error.message, error.status)
+            throw new InternalServerErrorException(error.message, error.status);
         }
     }
 }

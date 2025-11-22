@@ -3,7 +3,7 @@ import { PrismaService } from "src/lib/prisma/prisma.service";
 
 @Injectable()
 export class AdminDashboardStatsService {
-    constructor(private prisma: PrismaService) { }
+    constructor(private prisma: PrismaService) {}
 
     //* Aggregate key metrics for the dashboard overview cards
     async getAdminStats() {
@@ -19,7 +19,7 @@ export class AdminDashboardStatsService {
             totalRevenueObj,
             lastMonthRevenueObj,
             totalRefundObj,
-            lastMonthRefundObj
+            lastMonthRefundObj,
         ] = await Promise.all([
             this.prisma.user.count(),
 
@@ -83,16 +83,15 @@ export class AdminDashboardStatsService {
             totalRevenue: totalRevenueObj._sum.PlatfromRevinue || 0,
             revenuePercentage: calcPercentage(
                 totalRevenueObj._sum.PlatfromRevinue || 0,
-                lastMonthRevenueObj._sum.PlatfromRevinue || 0
+                lastMonthRevenueObj._sum.PlatfromRevinue || 0,
             ),
             totalRefund: totalRefundObj._sum.amount || 0,
             refundPercentage: calcPercentage(
                 totalRefundObj._sum.amount || 0,
-                lastMonthRefundObj._sum.amount || 0
+                lastMonthRefundObj._sum.amount || 0,
             ),
         };
     }
-
 
     //* Revenue trend by month (for the main line chart)
     async getLastYearAndThisYearRevenue() {
@@ -155,100 +154,93 @@ export class AdminDashboardStatsService {
         return result;
     }
 
+    async getTopSellers(page = 1, limit = 10) {
+        const skip = (page - 1) * limit;
 
+        const thirtyDaysAgo = new Date();
+        thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
 
-async getTopSellers(page = 1, limit = 10) {
-    const skip = (page - 1) * limit;
-
-    const thirtyDaysAgo = new Date();
-    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-
-    // Group by sellers for last 30 days
-    const sellers = await this.prisma.order.groupBy({
-        by: ["sellerId"],
-        where: {
-            status: "RELEASED",
-            createdAt: {
-                gte: thirtyDaysAgo,
+        // Group by sellers for last 30 days
+        const sellers = await this.prisma.order.groupBy({
+            by: ["sellerId"],
+            where: {
+                status: "RELEASED",
+                createdAt: {
+                    gte: thirtyDaysAgo,
+                },
             },
-        },
-        _count: true,
-        _sum: {
-            PlatfromRevinue: true,
-        },
-        orderBy: {
+            _count: true,
             _sum: {
-                PlatfromRevinue: "desc",
+                PlatfromRevinue: true,
             },
-        },
-        skip,
-        take: limit,
-    });
+            orderBy: {
+                _sum: {
+                    PlatfromRevinue: "desc",
+                },
+            },
+            skip,
+            take: limit,
+        });
 
+        const sellerIds = sellers.map((s) => s.sellerId);
 
-    const sellerIds = sellers.map((s) => s.sellerId);
+        const users = await this.prisma.user.findMany({
+            where: { id: { in: sellerIds } },
+            select: {
+                id: true,
+                full_name: true,
+            },
+        });
 
-    const users = await this.prisma.user.findMany({
-        where: { id: { in: sellerIds } },
-        select: {
-            id: true,
-            full_name: true,
-        },
-    });
+        const final = sellers.map((seller) => {
+            const user = users.find((u) => u.id === seller.sellerId);
+            const totalRevenue = seller._sum?.PlatfromRevinue || 0;
+            const deals = typeof seller._count === "number" ? seller._count : 0;
 
+            return {
+                username: "@" + (user?.full_name || "unknown"),
+                dealsCompleted30d: deals,
+                totalRevenue30d: totalRevenue,
+                avgOrderValue: deals > 0 ? totalRevenue / deals : 0,
+            };
+        });
 
-    const final = sellers.map((seller) => {
-        const user = users.find((u) => u.id === seller.sellerId);
-        const totalRevenue = seller._sum?.PlatfromRevinue || 0;
-        const deals = typeof seller._count === 'number' ? seller._count : 0;
+        const totalSellers = await this.prisma.order.groupBy({
+            by: ["sellerId"],
+            where: {
+                status: "RELEASED",
+                createdAt: {
+                    gte: thirtyDaysAgo,
+                },
+            },
+        });
 
         return {
-            username: "@" + (user?.full_name || "unknown"),
-            dealsCompleted30d: deals,
-            totalRevenue30d: totalRevenue,
-            avgOrderValue: deals > 0 ? totalRevenue / deals : 0,
-        };
-    });
-
-
-    const totalSellers = await this.prisma.order.groupBy({
-        by: ["sellerId"],
-        where: {
-            status: "RELEASED",
-            createdAt: {
-                gte: thirtyDaysAgo,
+            data: final,
+            pagination: {
+                page,
+                limit,
+                total: totalSellers.length,
             },
-        },
-    });
-
-    return {
-        data: final,
-        pagination: {
-            page,
-            limit,
-            total: totalSellers.length,
-        },
-    };
-}
-
+        };
+    }
 
     //* Top Performing Users (by amount of money spent/paid)
     async getTopPerformingUsers() {
         const res = await this.prisma.order.groupBy({
-            by: ['buyerId'],
+            by: ["buyerId"],
             _sum: {
                 amount: true,
             },
             orderBy: {
                 _sum: {
-                    amount: 'desc',
+                    amount: "desc",
                 },
             },
             take: 10,
         });
         return res;
     }
-
 
     //* Get Active User counts grouped by the day of the week over the last 7 days.
     async getUserActivityWeekly() {
@@ -299,22 +291,15 @@ async getTopSellers(page = 1, limit = 10) {
         const result = Object.keys(dayMap)
             .sort()
             .map((date) => {
-                const total =
-                    dayMap[date].active + dayMap[date].inactive || 1;
+                const total = dayMap[date].active + dayMap[date].inactive || 1;
 
                 return {
                     date,
-                    activePercentage: Number(
-                        ((dayMap[date].active / total) * 100).toFixed(2)
-                    ),
-                    inactivePercentage: Number(
-                        ((dayMap[date].inactive / total) * 100).toFixed(2)
-                    ),
+                    activePercentage: Number(((dayMap[date].active / total) * 100).toFixed(2)),
+                    inactivePercentage: Number(((dayMap[date].inactive / total) * 100).toFixed(2)),
                 };
             });
 
         return result;
     }
-
-
 }
