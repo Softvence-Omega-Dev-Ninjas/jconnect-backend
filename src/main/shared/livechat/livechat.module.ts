@@ -13,7 +13,6 @@ import { JwtServices } from "@global/auth-validator/jwt.service";
     providers: [
         ChatService,
         ChatGateway,
-        PrismaService,
         RedisService,
         SocketMiddleware,
         AuthValidatorService,

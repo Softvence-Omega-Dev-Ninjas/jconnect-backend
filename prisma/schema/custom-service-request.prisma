@@ -11,11 +11,11 @@ model CustomServiceRequest {
 
   // Buyer relation
   buyerId String
-  buyer   User   @relation(name: "BuyerCustomRequests", fields: [buyerId], references: [id])
+  buyer   User   @relation(name: "BuyerCustomRequests", fields: [buyerId], references: [id], onDelete: Cascade)
 
   // Target creator relation
   targetCreatorId String?
-  targetCreator   User?   @relation(name: "TargetedCustomRequests", fields: [targetCreatorId], references: [id])
+  targetCreator   User?   @relation(name: "TargetedCustomRequests", fields: [targetCreatorId], references: [id], onDelete: Cascade)
 
   serviceName           String
   description           String

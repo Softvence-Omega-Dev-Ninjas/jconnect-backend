@@ -1,10 +1,10 @@
 import { Module } from "@nestjs/common";
 import { awsModule } from "./aws/aws.module";
 
-import { PrivateMessageModule } from "./private-message/private-message.module";
+import { ChatModule } from "./livechat/livechat.module";
 
 @Module({
-    imports: [awsModule, PrivateMessageModule],
+    imports: [ChatModule],
     controllers: [],
     providers: [],
     exports: [],

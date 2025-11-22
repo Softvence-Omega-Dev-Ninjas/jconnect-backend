@@ -1,28 +1,68 @@
-import { ForbiddenException, Injectable, NotFoundException } from "@nestjs/common";
+import { HandleError } from "@common/error/handle-error.decorator";
+import { errorResponse } from "@common/utilsResponse/response.util";
+import { ForbiddenException, Inject, Injectable, NotFoundException } from "@nestjs/common";
 import { Service } from "@prisma/client";
 import { PrismaService } from "src/lib/prisma/prisma.service";
+import Stripe from "stripe";
 import { CreateServiceDto } from "./dto/create-service.dto";
 import { UpdateServiceDto } from "./dto/update-service.dto";
 @Injectable()
 export class ServiceService {
-    constructor(private prisma: PrismaService) {}
+    constructor(
+        private prisma: PrismaService,
+        @Inject("STRIPE_CLIENT") private stripe: Stripe,
+    ) {}
 
-    async create(createServiceDto: CreateServiceDto, user: any): Promise<Service> {
-        return this.prisma.service.create({
-            data: {
-                ...createServiceDto,
-                creatorId: user.userId,
-            },
+    @HandleError("Failed to create service")
+    async create(payload: CreateServiceDto, user: any): Promise<any> {
+        if (!user.userId) return errorResponse("User ID is missing");
+
+        // ------------------------------------------------------------
+        // STEP 3: CHECK IF SERVICE EXISTS
+        // ------------------------------------------------------------
+        const existingService = await this.prisma.service.findFirst({
+            where: { serviceName: payload.serviceName, creatorId: user.userId },
         });
+        if (existingService) return errorResponse("Service already exists");
+
+        // ------------------------------------------------------------
+        // STEP 4: CREATE NEW SERVICE
+        // ------------------------------------------------------------
+        const service = await this.prisma.service.create({
+            data: { ...payload, creatorId: user.userId },
+        });
+
+        return { message: "Service created successfully", service };
     }
 
     async findAll(): Promise<Service[]> {
-        return this.prisma.service.findMany();
+        return this.prisma.service.findMany({
+            where: { isCustom: false },
+            include: {
+                creator: {
+                    select: {
+                        sellerIDStripe: true,
+                        email: true,
+                        full_name: true,
+                    },
+                },
+                serviceRequests: true,
+            },
+        });
     }
 
     async findOne(id: string): Promise<Service> {
         const service = await this.prisma.service.findUnique({
             where: { id },
+            include: {
+                creator: {
+                    select: {
+                        sellerIDStripe: true,
+                        email: true,
+                        full_name: true,
+                    },
+                },
+            },
         });
 
         if (!service) {

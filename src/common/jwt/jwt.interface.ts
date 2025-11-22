@@ -15,5 +15,6 @@ export interface UserTokenPayload {
     roles: UserEnum[];
     email: string;
     userId: string;
+    customerIdStripe?: string;
     [key: string]: unknown;
 }

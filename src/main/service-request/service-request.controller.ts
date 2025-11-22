@@ -1,5 +1,5 @@
 // /src/servicerequest/servicerequest.controller.ts
-import { ValidateUser } from "@common/jwt/jwt.decorator";
+import { GetUser, ValidateUser } from "@common/jwt/jwt.decorator";
 import { Body, Controller, Delete, Get, Param, Patch, Post } from "@nestjs/common";
 import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from "@nestjs/swagger";
 import { ServiceRequest } from "@prisma/client";
@@ -20,8 +20,11 @@ export class ServiceRequestController {
         status: 201,
         description: "Request created successfully (Awaiting payment confirmation)",
     })
-    async create(@Body() createRequestDto: CreateServiceRequestDto): Promise<ServiceRequest> {
-        return this.serviceRequestService.create(createRequestDto);
+    async create(
+        @Body() createRequestDto: CreateServiceRequestDto,
+        @GetUser() user: any,
+    ): Promise<ServiceRequest> {
+        return this.serviceRequestService.create(createRequestDto, user);
     }
 
     @ApiBearerAuth()

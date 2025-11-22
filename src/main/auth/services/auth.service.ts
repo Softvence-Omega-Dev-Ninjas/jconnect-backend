@@ -1,4 +1,4 @@
-import { ForbiddenException, Injectable, NotFoundException } from "@nestjs/common";
+import { ForbiddenException, Inject, Injectable, NotFoundException } from "@nestjs/common";
 import { AppError } from "src/common/error/handle-error.app";
 import { successResponse, TResponse } from "src/common/utilsResponse/response.util";
 import { MailService } from "src/lib/mail/mail.service";
@@ -11,7 +11,7 @@ import { RegisterDto } from "../dto/register.dto";
 import { UserResponseDto } from "@common/enum/dto/user.response";
 
 import { EventEmitter2 } from "@nestjs/event-emitter";
-import { ValidationType } from "@prisma/client";
+import { Role, ValidationType } from "@prisma/client";
 import { HandleError } from "src/common/error/handle-error.decorator";
 import { DeviceService } from "src/lib/device/device.service";
 import { TwilioService } from "src/lib/twilio/twilio.service";
@@ -23,6 +23,7 @@ import { VerifyOtpAuthDto } from "../dto/varify-otp.dto";
 
 import { EVENT_TYPES } from "@common/interface/events.name";
 import { UserRegistration } from "@common/interface/events-payload";
+import { StripeService } from "@main/stripe/stripe.service";
 
 @Injectable()
 export class AuthService {
@@ -33,6 +34,7 @@ export class AuthService {
         private readonly jwt: JwtService,
         private readonly deviceService: DeviceService,
         private readonly twilio: TwilioService,
+        private readonly stripe: StripeService,
         private readonly eventEmitter: EventEmitter2,
     ) {}
 
@@ -53,6 +55,7 @@ export class AuthService {
         // Generate OTP
         const { otp, expiryTime } = this.utils.generateOtpAndExpiry();
 
+        const customers = await this.stripe.createCustomer(email, full_name);
         // Create new user with OTP
         const newUser = await this.prisma.user.create({
             data: {
@@ -61,8 +64,10 @@ export class AuthService {
                 phone: phone,
                 password: hashedPassword,
                 isVerified: false,
+                role: Role.ARTIST,
                 emailOtp: otp,
                 otpExpiresAt: expiryTime,
+                customerIdStripe: customers.id,
             },
         });
 

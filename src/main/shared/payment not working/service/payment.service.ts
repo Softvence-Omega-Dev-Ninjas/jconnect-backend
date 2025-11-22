@@ -1,37 +1,31 @@
 import { Injectable, NotFoundException } from "@nestjs/common";
+import { PaymentStatus } from "@prisma/client";
 import { HandleError } from "src/common/error/handle-error.decorator";
 import { PrismaService } from "src/lib/prisma/prisma.service";
-
-import { PaymentStatus } from "@prisma/client";
 import Stripe from "stripe";
 import { CreatePaymentDto } from "../dto/create-payment.dto";
+
 @Injectable()
 export class PaymentService {
     private stripe: Stripe;
 
     constructor(private readonly prisma: PrismaService) {
-        this.stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {});
+        this.stripe = new Stripe(process.env.STRIPE_SECRET_KEY!);
     }
-
-    // ---------------- create payment ----------------
 
     @HandleError("Failed to create payment")
     async createCheckoutSession(
         userId: string,
         payload: CreatePaymentDto,
     ): Promise<{ url: string }> {
-        // Find plan from DB
         const service = await this.prisma.service.findUnique({
             where: { id: payload.serviceId },
         });
-
         if (!service) throw new NotFoundException("Payment service not found");
 
-        // Create Stripe checkout session
         const frontendUrl = process.env.FRONTEND_URL?.startsWith("http")
             ? process.env.FRONTEND_URL
             : `https://${process.env.FRONTEND_URL}`;
-
         const session = await this.stripe.checkout.sessions.create({
             mode: "payment",
             payment_method_types: ["card"],
@@ -68,9 +62,7 @@ export class PaymentService {
                 paymentMethod: "STRIPE",
             },
         });
-
         console.log("payment info", session);
-
         return { url: session.url! };
     }
 
@@ -84,7 +76,7 @@ export class PaymentService {
             orderBy: { createdAt: "desc" },
         });
     }
-    // ------------------- Admin only -------------------
+
     @HandleError("Failed to fetch all payments")
     async findAllPayments() {
         const payments = await this.prisma.payment.findMany({
@@ -116,10 +108,8 @@ export class PaymentService {
         payments.forEach((payment) => {
             payment.service.creatorId = payment.service.creatorId;
         });
-
         return payments;
     }
-    // ------------service purchased by id ------------
 
     async myPurchased(id: string) {
         return this.prisma.payment.findFirst({
@@ -136,7 +126,7 @@ export class PaymentService {
             },
         });
     }
-    // ------------------------mySales------------------------
+
     async mySales(userId: string) {
         return this.prisma.payment.findMany({
             where: {
@@ -157,6 +147,46 @@ export class PaymentService {
             },
             orderBy: { createdAt: "desc" },
         });
+    }
+
+    @HandleError("Failed to fetch transaction history")
+    async getTransactionHistory() {
+        console.log("📦 Fetching all payments directly from Payment table...");
+
+        try {
+            // Directly fetch all payments, no joins
+            const payments = await this.prisma.payment.findMany({
+                orderBy: { createdAt: "desc" },
+            });
+
+            if (!payments.length) {
+                console.log("⚠️ No payments found.");
+                return { data: [], total: 0, page: 1, limit: 10 };
+            }
+
+            // Map each payment to a readable object
+            const formattedTransactions = payments.map((p) => ({
+                orderId: p.id,
+                userId: p.userId || "N/A",
+                serviceId: p.serviceId || "N/A",
+                amount: `$${(p.amount || 0) / 100}`,
+                paymentMethod: p.paymentMethod || "Unknown",
+                status: p.status || "Unknown",
+                date: p.createdAt?.toISOString().split("T")[0] || "N/A",
+                action: "View Details",
+            }));
+
+            console.log("✅ Payments fetched successfully:", formattedTransactions.length);
+            return {
+                data: formattedTransactions,
+                total: formattedTransactions.length,
+                page: 1,
+                limit: 10,
+            };
+        } catch (error) {
+            console.error("❌ Error fetching payments:", error);
+            throw error;
+        }
     }
 
     findOne(id: number) {

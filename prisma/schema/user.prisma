@@ -16,6 +16,7 @@ model User {
   isDeleted              Boolean                @default(false)
   isActive               Boolean                @default(true)
   login_attempts         Int?                   @default(0)
+  withdrawn_amount       Int?            @default(0)
   // OTP sent to phone for phone verification
   phoneOtp               Int?
   phoneOtpExpiresAt      DateTime?
@@ -24,9 +25,12 @@ model User {
   created_at             DateTime               @default(now())
   updated_at             DateTime               @updatedAt
   token_expires_at       DateTime?
-  role                   Role                   @default(USER)
+  role                   Role                   @default(ARTIST)
   validation_type        ValidationType?        @default(EMAIL)
   auth_provider          AuthProvider?
+  stripeAccountId        String?
+  sellerIDStripe         String?
+  customerIdStripe       String?
   // Relation to Service Model 
   profile                Profile?
   serviceRequests        ServiceRequest[]
@@ -45,10 +49,11 @@ model User {
   buyServicesAsSeller    BuyService[]           @relation("Seller")
   Buyer                  SocialServiceRequest[] @relation("SocialRequestBuyer")
   Artist                 SocialServiceRequest[] @relation("SocialRequestRequester")
+  socialServices         SocialService[]
+  ReviewsGiven    Review[] @relation("ReviewsGiven")
+  ReviewsReceived Review[] @relation("ReviewsReceived")
 
-  ReviewsGiven         Review[]               @relation("ReviewsGiven")
-  ReviewsReceived      Review[]               @relation("ReviewsReceived")
-  socialServices       SocialService[]
+
   // ------message relation---
   privateConversation1 PrivateConversation[]  @relation("User1Conversations")
   privateConversation2 PrivateConversation[]  @relation("User2Conversations")
@@ -64,13 +69,19 @@ model User {
   userNotifications   UserNotification[]
   notificationToggles NotificationToggle[]
 
+  orders_buyer  Order[] @relation("OrderBuyer")
+  orders_seller Order[] @relation("OrderSeller")
+
+  paymentMethod PaymentMethod[]
+  Disputes  Dispute[]
+
   @@map("users")
 }
 
 model Device {
   id             String   @id @default(uuid())
   userId         String
-  user           User     @relation(fields: [userId], references: [id])
+  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   browser        String?
   browserVersion String?
   os             String?
@@ -90,6 +101,9 @@ enum Role {
   MODERATOR
   ADMIN
   SUPER_ADMIN
+  FINANCE_ADMIN
+  SUPPORT_ADMIN
+  ANALYST
   MEMBER
   ARTIST
 }

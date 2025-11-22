@@ -1,3 +1,5 @@
+import { StripeModule } from "@main/stripe/stripe.module";
+import { StripeService } from "@main/stripe/stripe.service";
 import { Module } from "@nestjs/common";
 import { ConfigModule, ConfigService } from "@nestjs/config";
 import { EventEmitterModule } from "@nestjs/event-emitter";
@@ -10,6 +12,7 @@ import { AuthService } from "./services/auth.service";
 @Module({
     imports: [
         ConfigModule,
+        StripeModule,
         LibModule,
         EventEmitterModule.forRoot(),
         JwtModule.registerAsync({
@@ -24,7 +27,7 @@ import { AuthService } from "./services/auth.service";
         }),
     ],
     controllers: [AuthController],
-    providers: [AuthService, AuthGoogleService],
+    providers: [AuthService, AuthGoogleService, StripeService],
     exports: [AuthService, JwtModule],
 })
 export class AuthModule {}
