@@ -2,7 +2,7 @@ import { Body, Controller, Get, Patch } from "@nestjs/common";
 import { ApiBearerAuth, ApiOperation, ApiTags } from "@nestjs/swagger";
 import { SettingsService } from "./settings.service";
 
-import { ValidateAdmin } from "@common/jwt/jwt.decorator";
+import { ValidateAdmin, ValidateUser } from "@common/jwt/jwt.decorator";
 import { UpdateSettingDto } from "./dto/create-dto";
 
 @ApiTags("settings")
@@ -11,7 +11,7 @@ import { UpdateSettingDto } from "./dto/create-dto";
 export class SettingsController {
     constructor(private readonly settingsService: SettingsService) {}
 
-    @ValidateAdmin()
+    @ValidateUser()
     @Get()
     @ApiOperation({ summary: "Get platform settings" })
     get() {
