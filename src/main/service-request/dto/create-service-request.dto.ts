@@ -59,11 +59,11 @@ export class CreateServiceRequestDto {
     @IsArray()
     @IsString({ each: true }) // array of string URLs
     @ApiProperty({
-        description: 'Server-generated URLs for uploaded files',
+        description: "Server-generated URLs for uploaded files",
         readOnly: true,
         required: false,
-        type: 'array',
-        items: { type: 'string' },
+        type: "array",
+        items: { type: "string" },
     })
     uploadedFileUrl?: string[];
 
@@ -78,13 +78,12 @@ export class CreateServiceRequestDto {
     // totalAmount: number;
 }
 
-
 export class CreateServiceRequestWithFilesDto extends PartialType(CreateServiceRequestDto) {
     @ApiProperty({
         description: "Upload one or multiple files",
         required: false,
-        type: 'array',
-        items: { type: 'string', format: 'binary' },
+        type: "array",
+        items: { type: "string", format: "binary" },
     })
     files?: any[];
 }

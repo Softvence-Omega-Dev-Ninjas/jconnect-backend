@@ -7,7 +7,7 @@ import {
     Inject,
     OnModuleInit,
     Param,
-    Post
+    Post,
 } from "@nestjs/common";
 import { ApiBearerAuth, ApiOperation, ApiTags } from "@nestjs/swagger";
 import { GetUser, ValidateAuth } from "src/common/jwt/jwt.decorator";
@@ -26,7 +26,7 @@ export class PrivateChatController implements OnModuleInit {
         private readonly privateService: PrivateChatService,
         @Inject(forwardRef(() => PrivateChatGateway))
         private readonly injectedGateway: PrivateChatGateway,
-    ) { }
+    ) {}
 
     onModuleInit() {
         this.gateway = this.injectedGateway;
@@ -50,7 +50,6 @@ export class PrivateChatController implements OnModuleInit {
 
     @Post("send-message/:recipientId")
     @ApiOperation({ summary: "Sending Private message" })
-
     async sendTeamMessage(
         @Param("recipientId") recipientId: string,
         @Body() dto: SendPrivateMessageDto,

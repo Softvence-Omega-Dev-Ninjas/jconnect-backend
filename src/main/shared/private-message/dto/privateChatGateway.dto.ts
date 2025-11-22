@@ -17,7 +17,6 @@ import { IsArray, IsOptional, IsString } from "class-validator";
 //     replyToMessageId?: string;
 // }
 
-
 export class SendPrivateMessageDto {
     @ApiProperty({
         type: String,
@@ -35,33 +34,23 @@ export class SendPrivateMessageDto {
     @IsString()
     content: string;
 
-
-
     @ApiPropertyOptional({
         type: [String],
-        example: [
-            "uploads/chat/file1.jpg",
-            "uploads/chat/file2.pdf",
-        ],
+        example: ["uploads/chat/file1.jpg", "uploads/chat/file2.pdf"],
         description: "Stored path of uploaded files (auto-filled after upload)",
     })
     @IsOptional()
     @IsArray({ each: true })
     files: string[];
 
-
     @ApiPropertyOptional({
         type: [String],
-        example: [
-            "this is openservice",
-            "make us profile",
-        ],
+        example: ["this is openservice", "make us profile"],
         description: "Stored path of uploaded files (auto-filled after upload)",
     })
     @IsOptional()
     @IsArray({ each: true })
     service: string[];
-
 
     @ApiPropertyOptional({
         type: String,

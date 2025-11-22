@@ -1,9 +1,26 @@
 // /src/servicerequest/servicerequest.controller.ts
 import { GetUser, ValidateUser } from "@common/jwt/jwt.decorator";
 import { AwsService } from "@main/aws/aws.service";
-import { Body, Controller, Delete, Get, Param, Patch, Post, UploadedFiles, UseInterceptors } from "@nestjs/common";
+import {
+    Body,
+    Controller,
+    Delete,
+    Get,
+    Param,
+    Patch,
+    Post,
+    UploadedFiles,
+    UseInterceptors,
+} from "@nestjs/common";
 import { AnyFilesInterceptor } from "@nestjs/platform-express";
-import { ApiBearerAuth, ApiBody, ApiConsumes, ApiOperation, ApiResponse, ApiTags } from "@nestjs/swagger";
+import {
+    ApiBearerAuth,
+    ApiBody,
+    ApiConsumes,
+    ApiOperation,
+    ApiResponse,
+    ApiTags,
+} from "@nestjs/swagger";
 import { ServiceRequest } from "@prisma/client";
 import { CreateServiceRequestDto } from "./dto/create-service-request.dto";
 import { UpdateServiceRequestDto } from "./dto/update-service-request.dto";
@@ -12,7 +29,10 @@ import { ServiceRequestService } from "./service-request.service";
 @ApiTags("Service Requests (Orders)")
 @Controller("requests")
 export class ServiceRequestController {
-    constructor(private readonly serviceRequestService: ServiceRequestService, private readonly awsService: AwsService) { }
+    constructor(
+        private readonly serviceRequestService: ServiceRequestService,
+        private readonly awsService: AwsService,
+    ) {}
 
     @ApiBearerAuth()
     @ValidateUser()
@@ -22,13 +42,13 @@ export class ServiceRequestController {
     @ApiBody({
         description: "Service request with file upload",
         schema: {
-            type: 'object',
+            type: "object",
             properties: {
-                files: { type: 'array', items: { type: 'string', format: 'binary' } },
-                serviceId: { type: 'string' },
-                captionOrInstructions: { type: 'string' },
-                promotionDate: { type: 'string', format: 'date' },
-                specialNotes: { type: 'string' },
+                files: { type: "array", items: { type: "string", format: "binary" } },
+                serviceId: { type: "string" },
+                captionOrInstructions: { type: "string" },
+                promotionDate: { type: "string", format: "date" },
+                specialNotes: { type: "string" },
             },
         },
     })
@@ -38,7 +58,6 @@ export class ServiceRequestController {
         @UploadedFiles() files: Express.Multer.File[],
         @GetUser() user: any,
     ) {
-
         const uploadedUrls: string[] = [];
 
         if (files && files.length > 0) {
@@ -56,7 +75,6 @@ export class ServiceRequestController {
             user,
         );
     }
-
 
     @ApiBearerAuth()
     @ValidateUser()
