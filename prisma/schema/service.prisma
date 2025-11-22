@@ -1,6 +1,6 @@
 model Service {
   id          String  @id @default(uuid())
-  serviceName String  
+  serviceName String
   description String?
   price       Float
   currency    String  @default("USD")

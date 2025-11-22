@@ -3,12 +3,12 @@ model NotificationToggle {
   email            Boolean @default(true)
   userUpdates      Boolean @default(true)
   serviceCreate    Boolean @default(true)
-  review                  Boolean @default(true)
+  review           Boolean @default(true)
   post             Boolean @default(true)
   message          Boolean @default(true)
   userRegistration Boolean @default(true)
-  userId             String
-  user              User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId           String
+  user             User    @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("notification-toggle")
 }

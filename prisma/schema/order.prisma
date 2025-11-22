@@ -1,42 +1,42 @@
 enum OrderStatus {
-    PENDING 
-    IN_PROGRESS 
-    PROOF_SUBMITTED 
-    CANCELLED
-    RELEASED 
+  PENDING
+  IN_PROGRESS
+  PROOF_SUBMITTED
+  CANCELLED
+  RELEASED
 }
 
 model Order {
-  id                   String       @id @default(uuid())
-  orderCode            String       @unique
+  id                   String      @id @default(uuid())
+  orderCode            String      @unique
   buyerId              String
-  sessionId            String?      @unique() // Stripe Checkout Session ID
+  sessionId            String?     @unique() // Stripe Checkout Session ID
   sellerId             String
   sellerIdStripe       String?
   serviceId            String
-  paymentIntentId      String?      @unique // Stripe Payment Intent ID
+  paymentIntentId      String?     @unique // Stripe Payment Intent ID
   amount               Int
-  seller_amount        Int          @default(0)
-  buyerPay             Int          @default(0)
-  PlatfromRevinue        Int          @default(0)
+  seller_amount        Int         @default(0)
+  buyerPay             Int         @default(0)
+  PlatfromRevinue      Int         @default(0)
   platformFee          Int
-  platformFee_percents Int          @default(0)
-  stripeFee            Int          @default(0)
-  status               OrderStatus  @default(PENDING)
+  platformFee_percents Int         @default(0)
+  stripeFee            Int         @default(0)
+  status               OrderStatus @default(PENDING)
   deliveryDate         DateTime?
-  createdAt            DateTime     @default(now())
-  updatedAt            DateTime     @updatedAt
-  disposts  Dispute[]
+  createdAt            DateTime    @default(now())
+  updatedAt            DateTime    @updatedAt
+  disposts             Dispute[]
   // For Escrow Manual Release
-  isReleased           Boolean      @default(false)
+  isReleased           Boolean     @default(false)
   releasedAt           DateTime?
 
   //                   Proof
-  proofUrl             String[]
-  proofSubmittedAt     DateTime     @updatedAt
+  proofUrl         String[]
+  proofSubmittedAt DateTime @updatedAt
 
   //                   Relations
-  buyer                User        @relation("OrderBuyer", fields: [buyerId], references: [id], onDelete: Cascade)
-  seller               User        @relation("OrderSeller", fields: [sellerId], references: [id], onDelete: Cascade)
-  service              Service     @relation(fields: [serviceId], references: [id], onDelete: Cascade)
+  buyer   User    @relation("OrderBuyer", fields: [buyerId], references: [id], onDelete: Cascade)
+  seller  User    @relation("OrderSeller", fields: [sellerId], references: [id], onDelete: Cascade)
+  service Service @relation(fields: [serviceId], references: [id], onDelete: Cascade)
 }
