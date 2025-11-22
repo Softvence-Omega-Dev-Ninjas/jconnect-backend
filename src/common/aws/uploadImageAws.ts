@@ -6,10 +6,10 @@ import path from "path";
 
 //--------------------  Create the S3 client-------------
 const s3 = new S3({
-    region: "ap-southeast-1",
+    region: "us-east-1",
     credentials: {
-        accessKeyId: process.env.AWS_ACCESS_KEY_ID as string,
-        secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY as string,
+        accessKeyId: process.env.ACCESS_KEY as string,
+        secretAccessKey: process.env.ACCESS_SECRET as string,
     },
 });
 
@@ -23,7 +23,7 @@ const uploadFileToS3 = async (filePath: string): Promise<{ url: string; key: str
     const upload = new Upload({
         client: s3,
         params: {
-            Bucket: "milon32",
+            Bucket: "newportalbucket1122",
             Key: fileName,
             Body: fileContent,
             ContentType: contentType,

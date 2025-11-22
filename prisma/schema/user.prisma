@@ -16,7 +16,7 @@ model User {
   isDeleted              Boolean                @default(false)
   isActive               Boolean                @default(true)
   login_attempts         Int?                   @default(0)
-  withdrawn_amount       Int?            @default(0)
+  withdrawn_amount       Int?                   @default(0)
   // OTP sent to phone for phone verification
   phoneOtp               Int?
   phoneOtpExpiresAt      DateTime?
@@ -50,9 +50,8 @@ model User {
   Buyer                  SocialServiceRequest[] @relation("SocialRequestBuyer")
   Artist                 SocialServiceRequest[] @relation("SocialRequestRequester")
   socialServices         SocialService[]
-  ReviewsGiven    Review[] @relation("ReviewsGiven")
-  ReviewsReceived Review[] @relation("ReviewsReceived")
-
+  ReviewsGiven           Review[]               @relation("ReviewsGiven")
+  ReviewsReceived        Review[]               @relation("ReviewsReceived")
 
   // ------message relation---
   privateConversation1 PrivateConversation[]  @relation("User1Conversations")
@@ -73,7 +72,7 @@ model User {
   orders_seller Order[] @relation("OrderSeller")
 
   paymentMethod PaymentMethod[]
-  Disputes  Dispute[]
+  Disputes      Dispute[]
 
   @@map("users")
 }

@@ -5,14 +5,13 @@ model Notification {
   userId String
   user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-
-  title    String 
-  message  String           @db.Text 
-  entityId String? 
-  read     Boolean          @default(false)
+  title    String
+  message  String  @db.Text
+  entityId String?
+  read     Boolean @default(false)
 
   // Additional data as JSON
-  metadata  Json? 
+  metadata  Json?
   users     UserNotification[]
   createdAt DateTime           @default(now())
   updatedAt DateTime           @updatedAt
@@ -39,4 +38,3 @@ model UserNotification {
 
   @@unique([userId, notificationId])
 }
-
