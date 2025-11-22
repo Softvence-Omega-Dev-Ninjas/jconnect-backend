@@ -7,7 +7,7 @@ model ServiceRequest {
   captionOrInstructions String?
   promotionDate         DateTime?
   specialNotes          String?
-
+  price Int? 
   uploadedFileUrl String[]
 
   createdAt DateTime @default(now())
