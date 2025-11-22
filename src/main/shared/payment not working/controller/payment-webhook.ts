@@ -6,32 +6,26 @@ import {
     Post,
     Req,
     Res,
-} from '@nestjs/common';
-import { ApiExcludeController } from '@nestjs/swagger';
-import { PaymentStatus } from '@prisma/client';
-import 'dotenv/config';
-import { MailService } from 'src/lib/mail/mail.service';
-import { PrismaService } from 'src/lib/prisma/prisma.service';
-import Stripe from 'stripe';
+} from "@nestjs/common";
+import { ApiExcludeController } from "@nestjs/swagger";
+import { PaymentStatus } from "@prisma/client";
+import "dotenv/config";
+import { MailService } from "src/lib/mail/mail.service";
+import { PrismaService } from "src/lib/prisma/prisma.service";
+import Stripe from "stripe";
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY as string, {
-
-});
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY as string, {});
 
 @ApiExcludeController()
-@Controller('stripe')
+@Controller("stripe")
 export class PaymentWebhookController {
     constructor(
         private readonly prisma: PrismaService,
         private readonly mailService: MailService,
-    ) { }
+    ) {}
 
-    @Post('webhook')
-    async handleWebhook(
-        @Req() req,
-        @Res() res,
-        @Headers('stripe-signature') signature: string,
-    ) {
+    @Post("webhook")
+    async handleWebhook(@Req() req, @Res() res, @Headers("stripe-signature") signature: string) {
         let event: Stripe.Event;
 
         try {
@@ -41,19 +35,19 @@ export class PaymentWebhookController {
                 process.env.STRIPE_WEBHOOK_SECRET as string,
             );
         } catch (err) {
-            console.error(' Invalid webhook signature:', err.message);
+            console.error(" Invalid webhook signature:", err.message);
             return res.status(400).send(`Webhook Error: ${err.message}`);
         }
 
         try {
             //  Handle successful checkout
-            if (event.type === 'checkout.session.completed') {
+            if (event.type === "checkout.session.completed") {
                 const session = event.data.object as Stripe.Checkout.Session;
                 const userId = session.metadata?.userId;
                 const serviceId = session.metadata?.serviceId;
 
                 if (!userId || !serviceId)
-                    return res.status(400).send('Missing userId or serviceId in metadata');
+                    return res.status(400).send("Missing userId or serviceId in metadata");
 
                 // Fetch service info
                 const service = await this.prisma.service.findUnique({
@@ -61,8 +55,7 @@ export class PaymentWebhookController {
                     include: { creator: true },
                 });
 
-                if (!service)
-                    throw new InternalServerErrorException('Service not found');
+                if (!service) throw new InternalServerErrorException("Service not found");
 
                 // Map Stripe payment status → Prisma enum
                 const statusMap = {
@@ -82,9 +75,9 @@ export class PaymentWebhookController {
                         sessionId: session.id,
                         transactionId: session.payment_intent as string,
                         amount: session.amount_total || 0,
-                        currency: session.currency || 'usd',
+                        currency: session.currency || "usd",
                         status,
-                        paymentMethod: session.payment_method_types?.[0] ?? 'unknown',
+                        paymentMethod: session.payment_method_types?.[0] ?? "unknown",
                     },
                 });
 
@@ -96,7 +89,7 @@ export class PaymentWebhookController {
                         serviceId: service.id,
                         paymentId: paymentRecord.id,
                         amount: paymentRecord.amount ?? 0,
-                        status: 'SUCCESS',
+                        status: "SUCCESS",
                     },
                 });
 
@@ -111,16 +104,11 @@ export class PaymentWebhookController {
 
             Service: ${service.serviceName}
             Seller: ${service.creator.full_name}
-            Amount: $${(paymentRecord.amount / 100).toFixed(2)} ${paymentRecord.currency.toUpperCase()
-                        }
+            Amount: $${(paymentRecord.amount / 100).toFixed(2)} ${paymentRecord.currency.toUpperCase()}
             Transaction ID: ${paymentRecord.transactionId}
             Status: ${paymentRecord.status}
           `;
-                    await this.mailService.sendEmail(
-                        user.email,
-                        'Payment Confirmation',
-                        message,
-                    );
+                    await this.mailService.sendEmail(user.email, "Payment Confirmation", message);
                 }
 
                 return res.status(HttpStatus.OK).json({ success: true });
@@ -129,9 +117,9 @@ export class PaymentWebhookController {
             //  Handle failed payments
             if (
                 [
-                    'payment_intent.payment_failed',
-                    'invoice.payment_failed',
-                    'checkout.session.async_payment_failed',
+                    "payment_intent.payment_failed",
+                    "invoice.payment_failed",
+                    "checkout.session.async_payment_failed",
                 ].includes(event.type)
             ) {
                 const dataObject: any = event.data.object;
@@ -144,11 +132,11 @@ export class PaymentWebhookController {
                             userId,
                             serviceId,
                             sessionId: dataObject.id,
-                            transactionId: dataObject.payment_intent || '',
+                            transactionId: dataObject.payment_intent || "",
                             amount: dataObject.amount || 0,
-                            currency: dataObject.currency || 'usd',
+                            currency: dataObject.currency || "usd",
                             status: PaymentStatus.CANCELLED,
-                            paymentMethod: dataObject.payment_method_types?.[0] ?? 'unknown',
+                            paymentMethod: dataObject.payment_method_types?.[0] ?? "unknown",
                         },
                     });
 
@@ -160,21 +148,17 @@ export class PaymentWebhookController {
                         const message = `
               ❌ Payment Failed.
               Service ID: ${serviceId}
-              Reason: ${dataObject.last_payment_error?.message || 'Unknown'}
+              Reason: ${dataObject.last_payment_error?.message || "Unknown"}
             `;
-                        await this.mailService.sendEmail(
-                            user.email,
-                            'Payment Failed',
-                            message,
-                        );
+                        await this.mailService.sendEmail(user.email, "Payment Failed", message);
                     }
                 }
             }
 
             return res.status(HttpStatus.OK).json({ received: true });
         } catch (err) {
-            console.error('💥 Webhook handling error:', err);
-            return res.status(500).send('Internal server error');
+            console.error("💥 Webhook handling error:", err);
+            return res.status(500).send("Internal server error");
         }
     }
 }
