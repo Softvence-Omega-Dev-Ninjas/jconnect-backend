@@ -34,6 +34,15 @@ export class ServiceController {
 
     @ApiBearerAuth()
     @ValidateUser()
+    @Get("my_service")
+    @ApiOperation({ summary: "Get available services" })
+    @ApiResponse({ status: 200, description: "List of all services" })
+    MyService(@GetUser() user: any): Promise<Service[]> {
+        return this.serviceService.Myservice(user);
+    }
+
+    @ApiBearerAuth()
+    @ValidateUser()
     @Get(":id")
     @ApiOperation({ summary: "Get service details by ID" })
     @ApiResponse({ status: 200, description: "Service details found" })
