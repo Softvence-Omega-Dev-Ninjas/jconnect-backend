@@ -6,7 +6,7 @@ import { CreateServiceDto } from "./dto/create-service.dto";
 import { UpdateServiceDto } from "./dto/update-service.dto";
 import { ServiceService } from "./service.service";
 
-@ApiTags("Services")
+@ApiTags("Services-all -details")
 @Controller("services")
 export class ServiceController {
     constructor(private readonly serviceService: ServiceService) {}
@@ -30,6 +30,15 @@ export class ServiceController {
     @ApiResponse({ status: 200, description: "List of all services" })
     findAll(): Promise<Service[]> {
         return this.serviceService.findAll();
+    }
+
+    @ApiBearerAuth()
+    @ValidateUser()
+    @Get("my_service")
+    @ApiOperation({ summary: "Get available services" })
+    @ApiResponse({ status: 200, description: "List of all services" })
+    MyService(@GetUser() user: any): Promise<Service[]> {
+        return this.serviceService.Myservice(user);
     }
 
     @ApiBearerAuth()

@@ -1,22 +1,42 @@
 import { GetUser, ValidateAdmin, ValidateUser } from "@common/jwt/jwt.decorator";
+import { AwsService } from "@main/aws/aws.service";
 import {
+    BadRequestException,
     Body,
     Controller,
     Delete,
     ForbiddenException,
     Get,
     Param,
+    Patch,
+    Post,
     Put,
     Query,
+    UploadedFile,
+    UseInterceptors,
 } from "@nestjs/common";
-import { ApiBearerAuth, ApiOperation, ApiQuery, ApiResponse, ApiTags } from "@nestjs/swagger";
+import { FileInterceptor } from "@nestjs/platform-express";
+import {
+    ApiBearerAuth,
+    ApiBody,
+    ApiConsumes,
+    ApiOperation,
+    ApiQuery,
+    ApiResponse,
+    ApiTags,
+} from "@nestjs/swagger";
+import { Role } from "@prisma/client";
+import { FindArtistDto } from "./dto/findArtist.dto";
 import { reset_password, UpdateUserDto } from "./dto/user.dto";
 import { UsersService } from "./users.service";
 
 @ApiTags("Users")
 @Controller("users")
 export class UsersController {
-    constructor(private readonly usersService: UsersService) {}
+    constructor(
+        private readonly usersService: UsersService,
+        private awsservice: AwsService,
+    ) {}
 
     @ApiBearerAuth()
     @ValidateUser()
@@ -37,10 +57,54 @@ export class UsersController {
 
     @ApiBearerAuth()
     @ValidateUser()
-    @Get("aritist")
-    @ApiOperation({ summary: "Get all Artist access all login user" })
-    findAllArtist() {
-        return this.usersService.findAllArtist();
+    @Post("ProfilePhotoUpload")
+    @ApiOperation({ summary: "profile photo upload" })
+    @ApiConsumes("multipart/form-data")
+    @ApiBody({
+        description: "Upload a file",
+        schema: {
+            type: "object",
+            properties: {
+                image: {
+                    type: "string",
+                    format: "binary",
+                    description: "File to upload give me less than 1MB",
+                },
+            },
+            required: ["image"],
+        },
+    })
+    @UseInterceptors(
+        FileInterceptor("image", {
+            limits: { fileSize: 1 * 1024 * 1024 },
+            fileFilter: (req, file, cb) => {
+                if (!file.mimetype.startsWith("image/")) {
+                    return cb(new BadRequestException("Only image files are allowed!"), false);
+                }
+                cb(null, true);
+            },
+        }),
+    )
+    async UploadImage(
+        @UploadedFile() file: Express.Multer.File,
+        @GetUser("userId") userId: string,
+    ) {
+        const ProfileUrl = await this.awsservice.upload(file);
+        const reuslt = await this.usersService.update(userId, { profilePhoto: ProfileUrl.url });
+
+        return reuslt;
+    }
+
+    @ApiBearerAuth()
+    @ValidateUser()
+    @Get("artist")
+    @ApiOperation({ summary: "Get all artists (filterable, searchable, paginated)" })
+    @ApiQuery({ name: "page", required: false, example: 1 })
+    @ApiQuery({ name: "limit", required: false, example: 10 })
+    @ApiQuery({ name: "filter", required: false, example: "top-rated" })
+    @ApiQuery({ name: "search", required: false, example: "mixing" })
+    findAllArtist(@Query() query: FindArtistDto) {
+        return this.usersService.findAllArtist(query);
     }
 
     @ApiBearerAuth()
@@ -103,5 +167,35 @@ export class UsersController {
             throw new ForbiddenException("You are not authorized to update this user");
         }
         return this.usersService.remove(id);
+    }
+
+    @ApiBearerAuth()
+    @ValidateAdmin()
+    @Patch(":id/role")
+    @ApiOperation({ summary: "Update user role" })
+    @ApiQuery({
+        name: "role",
+        required: true,
+        enum: Role,
+        description: "New role for the user",
+        example: Role.ADMIN,
+    })
+    @ApiResponse({ status: 200, description: "User role updated successfully" })
+    @ApiResponse({ status: 404, description: "User not found" })
+    async updateRole(@Param("id") id: string, @Query("role") role: string) {
+        // // 🔹 Enum validation
+        // if (!Object.values(Role).includes(role as Role)) {
+        //     throw new BadRequestException(
+        //         `Invalid role. Valid roles: ${Object.values(Role).join(", ")}`
+        //     );
+        // }
+
+        const updatedUser = await this.usersService.updateRole(id, role as Role);
+
+        return {
+            success: true,
+            message: "User role updated successfully",
+            data: updatedUser,
+        };
     }
 }

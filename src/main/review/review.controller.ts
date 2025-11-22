@@ -1,3 +1,4 @@
+import { GetUser, ValidateUser } from "@common/jwt/jwt.decorator";
 import {
     Body,
     Controller,
@@ -9,6 +10,7 @@ import {
     Patch,
     Post,
 } from "@nestjs/common";
+import { ApiBearerAuth } from "@nestjs/swagger";
 import { CreateReviewDto } from "./dto/create-review.dto";
 import { UpdateReviewDto } from "./dto/update-review.dto";
 import { ReviewService } from "./review.service";
@@ -18,10 +20,12 @@ export class ReviewController {
     constructor(private readonly reviewService: ReviewService) {}
 
     // POST /reviews
+    @ApiBearerAuth()
+    @ValidateUser()
     @Post()
     @HttpCode(HttpStatus.CREATED)
-    create(@Body() createReviewDto: CreateReviewDto) {
-        return this.reviewService.create(createReviewDto);
+    create(@Body() createReviewDto: CreateReviewDto, @GetUser() user: any) {
+        return this.reviewService.create(createReviewDto, user);
     }
 
     // GET /reviews/artist/:artistId

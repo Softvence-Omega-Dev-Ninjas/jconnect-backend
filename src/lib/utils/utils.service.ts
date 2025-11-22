@@ -1,12 +1,12 @@
-import { Injectable } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
-import { JwtService } from '@nestjs/jwt';
+import { Injectable } from "@nestjs/common";
+import { ConfigService } from "@nestjs/config";
+import { JwtService } from "@nestjs/jwt";
 
-import * as bcrypt from 'bcrypt';
-import { ClassConstructor, plainToInstance } from 'class-transformer';
-import { PrismaService } from '../prisma/prisma.service';
-import { JWTPayload } from 'src/common/jwt/jwt.interface';
-import { ENVEnum } from 'src/common/enum/env.enum';
+import * as bcrypt from "bcrypt";
+import { ClassConstructor, plainToInstance } from "class-transformer";
+import { PrismaService } from "../prisma/prisma.service";
+import { JWTPayload } from "src/common/jwt/jwt.interface";
+import { ENVEnum } from "src/common/enum/env.enum";
 
 @Injectable()
 export class UtilsService {
@@ -15,27 +15,20 @@ export class UtilsService {
     constructor(
         private readonly jwtService: JwtService,
         private readonly configService: ConfigService,
-    ) { }
+    ) {}
 
     sanitizedResponse(dto: any, data: any) {
         return plainToInstance(dto, data, { excludeExtraneousValues: true });
     }
 
-    sanitizeWithRelations<T>(
-        dto: ClassConstructor<any>,
-        entity: Record<string, any>,
-    ): T {
+    sanitizeWithRelations<T>(dto: ClassConstructor<any>, entity: Record<string, any>): T {
         // Separate scalar fields from relations
         const scalars: Record<string, any> = {};
         const relations: Record<string, any> = {};
 
         for (const key in entity) {
             const value = entity[key];
-            if (
-                value !== null &&
-                typeof value === 'object' &&
-                !Array.isArray(value)
-            ) {
+            if (value !== null && typeof value === "object" && !Array.isArray(value)) {
                 // This is either a relation object or a Prisma _count
                 relations[key] = value;
             } else if (Array.isArray(value)) {
@@ -70,10 +63,13 @@ export class UtilsService {
     }
 
     generateToken(payload: JWTPayload): string {
-        const token = this.jwtService.sign(payload as any, {
-            secret: this.configService.get<string>(ENVEnum.JWT_SECRET),
-            expiresIn: this.configService.get<string>(ENVEnum.JWT_EXPIRES_IN),
-        } as any);
+        const token = this.jwtService.sign(
+            payload as any,
+            {
+                secret: this.configService.get<string>(ENVEnum.JWT_SECRET),
+                expiresIn: this.configService.get<string>(ENVEnum.JWT_EXPIRES_IN),
+            } as any,
+        );
 
         return token;
     }

@@ -3,7 +3,6 @@ import { ApiBearerAuth, ApiOperation, ApiTags } from "@nestjs/swagger";
 import { GoogleLoginDto } from "../dto/google-login.dto";
 import { LoginDto } from "../dto/login.dto";
 import { RegisterDto } from "../dto/register.dto";
-import { AuthService } from "../services/auth.service";
 
 import { VerifyOtpAuthDto } from "../dto/varify-otp.dto";
 
@@ -17,6 +16,7 @@ import { ForgotPasswordDto } from "../dto/forgot-password.dto";
 import { SendPhoneOtpDto, VerifyPhoneOtpDto } from "../dto/phone-login";
 import { ResetPasswordAuthDto } from "../dto/reset-password";
 import { AuthGoogleService } from "../services/auh-google.service";
+import { AuthService } from "../services/auth.service";
 
 @ApiTags("Authentication apis")
 @Controller("auth")
@@ -54,7 +54,7 @@ export class AuthController {
         @IpAddress() ipAddress: string,
         @Res({ passthrough: true }) res: Response,
     ) {
-        const result = (await this.authService.login(body)) as any;
+        const result = (await this.authService.login(body, userAgent, ipAddress)) as any;
 
         // Set HTTP-only cookie
         res.cookie("token", result?.data?.token, {
@@ -68,7 +68,7 @@ export class AuthController {
         return result;
     }
 
-    // -------------- Google Login --------------
+    // -------------- Google Login (Device tracking is typically done inside authGoogleService) --------------
     @ApiOperation({ summary: "Google Login or Sign Up" })
     @Post("google-login")
     async googleLogin(@Body() body: GoogleLoginDto, @Res({ passthrough: true }) res: Response) {
@@ -89,8 +89,13 @@ export class AuthController {
     // -------------- Verify OTP (Signup) --------------
     @ApiOperation({ summary: "Verify OTP after Registration" })
     @Post("signup-verify-otp")
-    async verifyOtp(@Body() payload: VerifyOtpAuthDto, @Res({ passthrough: true }) res: Response) {
-        const result = await this.authService.verifyOtp(payload);
+    async verifyOtp(
+        @Body() payload: VerifyOtpAuthDto,
+        @UserAgent() userAgent: string,
+        @IpAddress() ipAddress: string,
+        @Res({ passthrough: true }) res: Response,
+    ) {
+        const result = await this.authService.verifyOtp(payload, userAgent, ipAddress);
 
         // -----------Set HTTP-only cookie after successful verification
         if (result.data?.token) {
@@ -103,12 +108,7 @@ export class AuthController {
             });
         }
 
-        return {
-            statusCode: HttpStatus.OK,
-            success: true,
-            message: "OTP verified successfully!",
-            data: result,
-        };
+        return result;
     }
 
     // -------------- Verify OTP (Password Reset) --------------
@@ -169,9 +169,12 @@ export class AuthController {
     @ApiOperation({ summary: "Verify phone OTP – login" })
     async verifyPhoneOtp(
         @Body() dto: VerifyPhoneOtpDto,
+        @UserAgent() userAgent: string,
+        @IpAddress() ipAddress: string,
         @Res({ passthrough: true }) res: Response,
     ) {
-        const result = await this.authService.verifyPhoneOtp(dto);
+        // ✅ Fixed: Passing userAgent and ipAddress to the service layer for device tracking (Phone Login)
+        const result = await this.authService.verifyPhoneOtp(dto, userAgent, ipAddress);
 
         // set HTTP-only cookie
         res.cookie("token", result.data.token, {

@@ -1,10 +1,10 @@
 import { Module } from "@nestjs/common";
-import { LivechatModule } from "./livechat/livechat.module";
-import { PaymentModule } from "./payment/payment.module";
-import { AwsUploadModule } from "./upload-aws/upload-aws.module";
+import { awsModule } from "./aws/aws.module";
+
+import { ChatModule } from "./livechat/livechat.module";
 
 @Module({
-    imports: [LivechatModule, PaymentModule, AwsUploadModule],
+    imports: [ChatModule],
     controllers: [],
     providers: [],
     exports: [],
