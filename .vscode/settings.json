@@ -19,5 +19,6 @@
         "editor.defaultFormatter": "mads-hartmann.bash-ide-vscode"
     },
     "prisma-smart-formatter.typescript.defaultFormatter": "vscode.typescript-language-features",
-    "prisma-smart-formatter.prisma.defaultFormatter": "Prisma.prisma"
+    "prisma-smart-formatter.prisma.defaultFormatter": "Prisma.prisma",
+    "prisma.pinToPrisma6": true
 }
