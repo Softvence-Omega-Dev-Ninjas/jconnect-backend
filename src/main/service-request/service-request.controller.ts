@@ -8,7 +8,7 @@ import { ServiceRequestService } from "./service-request.service";
 @ApiTags("Service Requests")
 @Controller("service-requests")
 export class ServiceRequestController {
-    constructor(private readonly serviceRequestService: ServiceRequestService) { }
+    constructor(private readonly serviceRequestService: ServiceRequestService) {}
 
     @ApiBearerAuth()
     @ValidateUser()
@@ -36,13 +36,10 @@ export class ServiceRequestController {
     async create(
         @Body() dto: CreateServiceRequestDto,
         @GetUser() user: any,
-        @UploadedFiles() files: { files?: Express.Multer.File[] }
+        @UploadedFiles() files: { files?: Express.Multer.File[] },
     ) {
-
-
         return this.serviceRequestService.create(dto, files.files || [], user);
     }
-
 
     @ApiProperty({ description: "Get all service requests" })
     @Get()

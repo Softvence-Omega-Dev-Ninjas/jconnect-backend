@@ -8,19 +8,17 @@ import { CreateServiceRequestDto } from "./dto/create-service-request.dto";
 export class ServiceRequestService {
     constructor(
         private prisma: PrismaService,
-        private awsService: AwsService
-    ) { }
+        private awsService: AwsService,
+    ) {}
 
     async create(dto: CreateServiceRequestDto, files: Express.Multer.File[], user: any) {
-
-
         let uploadedUrls: string[] = ["no file"];
         if (files && files.length > 0) {
             uploadedUrls = await Promise.all(
                 files.map(async (file) => {
                     const result = await this.awsService.upload(file);
                     return result.url;
-                })
+                }),
             );
         }
 
@@ -40,13 +38,21 @@ export class ServiceRequestService {
     }
 
     async findAll() {
-        return this.prisma.serviceRequest.findMany({ include: { service: { include: { creator: { omit: { password: true } } } }, buyer: { omit: { password: true } } } });
+        return this.prisma.serviceRequest.findMany({
+            include: {
+                service: { include: { creator: { omit: { password: true } } } },
+                buyer: { omit: { password: true } },
+            },
+        });
     }
 
     async findOne(id: string) {
         return this.prisma.serviceRequest.findUnique({
             where: { id },
-            include: { service: { include: { creator: { omit: { password: true } } } }, buyer: { omit: { password: true } } }
+            include: {
+                service: { include: { creator: { omit: { password: true } } } },
+                buyer: { omit: { password: true } },
+            },
         });
     }
 }

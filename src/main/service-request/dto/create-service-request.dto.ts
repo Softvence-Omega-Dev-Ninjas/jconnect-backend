@@ -28,7 +28,7 @@ export class CreateServiceRequestDto {
     @IsString()
     specialNotes?: string;
 
-    @ApiPropertyOptional({ description: "Price",example:10 })
+    @ApiPropertyOptional({ description: "Price", example: 10 })
     @IsOptional()
     @IsNumber()
     @Type(() => Number)
