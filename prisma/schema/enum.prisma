@@ -1,0 +1,9 @@
+// ENUMS_START
+
+enum Test {
+  a
+  b
+  c
+}
+
+// ENUMS_END
