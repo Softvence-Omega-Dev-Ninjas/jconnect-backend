@@ -22,7 +22,7 @@ import { DisputeService } from "./dispotch.service";
 @ApiBearerAuth()
 @Controller("disputes")
 export class DisputeController {
-    constructor(private readonly disputeService: DisputeService) {}
+    constructor(private readonly disputeService: DisputeService) { }
 
     @ValidateUser()
     @Post()
@@ -76,7 +76,7 @@ export class DisputeController {
     @ApiBearerAuth()
     @ValidateUser()
     @Patch(":id")
-    @ApiOperation({ summary: "Update dispute status/resolution (admin)" })
+    @ApiOperation({ summary: "Update dispute status/resolution (admin) REJECTED RESOLVED UNDER_REVIEW" })
     update(@Param("id") id: string, @Body() dto: UpdateDisputeDto, @GetUser() user: any) {
         return this.disputeService.update(id, dto, user);
     }
