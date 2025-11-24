@@ -40,14 +40,6 @@ export class PaymentService {
     }
 
 
-    //withdrawal history
-    async withdrawalHistory(userReq: any) {
-        const withdrawal_history = await this.prisma.withdrawal.findMany({
-            where: { userId: userReq?.userId }, include: { user: true },
-        })
-
-        return withdrawal_history
-    }
 
     //payment method setup with token & secreate id
     async confirmSetupIntent(body: ConfirmSetupIntentDto, ReqUser: any) {
@@ -92,6 +84,29 @@ export class PaymentService {
             status: "success",
             paymentMethodId: result.payment_method,
         };
+    }
+
+
+
+    async delete_payment_methode(paymentMethodId: string, reqUser: any) {
+        const deleted = await this.prisma.paymentMethod.delete({
+            where: { id: paymentMethodId },
+        });
+    }
+
+
+
+    //withdrawal history
+    async withdrawalHistory(userReq: any) {
+        const withdrawal_history = await this.prisma.withdrawal.findMany({
+            where: { userId: userReq?.userId },
+            include: { user: { omit: { password: true } } },
+            orderBy: {
+
+            }
+        });
+
+        return withdrawal_history;
     }
 
     // // if you dont add payment methode then use session for create link for payment
@@ -223,6 +238,9 @@ export class PaymentService {
             throw new NotFoundException("User not found");
         }
 
+
+
+
         const seller = user;
         if (!seller) return errorResponse("Seller not found");
         if (seller.sellerIDStripe) {
@@ -235,7 +253,6 @@ export class PaymentService {
                         account: account.id,
                         refresh_url: process.env.BACKEND_URL + "/reauth",
                         return_url: process.env.FRONTEND_URL + "/stripe_success",
-
 
                         type: "account_onboarding",
                     });
@@ -352,9 +369,9 @@ export class PaymentService {
 
         amount = amount * 100;
 
-        if (!amount || amount < setting?.minimum_payout!) {
+        if (!amount || (amount < Number(setting?.minimum_payout!) * 100)) {
             throw new BadRequestException(
-                `Invalid transfer amount please follow minimum payout : ${setting?.minimum_payout! / 100}`,
+                `Invalid transfer amount please follow minimum payout : ${setting?.minimum_payout!}`,
             );
         }
 
@@ -384,12 +401,9 @@ export class PaymentService {
             data: {
                 amount,
                 userId: userID,
-                ballance: availableBalance - amount
-            }
-
-        })
-
-
+                ballance: availableBalance - amount,
+            },
+        });
 
         // const payout = await this.stripe.payouts.create( { amount: amountInCents, currency: "usd", }, { stripeAccount: sellerStripeAccountId, } );
 
@@ -563,6 +577,8 @@ export class PaymentService {
 
         this.logger.log("Stripe ফি:", balanceTransaction.fee);
         this.logger.log("নেট অ্যামাউন্ট:", balanceTransaction.net);
+        let PlatfromRevinue = balanceTransaction.net - order.seller_amount
+        
 
         const updated = await this.prisma.order.update({
             where: { id: order.id },
@@ -570,7 +586,7 @@ export class PaymentService {
                 status: OrderStatus.RELEASED,
                 isReleased: true,
                 releasedAt: new Date(),
-                PlatfromRevinue: balanceTransaction.net - order.seller_amount,
+                PlatfromRevinue,
                 buyerPay: balanceTransaction.net,
                 platformFee: (order.amount * setting.platformFee_percents) / 100,
                 stripeFee: Number(balanceTransaction.fee),
@@ -669,8 +685,6 @@ export class PaymentService {
 
             return { message: "Payment authorization cancelled. No refund needed." };
         }
-
-
 
         // 3) Payment was captured → refund the payment
         const refund = await this.stripe.refunds.create({

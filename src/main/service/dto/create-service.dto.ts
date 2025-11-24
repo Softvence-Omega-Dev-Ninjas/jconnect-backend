@@ -46,4 +46,13 @@ export class CreateServiceDto {
     @IsOptional()
     @IsBoolean()
     isCustom?: boolean = false;
+
+    @ApiProperty({
+        example: false,
+        description: "if post related",
+        required: false,
+    })
+    @IsOptional()
+    @IsBoolean()
+    isPost?: boolean = false;
 }

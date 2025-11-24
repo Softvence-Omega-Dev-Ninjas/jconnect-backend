@@ -9,20 +9,20 @@ enum OrderStatus {
 model Order {
   id                   String      @id @default(uuid())
   orderCode            String      @unique
+  amount               Int
+  seller_amount        Int         @default(0)
+  PlatfromRevinue      Int         @default(0)
+  stripeFee            Int         @default(0)
+  status               OrderStatus @default(PENDING)
   buyerId              String
   sessionId            String?     @unique() // Stripe Checkout Session ID
   sellerId             String
   sellerIdStripe       String?
   serviceId            String
   paymentIntentId      String?     @unique // Stripe Payment Intent ID
-  amount               Int
-  seller_amount        Int         @default(0)
   buyerPay             Int         @default(0)
-  PlatfromRevinue      Int         @default(0)
   platformFee          Int
   platformFee_percents Int         @default(0)
-  stripeFee            Int         @default(0)
-  status               OrderStatus @default(PENDING)
   deliveryDate         DateTime?
   createdAt            DateTime    @default(now())
   updatedAt            DateTime    @updatedAt

@@ -3,6 +3,7 @@ import {
     BadRequestException,
     Body,
     Controller,
+    Delete,
     Get,
     Headers,
     HttpCode,
@@ -125,6 +126,30 @@ This endpoint is used by Admin/Buyer only.
     }
 
     // ----------------------------
+    // Delete Payment Method
+    // ----------------------------
+    @ApiBearerAuth()
+    @ValidateUser()
+    @Delete("delete")
+    @ApiOperation({ summary: "Delete a payment method" })
+    @ApiBody({
+        description: "Payment method ID to delete",
+        schema: {
+            type: "object",
+            properties: {
+                paymentMethodId: { type: "string", example: "cmidkddvy0000vsy0l8xxxxxxx" },
+            },
+            required: ["paymentMethodId"],
+        },
+    })
+    async DeletePaymentMethode(
+        @Body() body: { paymentMethodId: string },
+        @GetUser() user: any
+    ) {
+        return this.paymentService.delete_payment_methode(body.paymentMethodId, user);
+    }
+
+    // ----------------------------
     // Refund Payment
     // ----------------------------
     // @ApiExcludeEndpoint()
@@ -142,6 +167,9 @@ This endpoint is used by Admin/Buyer only.
     async refundPayment(@Param("orderId") orderId: string, @GetUser() user: any) {
         return await this.paymentService.refundPayment(orderId, user);
     }
+
+
+
 
     @ApiExcludeEndpoint()
     @Post("webhook")
