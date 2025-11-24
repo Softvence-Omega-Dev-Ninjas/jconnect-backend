@@ -22,8 +22,9 @@ export class PaymentService {
         @Inject("STRIPE_CLIENT")
         private readonly stripe: Stripe,
         private readonly mail: MailService,
-    ) {}
+    ) { }
 
+    //create stipe pyament methode secreate
     async createSetupIntent(body: CreateSetupIntentDto, userReq: any) {
         const user = await this.prisma.user.findUnique({ where: { id: userReq?.userId } });
         if (!user?.customerIdStripe)
@@ -38,6 +39,17 @@ export class PaymentService {
         return { client_secret: setupIntent.client_secret };
     }
 
+
+    //withdrawal history
+    async withdrawalHistory(userReq: any) {
+        const withdrawal_history = await this.prisma.withdrawal.findMany({
+            where: { userId: userReq?.userId }, include: { user: true },
+        })
+
+        return withdrawal_history
+    }
+
+    //payment method setup with token & secreate id
     async confirmSetupIntent(body: ConfirmSetupIntentDto, ReqUser: any) {
         const setupIntentId = body.clientSecret.split("_secret")[0];
 
@@ -82,6 +94,7 @@ export class PaymentService {
         };
     }
 
+    // // if you dont add payment methode then use session for create link for payment
     // async createCheckoutSession(userFromReq: any, serviceId: string, frontendUrl: string) {
     //     const user: any = await this.prisma.user.findUnique({ where: { id: userFromReq?.userId } });
     //     // console.log("ami to asol user", user, userFromReq.userId);
@@ -200,71 +213,52 @@ export class PaymentService {
     //     };
     // }
 
+    // trasnfer to seller account / withdraw for seller
     async transferToSeller(userID: string, amount: number) {
         const user = await this.prisma.user.findUnique({
             where: { id: userID },
             omit: { password: true },
         });
-
         if (!user) {
             throw new NotFoundException("User not found");
         }
 
         const seller = user;
-
-        //  seller account create
-        //  seller account create
-        // const seller = await this.prisma.user.findUnique({
-        //     where: { id: userID },
-        // });
-
         if (!seller) return errorResponse("Seller not found");
-
-        // ------------------------------------------------------------
-        // STEP 1: CHECK IF SELLER HAS EXISTING STRIPE CONNECT ACCOUNT
-        // ------------------------------------------------------------
         if (seller.sellerIDStripe) {
             try {
-                // Fetch account info from Stripe
                 const account: any = await this.stripe.accounts.retrieve(seller.sellerIDStripe);
-
-                // Check account status conditions
                 const isDisabled = !!account.disabled_reason;
                 const isRequirementsPending = account.requirements?.currently_due?.length > 0;
-
                 if (isDisabled || isRequirementsPending) {
-                    // Need re-onboarding
                     const link = await this.stripe.accountLinks.create({
                         account: account.id,
-                        refresh_url: "http://localhost:3000/reauth",
-                        return_url: "http://localhost:3000/onboarding-success",
+                        refresh_url: process.env.BACKEND_URL + "/reauth",
+                        return_url: process.env.FRONTEND_URL + "/stripe_success",
+
+
                         type: "account_onboarding",
                     });
-
                     return {
                         status: "re_onboarding_required",
                         message: "Your Stripe account needs verification",
                         url: link.url,
                     };
                 }
-                // If everything OK → continue creating service
             } catch (err) {
-                // If account retrieve fails → re-create new account
                 const newAccount = await this.stripe.accounts.create({
                     type: "express",
                     email: seller.email,
                     capabilities: { transfers: { requested: true } },
                 });
-
                 await this.prisma.user.update({
                     where: { id: seller.id },
                     data: { sellerIDStripe: newAccount.id },
                 });
-
                 const link = await this.stripe.accountLinks.create({
                     account: newAccount.id,
-                    refresh_url: "http://localhost:3000/reauth",
-                    return_url: "http://localhost:3000/onboarding-success",
+                    refresh_url: process.env.BACKEND_URL + "/reauth",
+                    return_url: process.env.FRONTEND_URL + "/onboarding-success",
                     type: "account_onboarding",
                 });
 
@@ -294,8 +288,8 @@ export class PaymentService {
 
             const link = await this.stripe.accountLinks.create({
                 account: account.id,
-                refresh_url: "http://localhost:3000/reauth",
-                return_url: "http://localhost:3000/onboarding-success",
+                refresh_url: process.env.BACKEND_URL + "/reauth",
+                return_url: process.env.FRONTEND_URL + "/onboarding-success",
                 type: "account_onboarding",
             });
 
@@ -304,10 +298,8 @@ export class PaymentService {
                 url: link.url,
             };
         }
-        //  seller account create
-        //  seller account create
 
-        // --------------------------------------------
+        const account: any = await this.stripe.accounts.retrieve(seller.sellerIDStripe);
         const totalReleased = await this.prisma.order.aggregate({
             where: { sellerId: userID },
             _sum: { seller_amount: true },
@@ -318,11 +310,6 @@ export class PaymentService {
             _sum: { seller_amount: true },
         });
 
-        // const user = await this.prisma.user.findUnique({
-        //     where: { id: sellerId },
-        // });
-
-        // 2️⃣ Pending Clearance: IN_PROGRESS + PENDING + PROOF_SUBMITTED
         const onlyPending = await this.prisma.order.aggregate({
             where: {
                 sellerId: userID,
@@ -339,7 +326,6 @@ export class PaymentService {
             (totalCancelled._sum.seller_amount || 0) -
             (onlyPending._sum.seller_amount || 0);
 
-        // 2️⃣ Pending Clearance: IN_PROGRESS + PENDING + PROOF_SUBMITTED
         const pendingOrders = await this.prisma.order.aggregate({
             where: {
                 sellerId: userID,
@@ -352,10 +338,7 @@ export class PaymentService {
 
         const pendingClearance = pendingOrders._sum.seller_amount || 0;
 
-        // 3️⃣ Available balance
         const availableBalance = totalEarning - pendingClearance - user?.withdrawn_amount!;
-
-        // --------------------------------------------
 
         const setting = await this.prisma.setting.findUnique({
             where: { id: "platform_settings" },
@@ -388,7 +371,7 @@ export class PaymentService {
             );
         }
 
-        const amountInCents = Math.round(amount);
+        const amountInCents = amount;
 
         // Transfer money from your platform balance → seller’s connected account
         const transfer = await this.stripe.transfers.create({
@@ -396,6 +379,17 @@ export class PaymentService {
             currency: "usd",
             destination: sellerStripeAccountId,
         });
+
+        const withdrawalHistory = await this.prisma.withdrawal.create({
+            data: {
+                amount,
+                userId: userID,
+                ballance: availableBalance - amount
+            }
+
+        })
+
+
 
         // const payout = await this.stripe.payouts.create( { amount: amountInCents, currency: "usd", }, { stripeAccount: sellerStripeAccountId, } );
 
@@ -443,12 +437,8 @@ export class PaymentService {
 
         service.price = service.price * 100;
 
-        // Calculate fee amount
         const feeAmount = service.price * (setting?.platformFee_percents / 100);
-
-        // Final price = original price + random fee
         const finalPrice = service.price + feeAmount;
-
         const paymentIntent = await this.stripe.paymentIntents.create({
             amount: finalPrice,
             currency: service.currency?.toLowerCase() || "usd",
@@ -462,7 +452,6 @@ export class PaymentService {
                 serviceId: service.id,
             },
         });
-
         const priceInCents = Math.round(service.price);
         const sellerAmount = priceInCents - (priceInCents * setting.platformFee_percents) / 100;
         const order = await this.prisma.order.create({
@@ -547,10 +536,8 @@ export class PaymentService {
         if (!setting?.platformFee_percents)
             throw new BadRequestException("Platform fee is not set in settings");
 
-        // PaymentIntent রিটারিভ করা
         const intent = await this.stripe.paymentIntents.retrieve(paymentIntentId);
 
-        // যদি ম্যানুয়াল ক্যাপচার হয়, তাহলে ক্যাপচার করা
         let capturedIntent: Stripe.PaymentIntent = intent;
         if (intent.status !== "succeeded" && intent.capture_method === "manual") {
             capturedIntent = (await this.stripe.paymentIntents.capture(
@@ -559,12 +546,10 @@ export class PaymentService {
             this.logger.log(`Captured PaymentIntent ${paymentIntentId}`);
         }
 
-        // PaymentIntent‑এর সাথে যুক্ত চার্জগুলোর লিস্ট পাওয়া
         const chargesList = await this.stripe.charges.list({
             payment_intent: capturedIntent.id,
         });
 
-        // প্রথম চার্জ (যদি থাকে) পাওয়া
         const charge = chargesList.data[0];
         this.logger.log("চার্জ তথ্য:", charge);
         if (!charge) {
@@ -572,7 +557,6 @@ export class PaymentService {
             return;
         }
 
-        // ব্যালান্স ট্রানজ্যাকশন থেকে ফি ও নেট অ্যামাউন্ট পাওয়া
         const balanceTransaction = await this.stripe.balanceTransactions.retrieve(
             charge.balance_transaction as string,
         );
@@ -686,10 +670,12 @@ export class PaymentService {
             return { message: "Payment authorization cancelled. No refund needed." };
         }
 
+
+
         // 3) Payment was captured → refund the payment
         const refund = await this.stripe.refunds.create({
             payment_intent: order.paymentIntentId,
-            amount: Math.round(Number(order.amount) * 100),
+            amount: Math.round(Number(order.amount)),
         });
 
         // 4) Update order status

@@ -3,6 +3,7 @@ import {
     BadRequestException,
     Body,
     Controller,
+    Get,
     Headers,
     HttpCode,
     HttpStatus,
@@ -26,7 +27,7 @@ import { PaymentService } from "./payments.service";
 @ApiTags("Payment")
 @Controller("payments")
 export class PaymentController {
-    constructor(private readonly paymentService: PaymentService) {}
+    constructor(private readonly paymentService: PaymentService) { }
 
     @ApiBearerAuth()
     @ValidateUser()
@@ -40,10 +41,18 @@ export class PaymentController {
     @ApiBearerAuth()
     @ValidateUser()
     @Post("confirm-setup-intent")
-    @ApiOperation({ summary: "Confirm SetupIntent (Swagger test mode)" })
+    @ApiOperation({ summary: "Confirm SetupIntent with secrete and card token" })
     @ApiBody({ type: ConfirmSetupIntentDto })
     async confirmSetupIntent(@Body() body: ConfirmSetupIntentDto, @GetUser() user: any) {
         return this.paymentService.confirmSetupIntent(body, user);
+    }
+
+    @ApiBearerAuth()
+    @ValidateUser()
+    @Get("WithDrawal-history")
+    @ApiOperation({ summary: "my withdrawal history" })
+    async withdrawalHistory(@GetUser() user: any) {
+        return this.paymentService.withdrawalHistory(user);
     }
 
     // ----------------------------
@@ -118,7 +127,7 @@ This endpoint is used by Admin/Buyer only.
     // ----------------------------
     // Refund Payment
     // ----------------------------
-    @ApiExcludeEndpoint()
+    // @ApiExcludeEndpoint()
     @ApiBearerAuth()
     @ValidateUser()
     @Post("refund/:orderId")
