@@ -22,7 +22,7 @@ export class PaymentService {
         @Inject("STRIPE_CLIENT")
         private readonly stripe: Stripe,
         private readonly mail: MailService,
-    ) {}
+    ) { }
 
     //create stipe pyament methode secreate
     async createSetupIntent(body: CreateSetupIntentDto, userReq: any) {
@@ -37,6 +37,16 @@ export class PaymentService {
             },
         });
         return { client_secret: setupIntent.client_secret };
+    }
+
+
+    //withdrawal history
+    async withdrawalHistory(userReq: any) {
+        const withdrawal_history = await this.prisma.withdrawal.findMany({
+            where: { userId: userReq?.userId }, include: { user: true },
+        })
+
+        return withdrawal_history
     }
 
     //payment method setup with token & secreate id
@@ -83,7 +93,6 @@ export class PaymentService {
             paymentMethodId: result.payment_method,
         };
     }
-
 
     // // if you dont add payment methode then use session for create link for payment
     // async createCheckoutSession(userFromReq: any, serviceId: string, frontendUrl: string) {
@@ -204,8 +213,7 @@ export class PaymentService {
     //     };
     // }
 
-
-    // trasnfer to seller account / withdraw for seller 
+    // trasnfer to seller account / withdraw for seller
     async transferToSeller(userID: string, amount: number) {
         const user = await this.prisma.user.findUnique({
             where: { id: userID },
@@ -225,8 +233,10 @@ export class PaymentService {
                 if (isDisabled || isRequirementsPending) {
                     const link = await this.stripe.accountLinks.create({
                         account: account.id,
-                        refresh_url: "http://localhost:3000/reauth",
-                        return_url: "http://localhost:3000/stripe_success",
+                        refresh_url: process.env.BACKEND_URL + "/reauth",
+                        return_url: process.env.FRONTEND_URL + "/stripe_success",
+
+
                         type: "account_onboarding",
                     });
                     return {
@@ -247,8 +257,8 @@ export class PaymentService {
                 });
                 const link = await this.stripe.accountLinks.create({
                     account: newAccount.id,
-                    refresh_url: "http://localhost:3000/reauth",
-                    return_url: "http://localhost:3000/onboarding-success",
+                    refresh_url: process.env.BACKEND_URL + "/reauth",
+                    return_url: process.env.FRONTEND_URL + "/onboarding-success",
                     type: "account_onboarding",
                 });
 
@@ -278,8 +288,8 @@ export class PaymentService {
 
             const link = await this.stripe.accountLinks.create({
                 account: account.id,
-                refresh_url: "http://localhost:3000/reauth",
-                return_url: "http://localhost:3000/onboarding-success",
+                refresh_url: process.env.BACKEND_URL + "/reauth",
+                return_url: process.env.FRONTEND_URL + "/onboarding-success",
                 type: "account_onboarding",
             });
 
@@ -299,7 +309,6 @@ export class PaymentService {
             where: { sellerId: userID, status: OrderStatus.CANCELLED },
             _sum: { seller_amount: true },
         });
-
 
         const onlyPending = await this.prisma.order.aggregate({
             where: {
@@ -362,7 +371,7 @@ export class PaymentService {
             );
         }
 
-        const amountInCents = amount
+        const amountInCents = amount;
 
         // Transfer money from your platform balance → seller’s connected account
         const transfer = await this.stripe.transfers.create({
@@ -370,6 +379,17 @@ export class PaymentService {
             currency: "usd",
             destination: sellerStripeAccountId,
         });
+
+        const withdrawalHistory = await this.prisma.withdrawal.create({
+            data: {
+                amount,
+                userId: userID,
+                ballance: availableBalance - amount
+            }
+
+        })
+
+
 
         // const payout = await this.stripe.payouts.create( { amount: amountInCents, currency: "usd", }, { stripeAccount: sellerStripeAccountId, } );
 
@@ -649,6 +669,8 @@ export class PaymentService {
 
             return { message: "Payment authorization cancelled. No refund needed." };
         }
+
+
 
         // 3) Payment was captured → refund the payment
         const refund = await this.stripe.refunds.create({

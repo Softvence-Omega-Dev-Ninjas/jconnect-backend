@@ -1,4 +1,4 @@
-import { GetUser, ValidateAdmin, ValidateUser } from "@common/jwt/jwt.decorator";
+import { GetUser, ValidateAdmin, ValidateSuperAdmin, ValidateUser } from "@common/jwt/jwt.decorator";
 import { AwsService } from "@main/aws/aws.service";
 import {
     BadRequestException,
@@ -36,7 +36,7 @@ export class UsersController {
     constructor(
         private readonly usersService: UsersService,
         private awsservice: AwsService,
-    ) {}
+    ) { }
 
     @ApiBearerAuth()
     @ValidateUser()
@@ -170,7 +170,7 @@ export class UsersController {
     }
 
     @ApiBearerAuth()
-    @ValidateAdmin()
+    @ValidateSuperAdmin()
     @Patch(":id/role")
     @ApiOperation({ summary: "Update user role" })
     @ApiQuery({

@@ -1,4 +1,4 @@
-import { ValidateSuperAdmin } from "@common/jwt/jwt.decorator";
+import { ValidateAdmin, ValidateSuperAdmin } from "@common/jwt/jwt.decorator";
 import { Controller, Get, HttpStatus, InternalServerErrorException, Query } from "@nestjs/common";
 import { ApiBearerAuth, ApiOperation, ApiTags } from "@nestjs/swagger";
 import { AdminDashboardStatsService } from "./admin-dashboard-stats.service";
@@ -10,7 +10,7 @@ import { TopSellerFilterDto } from "./dto/topSelletFilter.dto";
 export class AdminDashboardStatsController {
     constructor(private readonly adminStatsService: AdminDashboardStatsService) {}
 
-    @ValidateSuperAdmin()
+    @ValidateAdmin()
     @Get("overview")
     @ApiOperation({
         summary: "Get admin dashboard overview stats (Users, Revenue, Disputes, Refunds)",
@@ -28,8 +28,7 @@ export class AdminDashboardStatsController {
         }
     }
 
-    @ApiBearerAuth()
-    @ValidateSuperAdmin()
+    @ValidateAdmin()
     @Get("revenue-by-month")
     @ApiOperation({ summary: "Get revenue trend by month for chart" })
     async getRevenueByMonth() {
@@ -45,7 +44,7 @@ export class AdminDashboardStatsController {
         }
     }
 
-    @ValidateSuperAdmin()
+    @ValidateAdmin()
     @Get("top-sellers")
     @ApiOperation({ summary: "Get top service sellers with their performance metrics" })
     async getTopSellers(@Query() filter: TopSellerFilterDto) {
@@ -61,7 +60,7 @@ export class AdminDashboardStatsController {
         }
     }
 
-    @ValidateSuperAdmin()
+    @ValidateAdmin()
     @Get("top-performing-users")
     @ApiOperation({ summary: "Get top performing users by total payment amount" })
     async getTopPerformingUsers() {
@@ -77,7 +76,7 @@ export class AdminDashboardStatsController {
         }
     }
 
-    @ValidateSuperAdmin()
+    @ValidateAdmin()
     @Get("user-activity-weekly")
     @ApiOperation({
         summary: "Get active vs inactive user counts by day of the week (Placeholder Data)",
