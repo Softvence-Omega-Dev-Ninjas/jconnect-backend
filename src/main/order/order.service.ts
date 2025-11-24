@@ -18,7 +18,7 @@ const orderStatusFilter = {
 
 @Injectable()
 export class OrdersService {
-    constructor(private prisma: PrismaService) {}
+    constructor(private prisma: PrismaService) { }
 
     // CREATE ORDER
     async createOrder(buyerId: string, dto: any) {
@@ -240,34 +240,35 @@ export class OrdersService {
     async getMyEarnings(sellerId: string) {
         // 1️⃣ Total earning: released orders - cancelled
         const totalReleased = await this.prisma.order.aggregate({
-            where: { sellerId },
+            where: { sellerId, status: OrderStatus.RELEASED },
             _sum: { seller_amount: true },
         });
+        const totalSuccessfullREleaseAmount = (totalReleased._sum.seller_amount || 0)
 
-        const totalCancelled = await this.prisma.order.aggregate({
-            where: { sellerId, status: OrderStatus.CANCELLED },
-            _sum: { seller_amount: true },
-        });
+        // const totalCancelled = await this.prisma.order.aggregate({
+        //     where: { sellerId, status: OrderStatus.CANCELLED },
+        //     _sum: { seller_amount: true },
+        // });
 
         const user = await this.prisma.user.findUnique({
             where: { id: sellerId },
         });
 
-        const onlyPending = await this.prisma.order.aggregate({
-            where: {
-                sellerId,
-                status: {
-                    in: [OrderStatus.PENDING],
-                },
-            },
-            _sum: { seller_amount: true },
-        });
+        // const onlyPending = await this.prisma.order.aggregate({
+        //     where: {
+        //         sellerId,
+        //         status: {
+        //             in: [OrderStatus.PENDING],
+        //         },
+        //     },
+        //     _sum: { seller_amount: true },
+        // });
 
-        const onlyPedningSum = onlyPending._sum.seller_amount || 0;
-        const totalEarning =
-            (totalReleased._sum.seller_amount || 0) -
-            (totalCancelled._sum.seller_amount || 0) -
-            (onlyPending._sum.seller_amount || 0);
+        // const onlyPedningSum = onlyPending._sum.seller_amount || 0;
+        // const totalEarning =
+        //     (totalReleased._sum.seller_amount || 0) -
+        //     (totalCancelled._sum.seller_amount || 0) -
+        //     (onlyPending._sum.seller_amount || 0);
 
         // 2️⃣ Pending Clearance: IN_PROGRESS + PENDING + PROOF_SUBMITTED
         const pendingOrders = await this.prisma.order.aggregate({
@@ -283,8 +284,10 @@ export class OrdersService {
         const pendingClearance = pendingOrders._sum.seller_amount || 0;
 
         // 3️⃣ Available balance
-        const availableBalance = totalEarning - pendingClearance - user?.withdrawn_amount!;
+        // const availableBalance = totalEarning - pendingClearance - user?.withdrawn_amount!;
 
+        const totalEarning = totalSuccessfullREleaseAmount + pendingClearance
+        const availableBalance = totalSuccessfullREleaseAmount - user?.withdrawn_amount!
         return {
             totalEarning: totalEarning / 100,
             pendingClearance: pendingClearance / 100,
