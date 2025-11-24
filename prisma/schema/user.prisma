@@ -70,7 +70,7 @@ model User {
 
   orders_buyer  Order[] @relation("OrderBuyer")
   orders_seller Order[] @relation("OrderSeller")
-
+  Withdraws Withdrawal[]
   paymentMethod PaymentMethod[]
   Disputes      Dispute[]
 
