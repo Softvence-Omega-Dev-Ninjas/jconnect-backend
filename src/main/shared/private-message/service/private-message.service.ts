@@ -7,22 +7,33 @@ import { SendPrivateMessageDto } from "../dto/privateChatGateway.dto";
 
 @Injectable()
 export class PrivateChatService {
-    constructor(private readonly prisma: PrismaService) {}
+    constructor(private readonly prisma: PrismaService) { }
 
     /**
      * Send a private message and update lastMessage in conversation
      */
     @HandleError("Failed to send private message", "PRIVATE_CHAT")
     async sendPrivateMessage(conversationId: string, senderId: string, dto: SendPrivateMessageDto) {
+        const serviceId = dto.serviceId || null;
+
+        if (serviceId) {
+            await this.prisma.service.findUniqueOrThrow({
+                where: {
+                    id: serviceId
+                }
+            })
+        }
+
         const message = await this.prisma.privateMessage.create({
             data: {
                 content: dto.content,
                 conversationId,
                 senderId,
+                ...(serviceId && { serviceId }),
                 ...(dto.files &&
                     dto.files.length > 0 && {
-                        files: dto.files,
-                    }),
+                    files: dto.files,
+                }),
             },
             include: {
                 sender: {
@@ -32,6 +43,7 @@ export class PrivateChatService {
                         full_name: true,
                     },
                 },
+                service: true,
             },
         });
 
@@ -120,12 +132,12 @@ export class PrivateChatService {
                 participant: otherUser,
                 lastMessage: chat.lastMessage
                     ? {
-                          id: chat.lastMessage.id,
-                          content: chat.lastMessage.content,
-                          createdAt: chat.lastMessage.createdAt,
-                          sender: chat.lastMessage.sender,
-                          file: chat.lastMessage.file,
-                      }
+                        id: chat.lastMessage.id,
+                        content: chat.lastMessage.content,
+                        createdAt: chat.lastMessage.createdAt,
+                        sender: chat.lastMessage.sender,
+                        file: chat.lastMessage.file,
+                    }
                     : null,
                 updatedAt: chat.updatedAt,
             };
@@ -197,7 +209,7 @@ export class PrivateChatService {
                                 full_name: true,
                             },
                         },
-                        // file: true,
+                        service: true
                     },
                 },
                 user1: {
@@ -281,6 +293,7 @@ export class PrivateChatService {
                                 full_name: true,
                             },
                         },
+                        service: true,
                         // file: true,
                     },
                 },

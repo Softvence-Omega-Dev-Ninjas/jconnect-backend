@@ -9,7 +9,7 @@ import { ServiceService } from "./service.service";
 @ApiTags("Services-all -details")
 @Controller("services")
 export class ServiceController {
-    constructor(private readonly serviceService: ServiceService) {}
+    constructor(private readonly serviceService: ServiceService) { }
 
     @ApiBearerAuth()
     @ValidateArtist()
