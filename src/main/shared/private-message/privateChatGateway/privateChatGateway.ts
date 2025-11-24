@@ -40,7 +40,7 @@ export class PrivateChatGateway implements OnGatewayInit, OnGatewayConnection, O
         private readonly privateChatService: PrivateChatService,
         private readonly configService: ConfigService,
         private readonly prisma: PrismaService,
-    ) { }
+    ) {}
 
     @WebSocketServer()
     server: Server;
@@ -152,10 +152,9 @@ export class PrivateChatGateway implements OnGatewayInit, OnGatewayConnection, O
         @ConnectedSocket() client: Socket,
     ) {
         const { recipientId } = payload;
-// ----------validate mission payload----------
-if(payload.serviceId){
-    
-}
+        // ----------validate mission payload----------
+        if (payload.serviceId) {
+        }
         const userId = this.getUserIdFromSocket(client);
         if (!userId) return; // already handled
 

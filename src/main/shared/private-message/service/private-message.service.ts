@@ -7,7 +7,7 @@ import { SendPrivateMessageDto } from "../dto/privateChatGateway.dto";
 
 @Injectable()
 export class PrivateChatService {
-    constructor(private readonly prisma: PrismaService) { }
+    constructor(private readonly prisma: PrismaService) {}
 
     /**
      * Send a private message and update lastMessage in conversation
@@ -19,9 +19,9 @@ export class PrivateChatService {
         if (serviceId) {
             await this.prisma.service.findUniqueOrThrow({
                 where: {
-                    id: serviceId
-                }
-            })
+                    id: serviceId,
+                },
+            });
         }
 
         const message = await this.prisma.privateMessage.create({
@@ -32,8 +32,8 @@ export class PrivateChatService {
                 ...(serviceId && { serviceId }),
                 ...(dto.files &&
                     dto.files.length > 0 && {
-                    files: dto.files,
-                }),
+                        files: dto.files,
+                    }),
             },
             include: {
                 sender: {
@@ -132,12 +132,12 @@ export class PrivateChatService {
                 participant: otherUser,
                 lastMessage: chat.lastMessage
                     ? {
-                        id: chat.lastMessage.id,
-                        content: chat.lastMessage.content,
-                        createdAt: chat.lastMessage.createdAt,
-                        sender: chat.lastMessage.sender,
-                        file: chat.lastMessage.file,
-                    }
+                          id: chat.lastMessage.id,
+                          content: chat.lastMessage.content,
+                          createdAt: chat.lastMessage.createdAt,
+                          sender: chat.lastMessage.sender,
+                          file: chat.lastMessage.file,
+                      }
                     : null,
                 updatedAt: chat.updatedAt,
             };
@@ -209,7 +209,7 @@ export class PrivateChatService {
                                 full_name: true,
                             },
                         },
-                        service: true
+                        service: true,
                     },
                 },
                 user1: {
