@@ -638,14 +638,26 @@ export class PaymentService {
                 "buyer not paid yet/PaymentIntent ID not found for this order",
             );
 
-        if (order.status === OrderStatus.RELEASED)
-            throw new BadRequestException("Order already released, refund not possible");
+        const sellerId = order.seller.id;
 
-        // Load payment intent
+        const totalReleased = await this.prisma.order.aggregate({
+            where: { sellerId, status: OrderStatus.RELEASED },
+            _sum: { seller_amount: true },
+        });
+        const totalSuccessfullREleaseAmount = totalReleased._sum.seller_amount || 0;
+
+        const availableBalance = totalSuccessfullREleaseAmount - order.seller?.withdrawn_amount!;
+
+        console.log("ami available ballance", availableBalance);
+
+        if (!availableBalance || availableBalance < Number(order.seller_amount)) {
+            throw new BadRequestException(
+                "No available balance to refund because seller account is empty",
+            );
+        }
+
         const intent = await this.stripe.paymentIntents.retrieve(order.paymentIntentId);
 
-        // 2) If payment is not captured yet (requires_capture)
-        //    → Cancel PaymentIntent (refund not needed)
         if (intent.status === "requires_capture") {
             await this.stripe.paymentIntents.cancel(order.paymentIntentId);
 
@@ -656,7 +668,7 @@ export class PaymentService {
                     seller_amount: 0,
                     buyerPay: 0,
                     stripeFee: 0,
-                    PlatfromRevinue: 0,
+                    PlatfromRevinue: order.buyerPay - order.amount,
                     platformFee: 0,
                 },
             });
@@ -686,11 +698,9 @@ export class PaymentService {
             data: {
                 status: OrderStatus.CANCELLED,
                 isReleased: false,
-                platformFee: 0,
-                PlatfromRevinue: 0,
+                PlatfromRevinue: order.buyerPay - order.amount,
                 seller_amount: 0,
                 buyerPay: 0,
-                stripeFee: 0,
             },
         });
 
