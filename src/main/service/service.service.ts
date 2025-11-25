@@ -1,7 +1,10 @@
 import { HandleError } from "@common/error/handle-error.decorator";
 import { errorResponse } from "@common/utilsResponse/response.util";
 import { ForbiddenException, Inject, Injectable, NotFoundException } from "@nestjs/common";
-import { Service } from "@prisma/client";
+import { EventEmitter2 } from "@nestjs/event-emitter";
+
+import { ServiceEvent } from "@common/interface/events-payload";
+import { EVENT_TYPES } from "@common/interface/events.name";
 import { PrismaService } from "src/lib/prisma/prisma.service";
 import Stripe from "stripe";
 import { CreateServiceDto } from "./dto/create-service.dto";
@@ -10,32 +13,97 @@ import { UpdateServiceDto } from "./dto/update-service.dto";
 export class ServiceService {
     constructor(
         private prisma: PrismaService,
+        private readonly eventEmitter: EventEmitter2,
         @Inject("STRIPE_CLIENT") private stripe: Stripe,
-    ) {}
+    ) { }
 
     @HandleError("Failed to create service")
-    async create(payload: CreateServiceDto, user: any): Promise<any> {
+    async create(dto: CreateServiceDto, user: any): Promise<any> {
         if (!user.userId) return errorResponse("User ID is missing");
 
-        // ------------------------------------------------------------
-        // STEP 3: CHECK IF SERVICE EXISTS
-        // ------------------------------------------------------------
+        // Check if service already exists
         const existingService = await this.prisma.service.findFirst({
-            where: { serviceName: payload.serviceName, creatorId: user.userId },
+            where: { serviceName: dto.serviceName, creatorId: user.userId },
         });
         if (existingService) return errorResponse("Service already exists");
 
-        // ------------------------------------------------------------
-        // STEP 4: CREATE NEW SERVICE
-        // ------------------------------------------------------------
+        // Create new service
         const service = await this.prisma.service.create({
-            data: { ...payload, creatorId: user.userId },
+            data: {
+                ...dto,
+                creatorId: user.userId,
+            },
         });
+
+        // -----------------------------------------
+        // Get users who enabled SERVICE notifications
+        // -----------------------------------------
+        const recipients = await this.prisma.notificationToggle.findMany({
+            where: { serviceCreate: true },
+            select: {
+                user: { select: { id: true, email: true } },
+            },
+        });
+
+        // -----------------------------------------
+        // Create Notification entry
+        // -----------------------------------------
+        const notification = await this.prisma.notification.create({
+            data: {
+                title: `New Service Created: ${service.serviceName}`,
+                message: `${user.email} created a service: ${service.serviceName}`,
+                userId: user.userId,
+                entityId: service.id,
+                metadata: {
+                    serviceId: service.id,
+                    serviceName: service.serviceName,
+                    description: service.description,
+                    author: user.email,
+                },
+            },
+        });
+
+        await this.prisma.$transaction(
+            recipients.map((r) =>
+                this.prisma.userNotification.create({
+                    data: {
+                        userId: r.user.id,
+                        notificationId: notification.id,
+                    },
+                }),
+            ),
+        );
+
+        // -----------------------------------------
+        // Emit Service Event
+        // -----------------------------------------
+        const payload: ServiceEvent = {
+            action: "CREATE",
+            meta: {
+                serviceName: service.serviceName,
+                description: service.description || "",
+                authorId: user.userId,
+                publishedAt: new Date(),
+            },
+            info: {
+                serviceName: service.serviceName,
+                description: service.description || "",
+                authorId: user.userId,
+                publishedAt: new Date(),
+                recipients: recipients.map((r) => ({
+                    id: r.user.id,
+                    email: r.user.email,
+                })),
+            },
+        };
+
+        this.eventEmitter.emit(EVENT_TYPES.SERVICE_CREATE, payload);
 
         return { message: "Service created successfully", service };
     }
 
-    async findAll(): Promise<Service[]> {
+    @HandleError("Failed to find service")
+    async findAll() {
         return this.prisma.service.findMany({
             where: { isCustom: false },
             include: {
@@ -51,7 +119,8 @@ export class ServiceService {
         });
     }
 
-    async Myservice(user: any): Promise<Service[]> {
+    @HandleError("Failed to find service")
+    async Myservice(user: any) {
         return this.prisma.service.findMany({
             where: { creatorId: user.userId },
             include: {
@@ -67,7 +136,8 @@ export class ServiceService {
         });
     }
 
-    async findOne(id: string): Promise<Service> {
+    @HandleError("Failed to find service")
+    async findOne(id: string) {
         const service = await this.prisma.service.findUnique({
             where: { id },
             include: {
@@ -87,7 +157,8 @@ export class ServiceService {
         return service;
     }
 
-    async update(id: string, user, updateServiceDto: UpdateServiceDto): Promise<Service> {
+    @HandleError("Failed to update service")
+    async update(id: string, user, updateServiceDto: UpdateServiceDto) {
         console.log(user);
         const service = await this.prisma.service.findUnique({
             where: { id },
@@ -112,7 +183,8 @@ export class ServiceService {
         });
     }
 
-    async remove(id: string): Promise<Service> {
+    @HandleError("Failed to delete service")
+    async remove(id: string) {
         return this.prisma.service.delete({
             where: { id },
         });
