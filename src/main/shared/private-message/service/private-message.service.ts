@@ -14,11 +14,22 @@ export class PrivateChatService {
      */
     @HandleError("Failed to send private message", "PRIVATE_CHAT")
     async sendPrivateMessage(conversationId: string, senderId: string, dto: SendPrivateMessageDto) {
+        const serviceId = dto.serviceId || null;
+
+        if (serviceId) {
+            await this.prisma.service.findUniqueOrThrow({
+                where: {
+                    id: serviceId,
+                },
+            });
+        }
+
         const message = await this.prisma.privateMessage.create({
             data: {
                 content: dto.content,
                 conversationId,
                 senderId,
+                ...(serviceId && { serviceId }),
                 ...(dto.files &&
                     dto.files.length > 0 && {
                         files: dto.files,
@@ -32,6 +43,7 @@ export class PrivateChatService {
                         full_name: true,
                     },
                 },
+                service: true,
             },
         });
 
@@ -197,7 +209,7 @@ export class PrivateChatService {
                                 full_name: true,
                             },
                         },
-                        // file: true,
+                        service: true,
                     },
                 },
                 user1: {
@@ -281,6 +293,7 @@ export class PrivateChatService {
                                 full_name: true,
                             },
                         },
+                        service: true,
                         // file: true,
                     },
                 },

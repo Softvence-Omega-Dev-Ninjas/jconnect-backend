@@ -27,7 +27,7 @@ model UserNotification {
 
   user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
   userId String
-
+  type  NotificationType? 
   notification   Notification @relation(fields: [notificationId], references: [id], onDelete: Cascade)
   notificationId String
 
@@ -37,4 +37,10 @@ model UserNotification {
   updatedAt DateTime @default(now()) @updatedAt
 
   @@unique([userId, notificationId])
+}
+
+enum NotificationType {
+  Service
+  Payment
+  UserRegistration
 }

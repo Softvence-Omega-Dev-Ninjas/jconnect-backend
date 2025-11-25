@@ -2,7 +2,7 @@ import {
     MessageMeta,
     PostMeta,
     ReviewMeta,
-    ServiceCreateMeta,
+    ServiceMeta,
     UserRegistrationMeta,
 } from "./events.name";
 
@@ -41,6 +41,15 @@ export interface PostEvent extends BaseEvent<PostMeta> {
         recipients: { id: string; email: string }[];
     };
 }
+export interface ServiceEvent extends BaseEvent<ServiceMeta> {
+    info: {
+        serviceName: string;
+        description: string;
+        authorId: string;
+        publishedAt: Date;
+        recipients: { id: string; email: string }[];
+    };
+}
 
 // Message Event
 export interface Message extends BaseEvent<MessageMeta> {
@@ -49,15 +58,6 @@ export interface Message extends BaseEvent<MessageMeta> {
         toUserId: string;
         content: string;
         sendEmail: boolean;
-    };
-}
-
-// Service Create Event
-export interface ServiceCreateEvent extends BaseEvent<ServiceCreateMeta> {
-    info: {
-        serviceName: string;
-        creatorId: string;
-        recipients: { id: string; email: string }[];
     };
 }
 

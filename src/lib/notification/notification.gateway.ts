@@ -1,4 +1,4 @@
-import type { UserRegistration } from "@common/interface/events-payload";
+import type { ServiceEvent, UserRegistration } from "@common/interface/events-payload";
 import { Notification } from "@common/interface/events-payload";
 import { EVENT_TYPES } from "@common/interface/events.name";
 import { PayloadForSocketClient } from "@common/interface/socket-client-payload";
@@ -84,7 +84,7 @@ export class NotificationGateway
                 sub: user.id,
                 email: user.email,
                 userUpdates: toggle?.userUpdates || false,
-                serviceCreate: toggle?.serviceCreate || false,
+                Service: toggle?.serviceCreate || false,
                 review: toggle?.review || false,
                 post: toggle?.post || false,
                 message: toggle?.message || false,
@@ -212,5 +212,40 @@ export class NotificationGateway
         }
 
         this.logger.log("USERREGISTRATION_CREATE event processing complete");
+    }
+
+    @OnEvent(EVENT_TYPES.SERVICE_CREATE)
+    async handleServiceCreated(payload: ServiceEvent) {
+        this.logger.log("SERVICE_CREATE EVENT RECEIVED");
+        this.logger.debug(JSON.stringify(payload, null, 2));
+
+        if (!payload.info?.recipients?.length) {
+            this.logger.warn("No recipients found for SERVICE_CREATE");
+            return;
+        }
+
+        for (const recipient of payload.info.recipients) {
+            const clients = this.getClientsForUser(recipient.id);
+
+            if (!clients.size) {
+                this.logger.warn(`No active socket for user ${recipient.id}`);
+                continue;
+            }
+
+            const socketPayload: Notification = {
+                type: EVENT_TYPES.SERVICE_CREATE,
+                title: "New Service Created",
+                message: `${payload.info.serviceName} has been created.`,
+                createdAt: new Date(),
+                meta: {
+                    ...payload.meta,
+                },
+            };
+
+            for (const client of clients) {
+                client.emit(EVENT_TYPES.SERVICE_CREATE, socketPayload);
+                this.logger.log(`Notification sent to ${recipient.id} (socket: ${client.id})`);
+            }
+        }
     }
 }

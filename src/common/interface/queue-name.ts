@@ -4,4 +4,5 @@ export enum QueueName {
     MESSAGE = "message",
     SERVICE_CREATE = "service_create",
     REVIEW = "review",
+    SERVICE = "service",
 }

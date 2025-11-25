@@ -16,6 +16,7 @@ model Service {
   payments        Payment[]
   buyServices     BuyService[]
   orders          Order[]
+  privateMessages PrivateMessage[]
 
   @@map("services")
 }
