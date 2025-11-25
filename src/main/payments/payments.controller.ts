@@ -28,7 +28,7 @@ import { PaymentService } from "./payments.service";
 @ApiTags("Payment")
 @Controller("payments")
 export class PaymentController {
-    constructor(private readonly paymentService: PaymentService) { }
+    constructor(private readonly paymentService: PaymentService) {}
 
     @ApiBearerAuth()
     @ValidateUser()
@@ -142,10 +142,7 @@ This endpoint is used by Admin/Buyer only.
             required: ["paymentMethodId"],
         },
     })
-    async DeletePaymentMethode(
-        @Body() body: { paymentMethodId: string },
-        @GetUser() user: any
-    ) {
+    async DeletePaymentMethode(@Body() body: { paymentMethodId: string }, @GetUser() user: any) {
         return this.paymentService.delete_payment_methode(body.paymentMethodId, user);
     }
 
@@ -167,9 +164,6 @@ This endpoint is used by Admin/Buyer only.
     async refundPayment(@Param("orderId") orderId: string, @GetUser() user: any) {
         return await this.paymentService.refundPayment(orderId, user);
     }
-
-
-
 
     @ApiExcludeEndpoint()
     @Post("webhook")

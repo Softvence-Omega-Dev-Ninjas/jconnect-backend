@@ -39,8 +39,6 @@ export class PaymentService {
         return { client_secret: setupIntent.client_secret };
     }
 
-
-
     //payment method setup with token & secreate id
     async confirmSetupIntent(body: ConfirmSetupIntentDto, ReqUser: any) {
         const setupIntentId = body.clientSecret.split("_secret")[0];
@@ -86,24 +84,18 @@ export class PaymentService {
         };
     }
 
-
-
     async delete_payment_methode(paymentMethodId: string, reqUser: any) {
         const deleted = await this.prisma.paymentMethod.delete({
             where: { id: paymentMethodId },
         });
     }
 
-
-
     //withdrawal history
     async withdrawalHistory(userReq: any) {
         const withdrawal_history = await this.prisma.withdrawal.findMany({
             where: { userId: userReq?.userId },
             include: { user: { omit: { password: true } } },
-            orderBy: {
-
-            }
+            orderBy: {},
         });
 
         return withdrawal_history;
@@ -238,9 +230,6 @@ export class PaymentService {
             throw new NotFoundException("User not found");
         }
 
-
-
-
         const seller = user;
         if (!seller) return errorResponse("Seller not found");
         if (seller.sellerIDStripe) {
@@ -369,7 +358,7 @@ export class PaymentService {
 
         amount = amount * 100;
 
-        if (!amount || (amount < Number(setting?.minimum_payout!) * 100)) {
+        if (!amount || amount < Number(setting?.minimum_payout!) * 100) {
             throw new BadRequestException(
                 `Invalid transfer amount please follow minimum payout : ${setting?.minimum_payout!}`,
             );
@@ -577,8 +566,7 @@ export class PaymentService {
 
         this.logger.log("Stripe ফি:", balanceTransaction.fee);
         this.logger.log("নেট অ্যামাউন্ট:", balanceTransaction.net);
-        let PlatfromRevinue = balanceTransaction.net - order.seller_amount
-        
+        let PlatfromRevinue = balanceTransaction.net - order.seller_amount;
 
         const updated = await this.prisma.order.update({
             where: { id: order.id },
@@ -634,6 +622,8 @@ export class PaymentService {
             },
         });
 
+
+
         if (!order) throw new NotFoundException("Order not found");
 
         // Only buyer or admin can request refund
@@ -650,14 +640,25 @@ export class PaymentService {
                 "buyer not paid yet/PaymentIntent ID not found for this order",
             );
 
-        if (order.status === OrderStatus.RELEASED)
-            throw new BadRequestException("Order already released, refund not possible");
+        const sellerId = order.seller.id
 
-        // Load payment intent
+        const totalReleased = await this.prisma.order.aggregate({
+            where: { sellerId, status: OrderStatus.RELEASED },
+            _sum: { seller_amount: true },
+        });
+        const totalSuccessfullREleaseAmount = totalReleased._sum.seller_amount || 0;
+
+        const availableBalance = totalSuccessfullREleaseAmount - order.seller?.withdrawn_amount!
+
+        console.log("ami available ballance", availableBalance);
+
+        if (!availableBalance || availableBalance < Number(order.seller_amount)) {
+            throw new BadRequestException("No available balance to refund because seller account is empty");
+        }
+ 
         const intent = await this.stripe.paymentIntents.retrieve(order.paymentIntentId);
 
-        // 2) If payment is not captured yet (requires_capture)
-        //    → Cancel PaymentIntent (refund not needed)
+  
         if (intent.status === "requires_capture") {
             await this.stripe.paymentIntents.cancel(order.paymentIntentId);
 
@@ -668,7 +669,7 @@ export class PaymentService {
                     seller_amount: 0,
                     buyerPay: 0,
                     stripeFee: 0,
-                    PlatfromRevinue: 0,
+                    PlatfromRevinue: order.buyerPay - order.amount,
                     platformFee: 0,
                 },
             });
@@ -686,6 +687,9 @@ export class PaymentService {
             return { message: "Payment authorization cancelled. No refund needed." };
         }
 
+
+
+
         // 3) Payment was captured → refund the payment
         const refund = await this.stripe.refunds.create({
             payment_intent: order.paymentIntentId,
@@ -698,11 +702,9 @@ export class PaymentService {
             data: {
                 status: OrderStatus.CANCELLED,
                 isReleased: false,
-                platformFee: 0,
-                PlatfromRevinue: 0,
+                PlatfromRevinue: order.buyerPay - order.amount,
                 seller_amount: 0,
                 buyerPay: 0,
-                stripeFee: 0,
             },
         });
 
