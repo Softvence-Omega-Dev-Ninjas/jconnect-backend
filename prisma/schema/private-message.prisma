@@ -24,8 +24,7 @@ model PrivateMessage {
 
   isRead Boolean @default(false)
 
-  files   String[]
-  service String[]
+  files String[]
 
   PrivateLastMessage PrivateConversation[] @relation("PrivateLastMessage")
 
@@ -34,6 +33,9 @@ model PrivateMessage {
 
   senderId String
   sender   User   @relation(fields: [senderId], references: [id], onDelete: Cascade)
+
+  serviceId String?
+  service   Service? @relation(fields: [serviceId], references: [id], onDelete: SetNull)
 
   createdAt DateTime @default(now())
 

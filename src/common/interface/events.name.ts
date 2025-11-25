@@ -18,17 +18,17 @@ export interface MessageMeta {
     sentAt: Date;
 }
 
-export interface ServiceCreateMeta {
-    creatorId: string;
-    serviceId: string;
-    performedBy: string;
-    publishedAt: Date;
-}
-
 export interface ReviewMeta {
     reviewId: string;
     reviewContent: string;
     performedBy: string;
+    publishedAt: Date;
+}
+
+export interface ServiceMeta {
+    serviceName: string;
+    description: string;
+    authorId: string;
     publishedAt: Date;
 }
 
@@ -43,8 +43,7 @@ export const EVENT_TYPES = {
     POST_DELETE: "post.delete",
 
     MESSAGE_CREATE: "message.create",
-
-    SERVICECREATE_CREATE: "service.create",
+    SERVICE_CREATE: "service.create",
     REVIEW_CREATE: "review.create",
 } as const;
 
@@ -63,6 +62,6 @@ export type EventPayloadMap = {
 
     [EVENT_TYPES.MESSAGE_CREATE]: MessageMeta;
 
-    [EVENT_TYPES.SERVICECREATE_CREATE]: ServiceCreateMeta;
+    [EVENT_TYPES.SERVICE_CREATE]: ServiceMeta;
     [EVENT_TYPES.REVIEW_CREATE]: ReviewMeta;
 };

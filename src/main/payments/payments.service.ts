@@ -22,7 +22,7 @@ export class PaymentService {
         @Inject("STRIPE_CLIENT")
         private readonly stripe: Stripe,
         private readonly mail: MailService,
-    ) { }
+    ) {}
 
     //create stipe pyament methode secreate
     async createSetupIntent(body: CreateSetupIntentDto, userReq: any) {
@@ -38,8 +38,6 @@ export class PaymentService {
         });
         return { client_secret: setupIntent.client_secret };
     }
-
-
 
     //payment method setup with token & secreate id
     async confirmSetupIntent(body: ConfirmSetupIntentDto, ReqUser: any) {
@@ -86,24 +84,18 @@ export class PaymentService {
         };
     }
 
-
-
     async delete_payment_methode(paymentMethodId: string, reqUser: any) {
         const deleted = await this.prisma.paymentMethod.delete({
             where: { id: paymentMethodId },
         });
     }
 
-
-
     //withdrawal history
     async withdrawalHistory(userReq: any) {
         const withdrawal_history = await this.prisma.withdrawal.findMany({
             where: { userId: userReq?.userId },
             include: { user: { omit: { password: true } } },
-            orderBy: {
-
-            }
+            orderBy: {},
         });
 
         return withdrawal_history;
@@ -238,9 +230,6 @@ export class PaymentService {
             throw new NotFoundException("User not found");
         }
 
-
-
-
         const seller = user;
         if (!seller) return errorResponse("Seller not found");
         if (seller.sellerIDStripe) {
@@ -369,7 +358,7 @@ export class PaymentService {
 
         amount = amount * 100;
 
-        if (!amount || (amount < Number(setting?.minimum_payout!) * 100)) {
+        if (!amount || amount < Number(setting?.minimum_payout!) * 100) {
             throw new BadRequestException(
                 `Invalid transfer amount please follow minimum payout : ${setting?.minimum_payout!}`,
             );
@@ -577,8 +566,7 @@ export class PaymentService {
 
         this.logger.log("Stripe ফি:", balanceTransaction.fee);
         this.logger.log("নেট অ্যামাউন্ট:", balanceTransaction.net);
-        let PlatfromRevinue = balanceTransaction.net - order.seller_amount
-        
+        let PlatfromRevinue = balanceTransaction.net - order.seller_amount;
 
         const updated = await this.prisma.order.update({
             where: { id: order.id },

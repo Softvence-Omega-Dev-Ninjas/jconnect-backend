@@ -28,8 +28,8 @@ export class SendPrivateMessageDto {
 
     @ApiProperty({
         type: String,
-        example: "Hey! How are you doing?",
-        description: "Message text content",
+        example: "7348343543943?",
+        description: "SERVICE ID text content",
     })
     @IsString()
     content: string;
@@ -43,14 +43,14 @@ export class SendPrivateMessageDto {
     @IsArray({ each: true })
     files: string[];
 
-    @ApiPropertyOptional({
-        type: [String],
-        example: ["this is openservice", "make us profile"],
-        description: "Stored path of uploaded files (auto-filled after upload)",
+    @ApiProperty({
+        type: String,
+        example: "d069d51a-5fc6-4252-bf26-3314acd307f5",
+        description: "service id of the message being sent",
     })
     @IsOptional()
-    @IsArray({ each: true })
-    service: string[];
+    @IsString()
+    serviceId: string;
 
     @ApiPropertyOptional({
         type: String,
