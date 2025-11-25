@@ -24,7 +24,8 @@ import { PrismaService } from "src/lib/prisma/prisma.service";
 })
 @Injectable()
 export class NotificationGateway
-    implements OnGatewayInit, OnGatewayConnection, OnGatewayDisconnect {
+    implements OnGatewayInit, OnGatewayConnection, OnGatewayDisconnect
+{
     private readonly logger = new Logger(NotificationGateway.name);
     private readonly clients = new Map<string, Set<Socket>>();
 
@@ -32,7 +33,7 @@ export class NotificationGateway
         private readonly jwtService: JwtService,
         private readonly configService: ConfigService,
         private readonly prisma: PrismaService,
-    ) { }
+    ) {}
 
     @WebSocketServer()
     server: Server;
@@ -213,8 +214,6 @@ export class NotificationGateway
         this.logger.log("USERREGISTRATION_CREATE event processing complete");
     }
 
-
-
     @OnEvent(EVENT_TYPES.SERVICE_CREATE)
     async handleServiceCreated(payload: ServiceEvent) {
         this.logger.log("SERVICE_CREATE EVENT RECEIVED");
@@ -245,11 +244,8 @@ export class NotificationGateway
 
             for (const client of clients) {
                 client.emit(EVENT_TYPES.SERVICE_CREATE, socketPayload);
-                this.logger.log(
-                    `Notification sent to ${recipient.id} (socket: ${client.id})`
-                );
+                this.logger.log(`Notification sent to ${recipient.id} (socket: ${client.id})`);
             }
         }
     }
-
 }

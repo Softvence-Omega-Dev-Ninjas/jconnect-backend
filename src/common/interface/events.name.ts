@@ -18,8 +18,6 @@ export interface MessageMeta {
     sentAt: Date;
 }
 
-
-
 export interface ReviewMeta {
     reviewId: string;
     reviewContent: string;

@@ -18,7 +18,7 @@ const orderStatusFilter = {
 
 @Injectable()
 export class OrdersService {
-    constructor(private prisma: PrismaService) { }
+    constructor(private prisma: PrismaService) {}
 
     // CREATE ORDER
     async createOrder(buyerId: string, dto: any) {
@@ -243,7 +243,7 @@ export class OrdersService {
             where: { sellerId, status: OrderStatus.RELEASED },
             _sum: { seller_amount: true },
         });
-        const totalSuccessfullREleaseAmount = (totalReleased._sum.seller_amount || 0)
+        const totalSuccessfullREleaseAmount = totalReleased._sum.seller_amount || 0;
 
         // const totalCancelled = await this.prisma.order.aggregate({
         //     where: { sellerId, status: OrderStatus.CANCELLED },
@@ -286,8 +286,8 @@ export class OrdersService {
         // 3️⃣ Available balance
         // const availableBalance = totalEarning - pendingClearance - user?.withdrawn_amount!;
 
-        const totalEarning = totalSuccessfullREleaseAmount + pendingClearance
-        const availableBalance = totalSuccessfullREleaseAmount - user?.withdrawn_amount!
+        const totalEarning = totalSuccessfullREleaseAmount + pendingClearance;
+        const availableBalance = totalSuccessfullREleaseAmount - user?.withdrawn_amount!;
         return {
             totalEarning: totalEarning / 100,
             pendingClearance: pendingClearance / 100,

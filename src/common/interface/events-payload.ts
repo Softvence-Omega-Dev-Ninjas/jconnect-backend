@@ -46,11 +46,10 @@ export interface ServiceEvent extends BaseEvent<ServiceMeta> {
         serviceName: string;
         description: string;
         authorId: string;
-        publishedAt: Date
+        publishedAt: Date;
         recipients: { id: string; email: string }[];
     };
 }
-
 
 // Message Event
 export interface Message extends BaseEvent<MessageMeta> {
@@ -61,8 +60,6 @@ export interface Message extends BaseEvent<MessageMeta> {
         sendEmail: boolean;
     };
 }
-
-
 
 // Review Event
 export interface ReviewEvent extends BaseEvent<ReviewMeta> {
