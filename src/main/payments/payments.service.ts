@@ -22,7 +22,7 @@ export class PaymentService {
         @Inject("STRIPE_CLIENT")
         private readonly stripe: Stripe,
         private readonly mail: MailService,
-    ) { }
+    ) {}
 
     //create stipe pyament methode secreate
     async createSetupIntent(body: CreateSetupIntentDto, userReq: any) {
@@ -622,8 +622,6 @@ export class PaymentService {
             },
         });
 
-
-
         if (!order) throw new NotFoundException("Order not found");
 
         // Only buyer or admin can request refund
@@ -640,7 +638,7 @@ export class PaymentService {
                 "buyer not paid yet/PaymentIntent ID not found for this order",
             );
 
-        const sellerId = order.seller.id
+        const sellerId = order.seller.id;
 
         const totalReleased = await this.prisma.order.aggregate({
             where: { sellerId, status: OrderStatus.RELEASED },
@@ -648,17 +646,18 @@ export class PaymentService {
         });
         const totalSuccessfullREleaseAmount = totalReleased._sum.seller_amount || 0;
 
-        const availableBalance = totalSuccessfullREleaseAmount - order.seller?.withdrawn_amount!
+        const availableBalance = totalSuccessfullREleaseAmount - order.seller?.withdrawn_amount!;
 
         console.log("ami available ballance", availableBalance);
 
         if (!availableBalance || availableBalance < Number(order.seller_amount)) {
-            throw new BadRequestException("No available balance to refund because seller account is empty");
+            throw new BadRequestException(
+                "No available balance to refund because seller account is empty",
+            );
         }
- 
+
         const intent = await this.stripe.paymentIntents.retrieve(order.paymentIntentId);
 
-  
         if (intent.status === "requires_capture") {
             await this.stripe.paymentIntents.cancel(order.paymentIntentId);
 
@@ -686,9 +685,6 @@ export class PaymentService {
 
             return { message: "Payment authorization cancelled. No refund needed." };
         }
-
-
-
 
         // 3) Payment was captured → refund the payment
         const refund = await this.stripe.refunds.create({
