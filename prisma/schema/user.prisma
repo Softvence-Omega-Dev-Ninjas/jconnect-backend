@@ -68,9 +68,9 @@ model User {
   userNotifications   UserNotification[]
   notificationToggles NotificationToggle[]
 
-  orders_buyer  Order[] @relation("OrderBuyer")
-  orders_seller Order[] @relation("OrderSeller")
-  Withdraws Withdrawal[]
+  orders_buyer  Order[]         @relation("OrderBuyer")
+  orders_seller Order[]         @relation("OrderSeller")
+  Withdraws     Withdrawal[]
   paymentMethod PaymentMethod[]
   Disputes      Dispute[]
 
@@ -93,26 +93,4 @@ model Device {
   updatedAt      DateTime @updatedAt
 
   @@map("devices")
-}
-
-enum Role {
-  USER
-  MODERATOR
-  ADMIN
-  SUPER_ADMIN
-  FINANCE_ADMIN
-  SUPPORT_ADMIN
-  ANALYST
-  MEMBER
-  ARTIST
-}
-
-enum ValidationType {
-  EMAIL
-  PHONE
-}
-
-enum AuthProvider {
-  GOOGLE
-  FACEBOOK
 }
