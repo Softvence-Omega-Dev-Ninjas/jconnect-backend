@@ -59,3 +59,8 @@
 - [ ] **Dashboard Clean** setup setting schema following the figma
 - [ ] **setting update and permition controll** setup setting schema following the figma
 - [ ] **i will try to best polish in order section then learn the chat system** chat system learning
+
+
+
+
+

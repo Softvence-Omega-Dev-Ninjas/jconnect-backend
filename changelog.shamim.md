@@ -133,3 +133,13 @@
 - order delete filter with valid user and admin/superadmin
 - add payment method for future refund
 - findout proper need time for compleat this project
+
+# 30/11/2025
+### Payment & Order Refactor
+
+- send proper email both buyer and seller
+- collabaration with shahriyar vai for best payment system like escrow system
+- payment refund
+- order delete filter with valid user and admin/superadmin
+- add payment method for future refund
+- findout proper need time for compleat this project
