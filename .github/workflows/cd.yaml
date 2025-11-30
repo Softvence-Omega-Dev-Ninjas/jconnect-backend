@@ -78,7 +78,7 @@ jobs:
                   username: ${{ secrets.VPS_USER }}
                   key: ${{ secrets.VPS_SSH_PRIVATE_KEY }}
                   source: "docker-compose.yaml"
-                  target: "~/jdadzok_server"
+                  target: "~/${{ secrets.PACKAGE_NAME }}"
 
             - name: Copy Caddy File
               uses: appleboy/scp-action@v0.1.7
@@ -87,7 +87,7 @@ jobs:
                   username: ${{ secrets.VPS_USER }}
                   key: ${{ secrets.VPS_SSH_PRIVATE_KEY }}
                   source: "Caddyfile"
-                  target: "~/jdadzok_server"
+                  target: "~/${{ secrets.PACKAGE_NAME }}"
 
             - name: Deploy via SSH
               uses: appleboy/ssh-action@v1.0.3
@@ -96,7 +96,7 @@ jobs:
                   username: ${{ secrets.VPS_USER }}
                   key: ${{ secrets.VPS_SSH_PRIVATE_KEY }}
                   script: |
-                      cd ~/jdadzok_server
+                      cd ~/${{ secrets.PACKAGE_NAME }}
                       # Pull the latest images
                       docker compose --profile prod pull
 
