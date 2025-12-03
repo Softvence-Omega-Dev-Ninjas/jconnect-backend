@@ -107,7 +107,7 @@ export class UsersController {
     @ApiQuery({ name: "page", required: false, example: 1 })
     @ApiQuery({ name: "limit", required: false, example: 10 })
     @ApiQuery({ name: "filter", required: false, example: "top-rated" })
-    @ApiQuery({ name: "search", required: false, example: "mixing" })
+    @ApiQuery({ name: "search", required: false, example: "" })
     findAllArtist(@Query() query: FindArtistDto) {
         return this.usersService.findAllArtist(query);
     }

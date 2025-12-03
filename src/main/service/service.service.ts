@@ -1,6 +1,6 @@
 import { HandleError } from "@common/error/handle-error.decorator";
 import { errorResponse } from "@common/utilsResponse/response.util";
-import { ForbiddenException, Inject, Injectable, NotFoundException } from "@nestjs/common";
+import { Inject, Injectable, NotFoundException } from "@nestjs/common";
 import { EventEmitter2 } from "@nestjs/event-emitter";
 
 import { ServiceEvent } from "@common/interface/events-payload";
@@ -15,7 +15,7 @@ export class ServiceService {
         private prisma: PrismaService,
         private readonly eventEmitter: EventEmitter2,
         @Inject("STRIPE_CLIENT") private stripe: Stripe,
-    ) {}
+    ) { }
 
     @HandleError("Failed to create service")
     async create(dto: CreateServiceDto, user: any): Promise<any> {
@@ -158,30 +158,33 @@ export class ServiceService {
     }
 
     @HandleError("Failed to update service")
-    async update(id: string, user, updateServiceDto: UpdateServiceDto) {
-        console.log(user);
+    async update(id: string, dto: UpdateServiceDto, user: any): Promise<any> {
+        if (!user.userId) return errorResponse("User ID is missing");
+
+        // Check if service exists
         const service = await this.prisma.service.findUnique({
             where: { id },
         });
 
-        if (!service) {
-            throw new NotFoundException(`Service with ID ${id} not found`);
-        }
+        if (!service) return errorResponse("Service not found");
 
-        // check ownership or super admin
-        const isOwner = service.creatorId === user?.userId;
-        const isSuperAdmin = user?.roles === "SUPER_ADMIN";
+        // Check ownership
+        if (service.creatorId !== user.userId)
+            return errorResponse("You are not allowed to update this service");
 
-        if (!isOwner && !isSuperAdmin) {
-            console.log("You are not authorized to access this service");
-            throw new ForbiddenException("You are not authorized to access this service");
-        }
-
-        return this.prisma.service.update({
+        // Update service
+        const updatedService = await this.prisma.service.update({
             where: { id },
-            data: updateServiceDto,
+            data: {
+                ...dto,
+            },
         });
+        return {
+            message: "Service updated successfully",
+            service: updatedService,
+        };
     }
+
 
     @HandleError("Failed to delete service")
     async remove(id: string) {
