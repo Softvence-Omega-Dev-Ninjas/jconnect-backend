@@ -58,9 +58,6 @@ export class CreateServiceDto {
     isPost?: boolean = false;
 }
 
-
-
-
 export class UpdateServiceDto extends PartialType(CreateServiceDto) {
     @ApiProperty({
         example: "Updated Track Review",

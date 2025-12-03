@@ -22,25 +22,21 @@ export class PaymentService {
         @Inject("STRIPE_CLIENT")
         private readonly stripe: Stripe,
         private readonly mail: MailService,
-    ) { }
-
+    ) {}
 
     async createCustomerID(user: any) {
-
-
-
         const customers = await this.stripe.customers.create({
-            email: user.email
+            email: user.email,
         });
 
-        if (!customers) throw new HttpException("customer not create", 400)
+        if (!customers) throw new HttpException("customer not create", 400);
         //update user customer.id
         return await this.prisma.user.update({
-            where: { id: user?.userId }, data: {
+            where: { id: user?.userId },
+            data: {
                 customerIdStripe: customers.id,
-            }
-        })
-
+            },
+        });
     }
 
     //create stipe pyament methode secreate
