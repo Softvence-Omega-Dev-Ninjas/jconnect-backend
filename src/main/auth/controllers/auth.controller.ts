@@ -4,7 +4,7 @@ import { GoogleLoginDto } from "../dto/google-login.dto";
 import { LoginDto } from "../dto/login.dto";
 import { RegisterDto } from "../dto/register.dto";
 
-import { VerifyOtpAuthDto } from "../dto/varify-otp.dto";
+import { ResendEmailDto, ResendverifyOtpDto, VerifyOtpAuthDto } from "../dto/varify-otp.dto";
 
 import IpAddress from "@common/decorators/ip-address.decorator";
 import { UserAgent } from "@common/decorators/user-agent.decorator";
@@ -26,7 +26,7 @@ export class AuthController {
         private readonly authGoogleService: AuthGoogleService,
         private readonly deviceService: DeviceService,
         private readonly twilio: TwilioService,
-    ) {}
+    ) { }
 
     // -------------- User Registration --------------
     @ApiOperation({ summary: "User Registration with Email" })
@@ -110,6 +110,45 @@ export class AuthController {
 
         return result;
     }
+   @Post("resend-email")
+@ApiOperation({ summary: "Resend verification email OTP" })
+async resendEmail(@Body() payload: ResendEmailDto) {
+  const result = await this.authService.resendEmail(payload);
+  return {
+    statusCode: HttpStatus.OK,
+    success: true,
+    message: "Email resent successfully!",
+    data: result,
+  };
+}
+
+@Post("resend-verify-otp")
+@ApiOperation({ summary: "Verify OTP after resend" })
+async verifyResentOtp(
+  @Body() payload: ResendverifyOtpDto,
+  @UserAgent() userAgent: string,
+  @IpAddress() ipAddress: string,
+  @Res({ passthrough: true }) res: Response,
+) {
+  const result = await this.authService.verifyResentOtp(
+    payload,
+    userAgent,
+    ipAddress
+  );
+
+  if (result.data?.token) {
+    res.cookie("token", result.data.token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "lax",
+      path: "/",
+      maxAge: 30 * 24 * 60 * 60 * 1000,
+    });
+  }
+
+  return result;
+}
+
 
     // -------------- Verify OTP (Password Reset) --------------
     @ApiOperation({ summary: "Verify OTP for Password Reset" })
