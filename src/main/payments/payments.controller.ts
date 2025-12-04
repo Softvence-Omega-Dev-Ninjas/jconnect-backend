@@ -32,17 +32,27 @@ export class PaymentController {
 
     @ApiBearerAuth()
     @ValidateUser()
-    @Post("create-setup-intent")
-    @ApiOperation({ summary: "Create SetupIntent for buyer to save card" })
-    @ApiBody({ type: CreateSetupIntentDto })
-    async createSetupIntent(@Body() body: CreateSetupIntentDto, @GetUser() user: any) {
-        return this.paymentService.createSetupIntent(body, user);
+    @Post("customerID")
+    @ApiOperation({
+        summary:
+            "if you have'n create customer id / invalid customer id then again create customer id",
+    })
+    async create_stripe_customerId(@GetUser() user: any) {
+        return this.paymentService.createCustomerID(user);
+    }
+
+    @ApiBearerAuth()
+    @ValidateUser()
+    @Get("create-setup-intent")
+    @ApiOperation({ summary: "get client secret for payment method" })
+    async createSetupIntent(@GetUser() user: any) {
+        return this.paymentService.createSetupIntent(user);
     }
 
     @ApiBearerAuth()
     @ValidateUser()
     @Post("confirm-setup-intent")
-    @ApiOperation({ summary: "Confirm SetupIntent with secrete and card token" })
+    @ApiOperation({ summary: "Confirm SetupIntent with secrete and card token (payment method)" })
     @ApiBody({ type: ConfirmSetupIntentDto })
     async confirmSetupIntent(@Body() body: ConfirmSetupIntentDto, @GetUser() user: any) {
         return this.paymentService.confirmSetupIntent(body, user);

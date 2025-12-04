@@ -33,15 +33,7 @@ services:
         volumes:
             - postgres_data:/var/lib/postgresql/data
         healthcheck:
-<<<<<<< HEAD
-            test:
-                [
-                    "CMD-SHELL",
-                    "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}",
-                ]
-=======
             test: ["CMD-SHELL", "pg_isready -U jconnect -d jconnect_db"]
->>>>>>> 99eb196e7a03f2b44c9c73a217e9956bd0c46d70
             interval: 10s
             timeout: 5s
             retries: 5

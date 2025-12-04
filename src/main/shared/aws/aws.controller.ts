@@ -1,6 +1,8 @@
 import { BadRequestException, Controller, Get, Query } from "@nestjs/common";
 import { awsService } from "./aws.service";
+import { ApiExcludeController } from "@nestjs/swagger";
 
+@ApiExcludeController()
 @Controller("s3")
 export class awsController {
     constructor(private readonly s3Service: awsService) {}

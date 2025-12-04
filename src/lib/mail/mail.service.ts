@@ -74,7 +74,6 @@ export class MailService {
         if (!this.transporter) {
             throw new Error("Email service is not configured. Please contact support.");
         }
-        console.log("ami sendMail function ................................");
 
         const mailOptions = {
             from: `"DJconnect"" <${this.configService.get<string>(ENVEnum.MAIL_USER)}>`,

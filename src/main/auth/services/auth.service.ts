@@ -1,4 +1,4 @@
-import { ForbiddenException, Injectable, NotFoundException } from "@nestjs/common";
+import { ForbiddenException, HttpException, Injectable, NotFoundException } from "@nestjs/common";
 import { AppError } from "src/common/error/handle-error.app";
 import { successResponse, TResponse } from "src/common/utilsResponse/response.util";
 import { MailService } from "src/lib/mail/mail.service";
@@ -21,6 +21,8 @@ import { SendPhoneOtpDto, VerifyPhoneOtpDto } from "../dto/phone-login";
 import { ResetPasswordAuthDto } from "../dto/reset-password";
 import { ResendEmailDto, ResendverifyOtpDto, VerifyOtpAuthDto } from "../dto/varify-otp.dto";
 
+import { UserRegistration } from "@common/interface/events-payload";
+import { EVENT_TYPES } from "@common/interface/events.name";
 import { StripeService } from "@main/stripe/stripe.service";
 
 @Injectable()
@@ -522,8 +524,11 @@ export class AuthService {
     // ---------- FORGOT PASSWORD VIA PHONE  ----------
     @HandleError("Failed to process phone forgot password", "PhoneForgot")
     async phoneForgotPassword(dto: SendPhoneOtpDto) {
+        if (!dto.phone) throw new HttpException("phone number required", 400);
         const phone = dto.phone.startsWith("+") ? dto.phone : `+${dto.phone}`;
-        const user = await this.prisma.user.findFirst({ where: { phone } });
+        const user = await this.prisma.user.findUnique({ where: { phone: dto.phone } });
+        // console.log("this is user", user, phone);
+
         if (!user) throw new NotFoundException("Phone not registered");
 
         const { otp, expiryTime } = this.utils.generateOtpAndExpiry();
