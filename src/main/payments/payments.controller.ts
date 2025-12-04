@@ -33,9 +33,12 @@ export class PaymentController {
     @ApiBearerAuth()
     @ValidateUser()
     @Post("customerID")
-    @ApiOperation({summary:"if you have'n create customer id / invalid customer id then again create customer id"})
-    async create_stripe_customerId(@GetUser() user:any){
-        return this.paymentService.createCustomerID(user)
+    @ApiOperation({
+        summary:
+            "if you have'n create customer id / invalid customer id then again create customer id",
+    })
+    async create_stripe_customerId(@GetUser() user: any) {
+        return this.paymentService.createCustomerID(user);
     }
 
     @ApiBearerAuth()

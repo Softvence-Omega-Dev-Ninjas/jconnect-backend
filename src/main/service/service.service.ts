@@ -15,7 +15,7 @@ export class ServiceService {
         private prisma: PrismaService,
         private readonly eventEmitter: EventEmitter2,
         @Inject("STRIPE_CLIENT") private stripe: Stripe,
-    ) { }
+    ) {}
 
     @HandleError("Failed to create service")
     async create(dto: CreateServiceDto, user: any): Promise<any> {
@@ -184,7 +184,6 @@ export class ServiceService {
             service: updatedService,
         };
     }
-
 
     @HandleError("Failed to delete service")
     async remove(id: string) {
