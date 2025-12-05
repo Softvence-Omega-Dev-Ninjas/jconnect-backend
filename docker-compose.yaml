@@ -16,10 +16,12 @@ services:
             db:
                 condition: service_healthy
         restart: unless-stopped
+        networks:
+            - jconnect-backend
 
     db:
         image: postgres:16-alpine
-        container_name: pg-db
+        container_name: jconnect-db
         profiles:
             - dev
             - prod
@@ -31,7 +33,7 @@ services:
         ports:
             - "127.0.0.1:5432:5432"
         volumes:
-            - postgres_data:/var/lib/postgresql/data
+            - jconnect_db:/var/lib/postgresql/data
         healthcheck:
             test: ["CMD-SHELL", "pg_isready -U jconnect -d jconnect_db"]
             interval: 10s
@@ -39,10 +41,13 @@ services:
             retries: 5
 
         restart: unless-stopped
+        networks:
+            - jconnect-backend
 
 volumes:
-    postgres_data:
+    jconnect_db:
         driver: local
 
 networks:
-    default:
+    jconnect-backend:
+        driver: bridge
