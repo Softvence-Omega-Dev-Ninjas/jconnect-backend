@@ -40,8 +40,8 @@ async function bootstrap() {
 
     await app.listen(PORT);
 
-    console.log(`🚀 Server running at: http://localhost:${PORT}`);
-    console.log(`📘 Swagger docs: http://localhost:${PORT}/api-docs`);
+    console.log(`🚀 Server running at: ${process.env.BACKEND_URL}:${PORT}`);
+    console.log(`📘 Swagger docs: ${process.env.BACKEND_URL}:${PORT}/api-docs`);
 }
 
 bootstrap();

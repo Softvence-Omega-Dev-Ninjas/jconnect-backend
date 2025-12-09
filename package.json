@@ -23,6 +23,10 @@
         "format:fix": "prettier --ignore-path .gitignore --write \"**/*.+(js|ts|json)\"",
         "ci:fix": "npm run format:fix",
         "db:seed": "tsx prisma/seed.ts",
+        "db:seed:nest": "tsx src/scripts/seed-database.ts",
+        "db:seed:prod": "tsx prisma/seed.ts",
+        "db:fetch-prod": "tsx src/scripts/fetch-production-data.ts",
+        "db:sync-prod": "tsx src/scripts/sync-production-db.ts",
         "prepare": "husky"
     },
     "dependencies": {
@@ -70,6 +74,9 @@
         "twilio-cli": "^6.2.0",
         "ua-parser-js": "^2.0.6",
         "uuid": "^13.0.0"
+    },
+    "prisma": {
+        "seed": "tsx prisma/seed.ts"
     },
     "devDependencies": {
         "@eslint/eslintrc": "^3.3.1",
