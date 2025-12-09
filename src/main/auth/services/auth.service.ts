@@ -36,7 +36,7 @@ export class AuthService {
         private readonly twilio: TwilioService,
         private readonly stripe: StripeService,
         private readonly eventEmitter: EventEmitter2,
-    ) { }
+    ) {}
 
     // ---------- REGISTER (send email verification OTP) ----------
     @HandleError("Failed to Register profile", "Register ")
@@ -193,7 +193,6 @@ export class AuthService {
     // ---------- VERIFY OTP (for signup) ----------
     @HandleError("Failed to verify OTP", "VerifyOTP")
     async verifyOtp(payload: VerifyOtpAuthDto, userAgent?: string, ipAddress?: string) {
-
         let decoded: any;
         try {
             decoded = await this.jwt.verifyAsync(payload.resetToken);
@@ -243,8 +242,6 @@ export class AuthService {
         const safeUser = this.utils.sanitizedResponse(UserResponseDto, updatedUser);
         const devices = await this.deviceService.getUserDevices(user.id);
 
-
-
         return {
             success: true,
             message: "OTP verified successfully",
@@ -257,14 +254,8 @@ export class AuthService {
     }
     // --------------resend otp------------
 
-
-    async verifyResentOtp(
-        payload: ResendverifyOtpDto,
-        userAgent?: string,
-        ipAddress?: string
-    ) {
+    async verifyResentOtp(payload: ResendverifyOtpDto, userAgent?: string, ipAddress?: string) {
         const { emailOtp, resetToken } = payload;
-
 
         let decoded: any;
         try {
@@ -281,16 +272,13 @@ export class AuthService {
             throw new ForbiddenException("User not found!");
         }
 
-
         if (user.otpExpiresAt && user.otpExpiresAt < new Date()) {
             throw new ForbiddenException("OTP has expired!");
         }
 
-
         if (user.emailOtp !== Number(emailOtp)) {
             throw new ForbiddenException("OTP does not match!");
         }
-
 
         const updatedUser = await this.prisma.user.update({
             where: { id: user.id },
@@ -302,14 +290,13 @@ export class AuthService {
             },
         });
 
-
         if (userAgent && ipAddress) {
             await this.deviceService.saveDeviceInfo(user.id, userAgent, ipAddress);
         }
 
         const token = await this.jwt.signAsync(
             { id: user.id, email: user.email, roles: user.role },
-            { secret: process.env.JWT_SECRET, expiresIn: "77d" }
+            { secret: process.env.JWT_SECRET, expiresIn: "77d" },
         );
 
         const safeUser = this.utils.sanitizedResponse(UserResponseDto, updatedUser);
@@ -325,8 +312,6 @@ export class AuthService {
             devices,
         };
     }
-
-
 
     // -----------resend otp email ----
 
@@ -365,21 +350,16 @@ export class AuthService {
       <p>Your verification OTP is:</p>
       <h2>${otp}</h2>
       <p>This OTP will expire in 10 minutes.</p>
-    `
+    `,
         );
 
-        const resetToken = await this.jwt.signAsync(
-            { id: user.id },
-            { expiresIn: "10m" }
-        );
+        const resetToken = await this.jwt.signAsync({ id: user.id }, { expiresIn: "10m" });
 
         return {
             message: "If this email is registered, an OTP has been sent.",
             resetToken,
         };
     }
-
-
 
     // ---------- VERIFY OTP (for password reset ) ----------
     @HandleError("Failed to verify reset OTP", "ResetVerifyOTP")
