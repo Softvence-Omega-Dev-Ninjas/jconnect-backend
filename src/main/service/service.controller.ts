@@ -2,8 +2,8 @@ import { GetUser, ValidateArtist, ValidateUser } from "@common/jwt/jwt.decorator
 import { Body, Controller, Delete, Get, Param, Patch, Post } from "@nestjs/common";
 import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from "@nestjs/swagger";
 import { Service } from "@prisma/client";
-import { CreateServiceDto } from "./dto/create-service.dto";
-import { UpdateServiceDto } from "./dto/update-service.dto";
+import { CreateServiceDto, UpdateServiceDto } from "./dto/create-service.dto";
+
 import { ServiceService } from "./service.service";
 
 @ApiTags("Services-all -details")
@@ -34,6 +34,15 @@ export class ServiceController {
 
     @ApiBearerAuth()
     @ValidateUser()
+    @Get("my_service")
+    @ApiOperation({ summary: "Get available services" })
+    @ApiResponse({ status: 200, description: "List of all services" })
+    MyService(@GetUser() user: any): Promise<Service[]> {
+        return this.serviceService.Myservice(user);
+    }
+
+    @ApiBearerAuth()
+    @ValidateUser()
     @Get(":id")
     @ApiOperation({ summary: "Get service details by ID" })
     @ApiResponse({ status: 200, description: "Service details found" })
@@ -45,15 +54,14 @@ export class ServiceController {
     @ApiBearerAuth()
     @ValidateArtist()
     @Patch(":id")
-    @ApiOperation({ summary: "Update service details by ID" })
+    @ApiOperation({ summary: "Update an existing service" })
     @ApiResponse({ status: 200, description: "Service updated successfully" })
-    @ApiResponse({ status: 404, description: "Service not found" })
-    update(
+    async update(
         @Param("id") id: string,
-        @GetUser() user: any,
         @Body() updateServiceDto: UpdateServiceDto,
-    ): Promise<Service> {
-        return this.serviceService.update(id, user, updateServiceDto);
+        @GetUser() user: any,
+    ) {
+        return this.serviceService.update(id, updateServiceDto, user);
     }
 
     @ApiBearerAuth()

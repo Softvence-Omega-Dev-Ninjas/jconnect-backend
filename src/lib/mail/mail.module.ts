@@ -1,6 +1,6 @@
-import { Global, Module } from '@nestjs/common';
-import { ConfigModule } from '@nestjs/config';
-import { MailService } from './mail.service';
+import { Global, Module } from "@nestjs/common";
+import { ConfigModule } from "@nestjs/config";
+import { MailService } from "./mail.service";
 
 @Global()
 @Module({
@@ -8,4 +8,4 @@ import { MailService } from './mail.service';
     providers: [MailService],
     exports: [MailService],
 })
-export class MailModule { }
+export class MailModule {}

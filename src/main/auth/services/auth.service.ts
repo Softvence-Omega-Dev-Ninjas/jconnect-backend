@@ -1,4 +1,4 @@
-import { ForbiddenException, Injectable, NotFoundException } from "@nestjs/common";
+import { ForbiddenException, HttpException, Injectable, NotFoundException } from "@nestjs/common";
 import { AppError } from "src/common/error/handle-error.app";
 import { successResponse, TResponse } from "src/common/utilsResponse/response.util";
 import { MailService } from "src/lib/mail/mail.service";
@@ -9,7 +9,9 @@ import { JwtService } from "@nestjs/jwt";
 import { RegisterDto } from "../dto/register.dto";
 
 import { UserResponseDto } from "@common/enum/dto/user.response";
-import { ValidationType } from "@prisma/client";
+
+import { EventEmitter2 } from "@nestjs/event-emitter";
+import { Role, ValidationType } from "@prisma/client";
 import { HandleError } from "src/common/error/handle-error.decorator";
 import { DeviceService } from "src/lib/device/device.service";
 import { TwilioService } from "src/lib/twilio/twilio.service";
@@ -17,7 +19,11 @@ import { ForgotPasswordDto } from "../dto/forgot-password.dto";
 import { LoginDto } from "../dto/login.dto";
 import { SendPhoneOtpDto, VerifyPhoneOtpDto } from "../dto/phone-login";
 import { ResetPasswordAuthDto } from "../dto/reset-password";
-import { VerifyOtpAuthDto } from "../dto/varify-otp.dto";
+import { ResendEmailDto, ResendverifyOtpDto, VerifyOtpAuthDto } from "../dto/varify-otp.dto";
+
+import { UserRegistration } from "@common/interface/events-payload";
+import { EVENT_TYPES } from "@common/interface/events.name";
+import { StripeService } from "@main/stripe/stripe.service";
 
 @Injectable()
 export class AuthService {
@@ -28,6 +34,8 @@ export class AuthService {
         private readonly jwt: JwtService,
         private readonly deviceService: DeviceService,
         private readonly twilio: TwilioService,
+        private readonly stripe: StripeService,
+        private readonly eventEmitter: EventEmitter2,
     ) {}
 
     // ---------- REGISTER (send email verification OTP) ----------
@@ -35,7 +43,7 @@ export class AuthService {
     async register(payload: RegisterDto, userAgent?: string, ipAddress?: string) {
         const { email, password, full_name, phone } = payload;
 
-        // Check if user already exists
+        // ------------------Check if user already exists----------------------
         const existing = await this.prisma.user.findUnique({ where: { email } });
         if (existing) {
             throw new AppError(400, "User already exists with this email");
@@ -47,6 +55,7 @@ export class AuthService {
         // Generate OTP
         const { otp, expiryTime } = this.utils.generateOtpAndExpiry();
 
+        const customers = await this.stripe.createCustomer(email, full_name);
         // Create new user with OTP
         const newUser = await this.prisma.user.create({
             data: {
@@ -55,8 +64,10 @@ export class AuthService {
                 phone: phone,
                 password: hashedPassword,
                 isVerified: false,
+                role: Role.ARTIST,
                 emailOtp: otp,
                 otpExpiresAt: expiryTime,
+                customerIdStripe: customers.id,
             },
         });
 
@@ -177,10 +188,11 @@ export class AuthService {
         return { resetToken };
     }
 
+    // ---------------
+
     // ---------- VERIFY OTP (for signup) ----------
     @HandleError("Failed to verify OTP", "VerifyOTP")
     async verifyOtp(payload: VerifyOtpAuthDto, userAgent?: string, ipAddress?: string) {
-        // Verify the JWT token
         let decoded: any;
         try {
             decoded = await this.jwt.verifyAsync(payload.resetToken);
@@ -188,7 +200,70 @@ export class AuthService {
             throw new ForbiddenException("Invalid or expired token!");
         }
 
-        // Find user by ID from the token
+        //  Find user from decoded token
+        const user = await this.prisma.user.findUnique({
+            where: { id: decoded.id },
+        });
+
+        if (!user) throw new ForbiddenException("User not found!");
+
+        //  Check OTP expiry
+        if (user.otpExpiresAt && user.otpExpiresAt < new Date()) {
+            throw new ForbiddenException("OTP has expired!");
+        }
+
+        // Check OTP match
+        if (user.emailOtp !== Number(payload.emailOtp)) {
+            throw new ForbiddenException("OTP does not match!");
+        }
+
+        //  Mark user as verified & clear OTP
+        const updatedUser = await this.prisma.user.update({
+            where: { id: user.id },
+            data: {
+                emailOtp: null,
+                otpExpiresAt: null,
+                isVerified: true,
+                last_login_at: new Date(),
+            },
+        });
+
+        // Save device info (first login)
+        if (userAgent && ipAddress) {
+            await this.deviceService.saveDeviceInfo(user.id, userAgent, ipAddress);
+        }
+
+        // Generate Auth Token
+        const token = await this.jwt.signAsync(
+            { id: user.id, email: user.email, roles: user.role },
+            { secret: process.env.JWT_SECRET, expiresIn: "77d" },
+        );
+
+        const safeUser = this.utils.sanitizedResponse(UserResponseDto, updatedUser);
+        const devices = await this.deviceService.getUserDevices(user.id);
+
+        return {
+            success: true,
+            message: "OTP verified successfully",
+            data: {
+                token,
+                user: safeUser,
+            },
+            devices,
+        };
+    }
+    // --------------resend otp------------
+
+    async verifyResentOtp(payload: ResendverifyOtpDto, userAgent?: string, ipAddress?: string) {
+        const { emailOtp, resetToken } = payload;
+
+        let decoded: any;
+        try {
+            decoded = await this.jwt.verifyAsync(resetToken);
+        } catch {
+            throw new ForbiddenException("Invalid or expired token!");
+        }
+
         const user = await this.prisma.user.findUnique({
             where: { id: decoded.id },
         });
@@ -197,40 +272,36 @@ export class AuthService {
             throw new ForbiddenException("User not found!");
         }
 
-        // Check if OTP has expired
         if (user.otpExpiresAt && user.otpExpiresAt < new Date()) {
             throw new ForbiddenException("OTP has expired!");
         }
 
-        // Check OTP match
-        if (user.emailOtp !== parseInt(payload.emailOtp)) {
+        if (user.emailOtp !== Number(emailOtp)) {
             throw new ForbiddenException("OTP does not match!");
         }
 
-        // Clear OTP and expiry, mark as verified
         const updatedUser = await this.prisma.user.update({
             where: { id: user.id },
             data: {
                 emailOtp: null,
                 otpExpiresAt: null,
-                isVerified: true, // Verification successful
+                isVerified: true,
                 last_login_at: new Date(),
             },
         });
 
-        // ✅ ADDED: Track device information on successful VERIFICATION (first login)
         if (userAgent && ipAddress) {
             await this.deviceService.saveDeviceInfo(user.id, userAgent, ipAddress);
         }
 
-        // Generate a new JWT token for authentication
         const token = await this.jwt.signAsync(
             { id: user.id, email: user.email, roles: user.role },
             { secret: process.env.JWT_SECRET, expiresIn: "77d" },
         );
 
         const safeUser = this.utils.sanitizedResponse(UserResponseDto, updatedUser);
-        const device = await this.deviceService.getUserDevices(user.id);
+        const devices = await this.deviceService.getUserDevices(user.id);
+
         return {
             success: true,
             message: "OTP verified successfully",
@@ -238,7 +309,55 @@ export class AuthService {
                 token,
                 user: safeUser,
             },
-            devices: device,
+            devices,
+        };
+    }
+
+    // -----------resend otp email ----
+
+    async resendEmail(payload: ResendEmailDto) {
+        const { email } = payload;
+
+        const user = await this.prisma.user.findUnique({
+            where: { email },
+        });
+
+        if (!user) {
+            return { message: "If this email is registered, an OTP has been sent." };
+        }
+
+        if (user.isVerified === true) {
+            return { message: "Account already verified." };
+        }
+
+        // Generate OTP
+        const { otp, expiryTime } = this.utils.generateOtpAndExpiry();
+
+        await this.prisma.user.update({
+            where: { id: user.id },
+            data: {
+                emailOtp: otp,
+                otpExpiresAt: expiryTime,
+            },
+        });
+
+        // Send OTP email
+        await this.mail.sendEmail(
+            email,
+            "Verify Your Account",
+            `
+      <h3>Hi ${user.full_name || "there"},</h3>
+      <p>Your verification OTP is:</p>
+      <h2>${otp}</h2>
+      <p>This OTP will expire in 10 minutes.</p>
+    `,
+        );
+
+        const resetToken = await this.jwt.signAsync({ id: user.id }, { expiresIn: "10m" });
+
+        return {
+            message: "If this email is registered, an OTP has been sent.",
+            resetToken,
         };
     }
 
@@ -385,8 +504,11 @@ export class AuthService {
     // ---------- FORGOT PASSWORD VIA PHONE  ----------
     @HandleError("Failed to process phone forgot password", "PhoneForgot")
     async phoneForgotPassword(dto: SendPhoneOtpDto) {
+        if (!dto.phone) throw new HttpException("phone number required", 400);
         const phone = dto.phone.startsWith("+") ? dto.phone : `+${dto.phone}`;
-        const user = await this.prisma.user.findFirst({ where: { phone } });
+        const user = await this.prisma.user.findUnique({ where: { phone: dto.phone } });
+        // console.log("this is user", user, phone);
+
         if (!user) throw new NotFoundException("Phone not registered");
 
         const { otp, expiryTime } = this.utils.generateOtpAndExpiry();

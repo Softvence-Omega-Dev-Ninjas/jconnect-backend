@@ -15,8 +15,8 @@ export class AwsService {
 
         this.s3 = new aws.S3({
             region,
-            accessKeyId: ENVEnum.AWS_ACCESS_KEY_ID,
-            secretAccessKey: ENVEnum.AWS_SECRET_ACCESS_KEY,
+            accessKeyId: ENVEnum.ACCESS_KEY,
+            secretAccessKey: ENVEnum.ACCESS_SECRET,
             signatureVersion: "v4",
         });
     }

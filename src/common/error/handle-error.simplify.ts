@@ -4,25 +4,23 @@ import {
     InternalServerErrorException,
     NotFoundException,
     UnauthorizedException,
-} from '@nestjs/common';
-import { Prisma } from '@prisma/client';
-import { AppError } from './handle-error.app';
+} from "@nestjs/common";
+import { Prisma } from "@prisma/client";
+import { AppError } from "./handle-error.app";
 
 export function simplifyError(
     error: Error,
-    customMessage = 'Operation Failed',
-    record = 'Record',
+    customMessage = "Operation Failed",
+    record = "Record",
 ): never {
     if (error instanceof Prisma.PrismaClientKnownRequestError) {
         switch (error.code) {
-            case 'P2002':
+            case "P2002":
                 throw new ConflictException(`${record} already exists`);
-            case 'P2025':
+            case "P2025":
                 throw new NotFoundException(`${record} not found`);
             default:
-                throw new InternalServerErrorException(
-                    `Database error: ${error.message}`,
-                );
+                throw new InternalServerErrorException(`Database error: ${error.message}`);
         }
     }
 

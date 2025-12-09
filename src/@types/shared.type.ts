@@ -1,7 +1,5 @@
 import { AuthProvider, Role } from "@constant/enums";
 
-
-
 export type MakeRequired<T, K extends keyof T> = T & { [P in K]-?: T[P] };
 
 export type TUser = {
@@ -21,7 +19,6 @@ export type VerifiedUser = {
     updatedAt: Date | string;
     userId: string;
 };
-
 
 export type PaginatedResult<T> = {
     data: T[];

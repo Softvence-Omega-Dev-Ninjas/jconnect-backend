@@ -5,11 +5,11 @@ import { PrismaService } from "src/lib/prisma/prisma.service";
 @Injectable()
 export class AwsService {
     private readonly s3 = new S3({
-        accessKeyId: process.env.ACCESS_KEY,
-        secretAccessKey: process.env.ACCESS_SECRET,
-        region: process.env.BUCKET_REGION,
+        accessKeyId: process.env.AWS_ACCESS_KEY_ID,
+        secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
+        region: process.env.AWS_BUCKET_REGION,
     });
-    private readonly bucketName = process.env.BUCKET_NAME!;
+    private readonly bucketName = process.env.AWS_BUCKET_NAME!;
     async upload(file: Express.Multer.File): Promise<any> {
         if (!file) {
             throw new Error("File not provided");

@@ -1,11 +1,18 @@
 import { ValidateUser } from "@common/jwt/jwt.decorator";
 import { Body, Controller, Delete, Get, Param, Patch, Post } from "@nestjs/common";
-import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from "@nestjs/swagger";
+import {
+    ApiBearerAuth,
+    ApiExcludeController,
+    ApiOperation,
+    ApiResponse,
+    ApiTags,
+} from "@nestjs/swagger";
 import { CustomServiceRequest } from "@prisma/client";
 import { CustomServiceRequestService } from "./custom-service-request.service";
 import { CreateCustomRequestDto } from "./dto/create-custom-request.dto";
 import { UpdateCustomRequestDto } from "./dto/update-custom-request.dto";
 
+@ApiExcludeController()
 @ApiTags("Custom Service Requests")
 @Controller("custom-requests")
 export class CustomServiceRequestController {

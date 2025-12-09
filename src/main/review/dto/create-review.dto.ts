@@ -3,14 +3,6 @@ import { IsInt, IsNotEmpty, IsOptional, IsString, Max, Min } from "class-validat
 
 export class CreateReviewDto {
     @ApiProperty({
-        description: "The ID of the User who is writing the review (e.g., a buyer).",
-        example: "a1b2c3d4-e5f6-7890-abcd-ef0123456789", // Example UUID
-    })
-    @IsNotEmpty()
-    @IsString()
-    reviewerId: string;
-
-    @ApiProperty({
         description: "The ID of the User (who has the ARTIST role) receiving the review.",
         example: "09876543-21ba-dcfe-8765-4321fedcba98", // Example UUID
     })

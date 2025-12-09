@@ -1,35 +1,154 @@
-import { ForbiddenException, Injectable, NotFoundException } from "@nestjs/common";
-import { Service } from "@prisma/client";
+import { HandleError } from "@common/error/handle-error.decorator";
+import { errorResponse } from "@common/utilsResponse/response.util";
+import { Inject, Injectable, NotFoundException } from "@nestjs/common";
+import { EventEmitter2 } from "@nestjs/event-emitter";
+
+import { ServiceEvent } from "@common/interface/events-payload";
+import { EVENT_TYPES } from "@common/interface/events.name";
 import { PrismaService } from "src/lib/prisma/prisma.service";
+import Stripe from "stripe";
 import { CreateServiceDto } from "./dto/create-service.dto";
 import { UpdateServiceDto } from "./dto/update-service.dto";
 @Injectable()
 export class ServiceService {
-    constructor(private prisma: PrismaService) {}
+    constructor(
+        private prisma: PrismaService,
+        private readonly eventEmitter: EventEmitter2,
+        @Inject("STRIPE_CLIENT") private stripe: Stripe,
+    ) {}
 
-    @HandleError('Failed to create service')
-    async create(payload: CreateServiceDto, userId: string): Promise<any> {
-        if (!userId) return errorResponse('User ID is missing');
+    @HandleError("Failed to create service")
+    async create(dto: CreateServiceDto, user: any): Promise<any> {
+        if (!user.userId) return errorResponse("User ID is missing");
 
-        // Check for existing service
+        // Check if service already exists
         const existingService = await this.prisma.service.findFirst({
-            where: { serviceName: payload.serviceName, creatorId: userId },
+            where: { serviceName: dto.serviceName, creatorId: user.userId },
         });
-        if (existingService) return errorResponse('Service already exists');
+        if (existingService) return errorResponse("Service already exists");
 
-        // ----------Create new service-------------
+        // Create new service
         const service = await this.prisma.service.create({
-            data: { ...payload, creatorId: userId },
+            data: {
+                ...dto,
+                creatorId: user.userId,
+            },
+        });
+
+        // -----------------------------------------
+        // Get users who enabled SERVICE notifications
+        // -----------------------------------------
+        const recipients = await this.prisma.notificationToggle.findMany({
+            where: { serviceCreate: true },
+            select: {
+                user: { select: { id: true, email: true } },
+            },
+        });
+
+        // -----------------------------------------
+        // Create Notification entry
+        // -----------------------------------------
+        const notification = await this.prisma.notification.create({
+            data: {
+                title: `New Service Created: ${service.serviceName}`,
+                message: `${user.email} created a service: ${service.serviceName}`,
+                userId: user.userId,
+                entityId: service.id,
+                metadata: {
+                    serviceId: service.id,
+                    serviceName: service.serviceName,
+                    description: service.description,
+                    author: user.email,
+                },
+            },
+        });
+
+        await this.prisma.$transaction(
+            recipients.map((r) =>
+                this.prisma.userNotification.create({
+                    data: {
+                        userId: r.user.id,
+                        notificationId: notification.id,
+                    },
+                }),
+            ),
+        );
+
+        // -----------------------------------------
+        // Emit Service Event
+        // -----------------------------------------
+        const payload: ServiceEvent = {
+            action: "CREATE",
+            meta: {
+                serviceName: service.serviceName,
+                description: service.description || "",
+                authorId: user.userId,
+                publishedAt: new Date(),
+            },
+            info: {
+                serviceName: service.serviceName,
+                description: service.description || "",
+                authorId: user.userId,
+                publishedAt: new Date(),
+                recipients: recipients.map((r) => ({
+                    id: r.user.id,
+                    email: r.user.email,
+                })),
+            },
+        };
+
+        this.eventEmitter.emit(EVENT_TYPES.SERVICE_CREATE, payload);
+
+        return { message: "Service created successfully", service };
+    }
+
+    @HandleError("Failed to find service")
+    async findAll() {
+        return this.prisma.service.findMany({
+            where: { isCustom: false },
+            include: {
+                creator: {
+                    select: {
+                        sellerIDStripe: true,
+                        email: true,
+                        full_name: true,
+                    },
+                },
+                serviceRequests: true,
+            },
         });
     }
 
-    async findAll(): Promise<Service[]> {
-        return this.prisma.service.findMany();
+    @HandleError("Failed to find service")
+    async Myservice(user: any) {
+        return this.prisma.service.findMany({
+            where: { creatorId: user.userId },
+            include: {
+                creator: {
+                    select: {
+                        sellerIDStripe: true,
+                        email: true,
+                        full_name: true,
+                    },
+                },
+                serviceRequests: true,
+            },
+        });
     }
 
-    async findOne(id: string): Promise<Service> {
+    @HandleError("Failed to find service")
+    async findOne(id: string) {
         const service = await this.prisma.service.findUnique({
             where: { id },
+            include: {
+                creator: {
+                    select: {
+                        sellerIDStripe: true,
+                        email: true,
+                        full_name: true,
+                    },
+                },
+            },
         });
 
         if (!service) {
@@ -38,32 +157,36 @@ export class ServiceService {
         return service;
     }
 
-    async update(id: string, user, updateServiceDto: UpdateServiceDto): Promise<Service> {
-        console.log(user);
+    @HandleError("Failed to update service")
+    async update(id: string, dto: UpdateServiceDto, user: any): Promise<any> {
+        if (!user.userId) return errorResponse("User ID is missing");
+
+        // Check if service exists
         const service = await this.prisma.service.findUnique({
             where: { id },
         });
 
-        if (!service) {
-            throw new NotFoundException(`Service with ID ${id} not found`);
-        }
+        if (!service) return errorResponse("Service not found");
 
-        // check ownership or super admin
-        const isOwner = service.creatorId === user?.userId;
-        const isSuperAdmin = user?.roles === "SUPER_ADMIN";
+        // Check ownership
+        if (service.creatorId !== user.userId)
+            return errorResponse("You are not allowed to update this service");
 
-        if (!isOwner && !isSuperAdmin) {
-            console.log("You are not authorized to access this service");
-            throw new ForbiddenException("You are not authorized to access this service");
-        }
-
-        return this.prisma.service.update({
+        // Update service
+        const updatedService = await this.prisma.service.update({
             where: { id },
-            data: updateServiceDto,
+            data: {
+                ...dto,
+            },
         });
+        return {
+            message: "Service updated successfully",
+            service: updatedService,
+        };
     }
 
-    async remove(id: string): Promise<Service> {
+    @HandleError("Failed to delete service")
+    async remove(id: string) {
         return this.prisma.service.delete({
             where: { id },
         });

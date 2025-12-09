@@ -2,8 +2,9 @@ import { Controller, Get, Post, Body, Patch, Param, Delete } from "@nestjs/commo
 import { SocialServiceService } from "./social-service.service";
 import { CreateSocialServiceDto, UpdateSocialServiceDto } from "./dto/create-social-service.dto";
 
-import { ApiTags } from "@nestjs/swagger";
+import { ApiExcludeController, ApiTags } from "@nestjs/swagger";
 
+@ApiExcludeController()
 @ApiTags("Social Service")
 @Controller("social-service")
 export class SocialServiceController {
