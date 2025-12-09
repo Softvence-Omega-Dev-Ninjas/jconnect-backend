@@ -12,17 +12,17 @@ export class VerifyOtpAuthDto {
 }
 
 export class ResendverifyOtpDto {
-  @ApiProperty({ example: "123456" })
-  @IsString()
-  emailOtp: string;
+    @ApiProperty({ example: "123456" })
+    @IsString()
+    emailOtp: string;
 
-  @ApiProperty({ example: "jwt-reset-token" })
-  @IsString()
-  resetToken: string;
+    @ApiProperty({ example: "jwt-reset-token" })
+    @IsString()
+    resetToken: string;
 }
 
 export class ResendEmailDto {
-  @ApiProperty({ example: "shamimranaprofessional.office@gmail.com" })
-  @IsString()
-  email: string;
+    @ApiProperty({ example: "shamimranaprofessional.office@gmail.com" })
+    @IsString()
+    email: string;
 }
