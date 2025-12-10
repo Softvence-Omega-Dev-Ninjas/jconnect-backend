@@ -36,13 +36,13 @@ export class OrdersController {
         private awsservice: AwsService,
     ) {}
 
-    @ApiBearerAuth()
-    @ValidateUser()
-    @Get("tessss")
-    @ApiOperation({ summary: "Create a new order" })
-    async createOrder(@GetUser() user: any, @Body() dto: any) {
-        return await this.prisma.order.findMany();
-    }
+    // @ApiBearerAuth()
+    // @ValidateUser()
+    // @Get("tessss")
+    // @ApiOperation({ summary: "Create a new order" })
+    // async createOrder(@GetUser() user: any, @Body() dto: any) {
+    //     return await this.prisma.order.findMany();
+    // }
 
     @ApiBearerAuth()
     @ValidateUser()

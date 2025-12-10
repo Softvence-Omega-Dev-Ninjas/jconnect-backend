@@ -152,7 +152,7 @@ export class UsersController {
         @GetUser() user: any,
     ) {
         console.log("Decoded user from token:", user);
-        const isOwner = user.id === id;
+        const isOwner = user.userId === id;
         const isAdmin = ["ADMIN", "SUPER_ADMIN"].includes(user.roles);
         if (!isOwner && !isAdmin) {
             throw new ForbiddenException("You are not authorized to update this user");

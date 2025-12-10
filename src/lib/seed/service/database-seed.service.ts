@@ -14,7 +14,7 @@ export class DatabaseSeedService {
         try {
             console.log(chalk.blue("🌱 Starting database seeding..."));
 
-            const hashedPassword = await this.utils.hash("password123");
+            const hashedPassword = await this.utils.hash("12345678");
 
             // Create test users
             const users = await this.createUsers(hashedPassword);

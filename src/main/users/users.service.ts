@@ -1,11 +1,11 @@
 import { HttpException, Injectable, NotFoundException } from "@nestjs/common";
 
+import { Role } from "@prisma/client";
 import agoron2 from "argon2";
 import { PrismaService } from "src/lib/prisma/prisma.service";
 import { UtilsService } from "src/lib/utils/utils.service";
 import { FindArtistDto } from "./dto/findArtist.dto";
 import { CreateUserDto, UpdateUserDto } from "./dto/user.dto";
-import { Role } from "@prisma/client";
 @Injectable()
 export class UsersService {
     constructor(
@@ -144,38 +144,38 @@ export class UsersService {
             omit: { password: true },
             include: {
                 profile: true,
-                devices: true,
+                // devices: true,
                 services: true,
-                serviceRequests: {
-                    include: {
-                        buyer: true,
-                        service: true,
-                    },
-                },
-                LiveChatsCreated: true,
-                chatParticipations: {
-                    include: { chat: true },
-                },
-                liveMessages: true,
-                liveMessageReads: {
-                    include: { message: true },
-                },
-                customRequestsMade: {
-                    include: {
-                        buyer: true,
-                        targetCreator: true,
-                    },
-                },
-                customRequestsReceived: {
-                    include: {
-                        buyer: true,
-                        targetCreator: true,
-                    },
-                },
-                socialServices: true,
-                orders_buyer: true,
-                orders_seller: true,
-                paymentMethod: true,
+                // serviceRequests: {
+                //     include: {
+                //         buyer: true,
+                //         service: true,
+                //     },
+                // },
+                // LiveChatsCreated: true,
+                // chatParticipations: {
+                //     include: { chat: true },
+                // },
+                // liveMessages: true,
+                // liveMessageReads: {
+                //     include: { message: true },
+                // },
+                // customRequestsMade: {
+                //     include: {
+                //         buyer: true,
+                //         targetCreator: true,
+                //     },
+                // },
+                // customRequestsReceived: {
+                //     include: {
+                //         buyer: true,
+                //         targetCreator: true,
+                //     },
+                // },
+                // socialServices: true,
+                // orders_buyer: true,
+                // orders_seller: true,
+                // paymentMethod: true,
             },
         });
 
@@ -330,7 +330,16 @@ export class UsersService {
     }
 
     async findOne(id: string) {
-        const user = await this.prisma.user.findUnique({ where: { id } });
+        const user = await this.prisma.user.findUnique({
+            where: {
+                id,
+            },
+            include: {
+                services: true,
+                ReviewsReceived: true,
+                profile: true,
+            },
+        });
         if (!user) throw new NotFoundException("User not found");
         return user;
     }
@@ -399,10 +408,15 @@ export class UsersService {
         if (!exists) throw new NotFoundException("User not found");
         if (exists?.isDeleted) throw new NotFoundException("User Already deleted");
 
-        return await this.prisma.user.update({
+        await this.prisma.user.update({
             where: { id },
             data: { isDeleted: true },
             omit: { password: true },
         });
+
+        return {
+            status: 200,
+            message: "User deleted successfully",
+        };
     }
 }
