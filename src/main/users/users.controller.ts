@@ -41,7 +41,7 @@ export class UsersController {
     constructor(
         private readonly usersService: UsersService,
         private awsservice: AwsService,
-    ) { }
+    ) {}
 
     @ApiBearerAuth()
     @ValidateUser()
