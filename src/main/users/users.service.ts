@@ -11,7 +11,7 @@ export class UsersService {
     constructor(
         private prisma: PrismaService,
         private utils: UtilsService,
-    ) {}
+    ) { }
 
     async create(Userdata: CreateUserDto) {
         const { password, ...users } = Userdata;
@@ -144,38 +144,38 @@ export class UsersService {
             omit: { password: true },
             include: {
                 profile: true,
-                devices: true,
+                // devices: true,
                 services: true,
-                serviceRequests: {
-                    include: {
-                        buyer: true,
-                        service: true,
-                    },
-                },
-                LiveChatsCreated: true,
-                chatParticipations: {
-                    include: { chat: true },
-                },
-                liveMessages: true,
-                liveMessageReads: {
-                    include: { message: true },
-                },
-                customRequestsMade: {
-                    include: {
-                        buyer: true,
-                        targetCreator: true,
-                    },
-                },
-                customRequestsReceived: {
-                    include: {
-                        buyer: true,
-                        targetCreator: true,
-                    },
-                },
-                socialServices: true,
-                orders_buyer: true,
-                orders_seller: true,
-                paymentMethod: true,
+                // serviceRequests: {
+                //     include: {
+                //         buyer: true,
+                //         service: true,
+                //     },
+                // },
+                // LiveChatsCreated: true,
+                // chatParticipations: {
+                //     include: { chat: true },
+                // },
+                // liveMessages: true,
+                // liveMessageReads: {
+                //     include: { message: true },
+                // },
+                // customRequestsMade: {
+                //     include: {
+                //         buyer: true,
+                //         targetCreator: true,
+                //     },
+                // },
+                // customRequestsReceived: {
+                //     include: {
+                //         buyer: true,
+                //         targetCreator: true,
+                //     },
+                // },
+                // socialServices: true,
+                // orders_buyer: true,
+                // orders_seller: true,
+                // paymentMethod: true,
             },
         });
 
@@ -286,12 +286,12 @@ export class UsersService {
                 const avgA =
                     a.ReviewsReceived.length > 0
                         ? a.ReviewsReceived.reduce((sum, r) => sum + r.rating, 0) /
-                          a.ReviewsReceived.length
+                        a.ReviewsReceived.length
                         : 0;
                 const avgB =
                     b.ReviewsReceived.length > 0
                         ? b.ReviewsReceived.reduce((sum, r) => sum + r.rating, 0) /
-                          b.ReviewsReceived.length
+                        b.ReviewsReceived.length
                         : 0;
                 return avgB - avgA;
             });
