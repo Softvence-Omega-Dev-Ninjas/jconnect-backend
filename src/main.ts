@@ -42,6 +42,8 @@ async function bootstrap() {
 
     console.log(`🚀 Server running at: ${process.env.BACKEND_URL}:${PORT}`);
     console.log(`📘 Swagger docs: ${process.env.BACKEND_URL}:${PORT}/api-docs`);
+    // ---------local run swagger url----------------
+     console.log(`📘 Swagger docs: http://localhost:${PORT}/api-docs`);
 }
 
 bootstrap();
