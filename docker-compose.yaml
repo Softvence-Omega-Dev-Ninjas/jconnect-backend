@@ -18,6 +18,15 @@ services:
         restart: unless-stopped
         networks:
             - jconnect-backend
+        command: >
+            sh -c "
+              echo '🏁 Waiting for DB...';
+              sleep 5;
+              npx prisma migrate deploy;
+              echo '🚀 Starting app...';
+              npm run db:seed;
+              npm run start:docker
+            "
 
     db:
         image: postgres:16-alpine
@@ -31,7 +40,7 @@ services:
             - POSTGRES_DB=jconnect_db
             - PGDATA=/var/lib/postgresql/data/pgdata
         ports:
-            - "127.0.0.1:5433:5432"
+            - "5433:5432"
         volumes:
             - jconnect_db:/var/lib/postgresql/data
         healthcheck:

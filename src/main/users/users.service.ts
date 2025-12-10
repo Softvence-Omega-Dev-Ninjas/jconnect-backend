@@ -5,7 +5,7 @@ import agoron2 from "argon2";
 import { PrismaService } from "src/lib/prisma/prisma.service";
 import { UtilsService } from "src/lib/utils/utils.service";
 import { FindArtistDto } from "./dto/findArtist.dto";
-import { CreateUserDto, UpdateUserDto } from "./dto/user.dto";
+import { CreateUserDto, UpdateMeDto, UpdateUserDto } from "./dto/user.dto";
 @Injectable()
 export class UsersService {
     constructor(
@@ -230,12 +230,72 @@ export class UsersService {
         };
     }
 
+    async updateMe(userId: string, dto: UpdateMeDto) {
+        const existingUser = await this.prisma.user.findUnique({ where: { id: userId } });
+        if (!existingUser) throw new NotFoundException("User not found");
+
+        const normalizeUrl = (input: string | null | undefined, base?: string) => {
+            if (input === undefined) return undefined;
+            const trimmed = input?.trim();
+            if (!trimmed) return null; // allow clearing value
+            if (trimmed.startsWith("http")) return trimmed;
+            if (!base) return trimmed;
+            return `${base}${trimmed}`;
+        };
+
+        const userPayload: UpdateUserDto = {};
+        if (dto.full_name !== undefined) userPayload.full_name = dto.full_name;
+        if (dto.phone !== undefined) userPayload.phone = dto.phone;
+        if (dto.profilePhoto !== undefined) userPayload.profilePhoto = dto.profilePhoto;
+
+        const profilePayload = {
+            profile_image_url: dto.profile_image_url ?? undefined,
+            short_bio: dto.short_bio ?? undefined,
+            instagram: normalizeUrl(dto.instagram, "https://instagram.com/"),
+            facebook: normalizeUrl(dto.facebook, "https://facebook.com/"),
+            tiktok: normalizeUrl(dto.tiktok, "https://tiktok.com/@"),
+            youtube: normalizeUrl(dto.youtube, "https://youtube.com/"),
+        };
+
+        const hasProfileChanges = Object.values(profilePayload).some(
+            (value) => value !== undefined,
+        );
+
+        await this.prisma.$transaction(async (tx) => {
+            if (Object.keys(userPayload).length) {
+                await tx.user.update({
+                    where: { id: userId },
+                    data: userPayload,
+                    omit: { password: true },
+                });
+            }
+
+            if (hasProfileChanges) {
+                const profileExists = await tx.profile.findUnique({ where: { user_id: userId } });
+
+                if (profileExists) {
+                    await tx.profile.update({ where: { user_id: userId }, data: profilePayload });
+                } else {
+                    await tx.profile.create({
+                        data: {
+                            user_id: userId,
+                            ...profilePayload,
+                        },
+                    });
+                }
+            }
+        });
+
+        return this.findMe(userId);
+    }
+
     async findAllArtist({ page = 1, limit = 10, filter, search }: FindArtistDto) {
         const skip = (page - 1) * limit;
 
         const baseWhere: any = {
             isDeleted: false,
             isActive: true,
+            role: Role.ARTIST,
         };
 
         // 🔹 Add search system (artist_name OR service_name)
