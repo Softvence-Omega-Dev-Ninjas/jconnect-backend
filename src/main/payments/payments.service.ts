@@ -24,8 +24,23 @@ export class PaymentService {
         private readonly mail: MailService,
     ) {}
 
+    async createCustomerID(user: any) {
+        const customers = await this.stripe.customers.create({
+            email: user.email,
+        });
+
+        if (!customers) throw new HttpException("customer not create", 400);
+        //update user customer.id
+        return await this.prisma.user.update({
+            where: { id: user?.userId },
+            data: {
+                customerIdStripe: customers.id,
+            },
+        });
+    }
+
     //create stipe pyament methode secreate
-    async createSetupIntent(body: CreateSetupIntentDto, userReq: any) {
+    async createSetupIntent(userReq: any) {
         const user = await this.prisma.user.findUnique({ where: { id: userReq?.userId } });
         if (!user?.customerIdStripe)
             throw new BadRequestException("User does not have a Stripe Customer ID");

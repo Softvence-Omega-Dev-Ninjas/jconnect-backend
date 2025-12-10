@@ -15,7 +15,7 @@ import { SendPrivateMessageDto } from "../dto/privateChatGateway.dto";
 import { PrivateChatGateway } from "../privateChatGateway/privateChatGateway";
 import { PrivateChatService } from "../service/private-message.service";
 
-@ApiTags("Garage  owner Private Chat => One to One Chat")
+@ApiTags("Seller/help/artist message")
 @Controller("private-chat")
 @ValidateAuth()
 @ApiBearerAuth()
