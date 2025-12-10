@@ -153,6 +153,7 @@ export class DatabaseSeedService {
             this.prisma.service.create({
                 data: {
                     serviceName: "Instagram Shoutout",
+                    serviceType: "Social Post",
                     description: "Professional Instagram shoutout",
                     price: 50.0,
                     creatorId: users[0].id,
@@ -162,6 +163,7 @@ export class DatabaseSeedService {
             this.prisma.service.create({
                 data: {
                     serviceName: "TikTok Video",
+                    serviceType: "Social Post",
                     description: "Custom TikTok video",
                     price: 100.0,
                     creatorId: users[1].id,

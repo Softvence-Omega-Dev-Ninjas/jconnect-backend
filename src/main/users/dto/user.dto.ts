@@ -209,6 +209,53 @@ export class UpdateUserDto {
     token_expires_at?: Date;
 }
 
+export class UpdateMeDto {
+    @ApiProperty({ example: "John Doe", required: false })
+    @IsOptional()
+    @IsString()
+    full_name?: string;
+
+    @ApiProperty({ example: "+8801700000000", required: false })
+    @IsOptional()
+    @IsString()
+    phone?: string;
+
+    @ApiProperty({ example: "https://example.com/profile.jpg", required: false })
+    @IsOptional()
+    @IsString()
+    profilePhoto?: string;
+
+    @ApiProperty({ example: "https://example.com/image.jpg", required: false })
+    @IsOptional()
+    @IsString()
+    profile_image_url?: string;
+
+    @ApiProperty({ example: "DJ / Producer", required: false })
+    @IsOptional()
+    @IsString()
+    short_bio?: string;
+
+    @ApiProperty({ example: "john_instagram", required: false })
+    @IsOptional()
+    @IsString()
+    instagram?: string;
+
+    @ApiProperty({ example: "john.facebook", required: false })
+    @IsOptional()
+    @IsString()
+    facebook?: string;
+
+    @ApiProperty({ example: "john.tiktok", required: false })
+    @IsOptional()
+    @IsString()
+    tiktok?: string;
+
+    @ApiProperty({ example: "@johnchannel", required: false })
+    @IsOptional()
+    @IsString()
+    youtube?: string;
+}
+
 export class reset_password {
     @ApiProperty({ example: "xxxxxx", required: true })
     @IsString()

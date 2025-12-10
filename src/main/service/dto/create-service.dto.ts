@@ -14,6 +14,14 @@ export class CreateServiceDto {
     serviceName: string;
 
     @ApiProperty({
+        example: "Service Type",
+        description: "The type/category of the service (e.g., Social Post, Service).",
+    })
+    @IsString()
+    @IsNotEmpty()
+    serviceType: string;
+
+    @ApiProperty({
         example: "I'll review your song and share actionable feedback.",
         description: "A short description (1-2 lines) of what the service entails.",
         required: false,
