@@ -32,7 +32,7 @@ import {
 } from "@nestjs/swagger";
 import { Role } from "@prisma/client";
 import { FindArtistDto } from "./dto/findArtist.dto";
-import { reset_password, UpdateUserDto } from "./dto/user.dto";
+import { reset_password, UpdateMeDto, UpdateUserDto } from "./dto/user.dto";
 import { UsersService } from "./users.service";
 
 @ApiTags("Users")
@@ -41,7 +41,7 @@ export class UsersController {
     constructor(
         private readonly usersService: UsersService,
         private awsservice: AwsService,
-    ) {}
+    ) { }
 
     @ApiBearerAuth()
     @ValidateUser()
@@ -49,6 +49,53 @@ export class UsersController {
     @ApiOperation({ summary: "if login then get the logged in user data" })
     GetOwnUserData(@GetUser() user: any) {
         return this.usersService.findMe(user.userId);
+    }
+
+    @ApiBearerAuth()
+    @ValidateUser()
+    @Patch("me")
+    @ApiOperation({ summary: "Update my account and profile" })
+    @ApiConsumes("multipart/form-data")
+    @ApiBody({
+        description: "Update profile fields and optionally upload a profile image",
+        schema: {
+            type: "object",
+            properties: {
+                image: { type: "string", format: "binary", description: "Profile image" },
+                full_name: { type: "string" },
+                phone: { type: "string" },
+                profilePhoto: { type: "string" },
+                profile_image_url: { type: "string" },
+                short_bio: { type: "string" },
+                instagram: { type: "string" },
+                facebook: { type: "string" },
+                tiktok: { type: "string" },
+                youtube: { type: "string" },
+            },
+        },
+    })
+    @UseInterceptors(
+        FileInterceptor("image", {
+            limits: { fileSize: 1 * 1024 * 1024 },
+            fileFilter: (req, file, cb) => {
+                if (!file.mimetype.startsWith("image/")) {
+                    return cb(new BadRequestException("Only image files are allowed!"), false);
+                }
+                cb(null, true);
+            },
+        }),
+    )
+    async updateMe(
+        @GetUser() user: any,
+        @Body() updateMeDto: UpdateMeDto,
+        @UploadedFile() file?: Express.Multer.File,
+    ) {
+        if (file) {
+            const uploaded = await this.awsservice.upload(file);
+            updateMeDto.profilePhoto = uploaded.url;
+        }
+
+        return this.usersService.updateMe(user.userId, updateMeDto);
     }
 
     @ApiBearerAuth()
@@ -144,7 +191,7 @@ export class UsersController {
 
     @ApiBearerAuth()
     @ValidateUser()
-    @Put(":id")
+    @Patch(":id")
     @ApiOperation({ summary: "Update user by ID (own user, admin, or super admin)" })
     async update(
         @Param("id") id: string,
@@ -152,7 +199,7 @@ export class UsersController {
         @GetUser() user: any,
     ) {
         console.log("Decoded user from token:", user);
-        const isOwner = user.id === id;
+        const isOwner = user.userId === id;
         const isAdmin = ["ADMIN", "SUPER_ADMIN"].includes(user.roles);
         if (!isOwner && !isAdmin) {
             throw new ForbiddenException("You are not authorized to update this user");

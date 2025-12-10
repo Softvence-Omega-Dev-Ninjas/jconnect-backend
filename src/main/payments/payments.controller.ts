@@ -21,7 +21,7 @@ import {
     ApiResponse,
     ApiTags,
 } from "@nestjs/swagger";
-import { ConfirmSetupIntentDto, CreateSetupIntentDto } from "./dto/confirm-setup-intent.dto";
+import { ConfirmSetupIntentDto } from "./dto/confirm-setup-intent.dto";
 import { WithdrawDto } from "./dto/withdraw.dto";
 import { PaymentService } from "./payments.service";
 
@@ -43,7 +43,7 @@ export class PaymentController {
 
     @ApiBearerAuth()
     @ValidateUser()
-    @Get("create-setup-intent")
+    @Post("create-setup-intent")
     @ApiOperation({ summary: "get client secret for payment method" })
     async createSetupIntent(@GetUser() user: any) {
         return this.paymentService.createSetupIntent(user);

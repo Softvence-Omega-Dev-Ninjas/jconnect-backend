@@ -8,13 +8,13 @@ export class DatabaseSeedService {
     constructor(
         private readonly prisma: PrismaService,
         private readonly utils: UtilsService,
-    ) {}
+    ) { }
 
     async seedDatabase(): Promise<void> {
         try {
             console.log(chalk.blue("🌱 Starting database seeding..."));
 
-            const hashedPassword = await this.utils.hash("password123");
+            const hashedPassword = await this.utils.hash("12345678");
 
             // Create test users
             const users = await this.createUsers(hashedPassword);
@@ -153,6 +153,7 @@ export class DatabaseSeedService {
             this.prisma.service.create({
                 data: {
                     serviceName: "Instagram Shoutout",
+                    serviceType: "Social Post",
                     description: "Professional Instagram shoutout",
                     price: 50.0,
                     creatorId: users[0].id,
@@ -162,6 +163,7 @@ export class DatabaseSeedService {
             this.prisma.service.create({
                 data: {
                     serviceName: "TikTok Video",
+                    serviceType: "Social Post",
                     description: "Custom TikTok video",
                     price: 100.0,
                     creatorId: users[1].id,
