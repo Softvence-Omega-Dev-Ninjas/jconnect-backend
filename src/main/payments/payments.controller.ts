@@ -10,7 +10,7 @@ import {
     HttpStatus,
     Param,
     Post,
-    Req,
+    Req
 } from "@nestjs/common";
 import {
     ApiBearerAuth,
@@ -28,7 +28,7 @@ import { PaymentService } from "./payments.service";
 @ApiTags("Payment")
 @Controller("payments")
 export class PaymentController {
-    constructor(private readonly paymentService: PaymentService) {}
+    constructor(private readonly paymentService: PaymentService) { }
 
     @ApiBearerAuth()
     @ValidateUser()
@@ -57,6 +57,28 @@ export class PaymentController {
     async confirmSetupIntent(@Body() body: ConfirmSetupIntentDto, @GetUser() user: any) {
         return this.paymentService.confirmSetupIntent(body, user);
     }
+
+    // ----------------------------
+    // Delete Payment Method
+    // ----------------------------
+    @ApiBearerAuth()
+    @ValidateUser()
+    @Delete("delete-payment-method")
+    @ApiOperation({ summary: "Delete a payment method" })
+    @ApiBody({
+        description: "Payment method ID to delete",
+        schema: {
+            type: "object",
+            properties: {
+                paymentMethodId: { type: "string", example: "cmidkddvy0000vsy0l8xxxxxxx" },
+            },
+            required: ["paymentMethodId"],
+        },
+    })
+    async DeletePaymentMethode(@Body() body: { paymentMethodId: string }, @GetUser() user: any) {
+        return this.paymentService.delete_payment_methode(body.paymentMethodId, user);
+    }
+
 
     @ApiBearerAuth()
     @ValidateUser()
@@ -133,27 +155,6 @@ This endpoint is used by Admin/Buyer only.
         @GetUser() user: any,
     ) {
         return this.paymentService.approvePayment(body.orderID, user);
-    }
-
-    // ----------------------------
-    // Delete Payment Method
-    // ----------------------------
-    @ApiBearerAuth()
-    @ValidateUser()
-    @Delete("delete")
-    @ApiOperation({ summary: "Delete a payment method" })
-    @ApiBody({
-        description: "Payment method ID to delete",
-        schema: {
-            type: "object",
-            properties: {
-                paymentMethodId: { type: "string", example: "cmidkddvy0000vsy0l8xxxxxxx" },
-            },
-            required: ["paymentMethodId"],
-        },
-    })
-    async DeletePaymentMethode(@Body() body: { paymentMethodId: string }, @GetUser() user: any) {
-        return this.paymentService.delete_payment_methode(body.paymentMethodId, user);
     }
 
     // ----------------------------
