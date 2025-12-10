@@ -46,7 +46,7 @@ export class PrivateChatController implements OnModuleInit {
     ) {
         return await this.privateService.getPrivateConversationWithMessages(conversationId, userId);
     }
-    // -----------send message for
+    // -----------send message for--------------
 
     @Post("send-message/:recipientId")
     @ApiOperation({ summary: "Sending Private message" })
