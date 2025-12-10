@@ -5,10 +5,10 @@ import {
     NotFoundException,
 } from "@nestjs/common";
 
+import { AwsService } from "@main/aws/aws.service";
 import { PrismaService } from "src/lib/prisma/prisma.service";
 import { CreateDisputeDto } from "./dto/create-dispute.dto";
 import { UpdateDisputeDto } from "./dto/update-dispute.dto";
-import { AwsService } from "@main/aws/aws.service";
 
 @Injectable()
 export class DisputeService {
@@ -22,6 +22,7 @@ export class DisputeService {
         const order = await this.prisma.order.findUnique({
             where: { id: dto.orderId, buyerId: userId },
         });
+        console.log(order);
         if (!order) throw new NotFoundException("Order not found");
 
         // 2️⃣ Check for existing dispute under review

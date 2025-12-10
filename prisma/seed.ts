@@ -1,5 +1,5 @@
 import { PrismaClient } from "@prisma/client";
-import * as argon2 from "argon2";
+import bcrypt from "bcrypt";
 
 const prisma = new PrismaClient();
 
@@ -36,7 +36,7 @@ async function main() {
     await prisma.user.deleteMany();
 
     // Hash password
-    const hashedPassword = await argon2.hash("password123");
+    const hashedPassword = await bcrypt.hash("12345678", 10);
 
     // Create Users
     const users = await Promise.all([
