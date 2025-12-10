@@ -8,7 +8,7 @@ import {
     IsInt,
     IsOptional,
     IsString,
-    MinLength
+    MinLength,
 } from "class-validator";
 
 export class CreateUserDto {
@@ -207,9 +207,7 @@ export class UpdateUserDto {
     @IsOptional()
     @IsDateString()
     token_expires_at?: Date;
-
 }
-
 
 export class UpdateMeDto {
     @ApiProperty({ example: "John Doe", required: false })

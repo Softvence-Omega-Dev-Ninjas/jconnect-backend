@@ -8,7 +8,7 @@ export class DatabaseSeedService {
     constructor(
         private readonly prisma: PrismaService,
         private readonly utils: UtilsService,
-    ) { }
+    ) {}
 
     async seedDatabase(): Promise<void> {
         try {
