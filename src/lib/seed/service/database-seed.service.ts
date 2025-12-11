@@ -122,15 +122,40 @@ export class DatabaseSeedService {
                 data: {
                     user_id: users[0].id,
                     short_bio: "Professional artist with 5 years experience",
-                    instagram: "@johnartist",
-                    facebook: "johnartist",
+                    socialProfiles: {
+                        create: [
+                            {
+                                orderId: 1,
+                                platformName: "Instagram",
+                                platformLink: "https://instagram.com/johnartist",
+                            },
+                            {
+                                orderId: 2,
+                                platformName: "Facebook",
+                                platformLink: "https://facebook.com/johnartist",
+                            },
+                        ],
+                    },
                 },
             }),
             this.prisma.profile.create({
                 data: {
                     user_id: users[1].id,
                     short_bio: "Creative content creator",
-                    instagram: "@sarahcreator",
+                    socialProfiles: {
+                        create: [
+                            {
+                                orderId: 1,
+                                platformName: "Instagram",
+                                platformLink: "https://instagram.com/sarahcreator",
+                            },
+                            {
+                                orderId: 2,
+                                platformName: "YouTube",
+                                platformLink: "https://youtube.com/@sarahcreator",
+                            },
+                        ],
+                    },
                 },
             }),
         ]);

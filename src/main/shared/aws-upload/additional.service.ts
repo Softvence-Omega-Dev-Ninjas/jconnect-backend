@@ -9,15 +9,15 @@ import { promisify } from "util";
 const unlinkAsync = promisify(fs.unlink);
 
 @Injectable()
-export class AdditionalS3Service {
+export class AwsS3Service {
     private s3: S3;
 
     constructor() {
         this.s3 = new S3({
-            region: process.env.BUCKET_REGION!,
+            region: process.env.AWS_BUCKET_REGION || "us-east-1",
             credentials: {
-                accessKeyId: process.env.ACCESS_KEY!,
-                secretAccessKey: process.env.ACCESS_SECRET!,
+                accessKeyId: process.env.AWS_ACCESS_KEY_ID || "",
+                secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY || "",
             },
         });
     }
@@ -32,7 +32,7 @@ export class AdditionalS3Service {
             const upload = new Upload({
                 client: this.s3,
                 params: {
-                    Bucket: process.env.BUCKET_REGION!,
+                    Bucket: process.env.AWS_BUCKET_REGION!,
                     Key: fileName,
                     Body: fileContent,
                     ContentType: mimeType,
@@ -43,23 +43,15 @@ export class AdditionalS3Service {
 
             // Delete local file after successful upload
             await unlinkAsync(localFilePath);
-            console.log(`🧹 Deleted local file: ${localFilePath}`);
+            console.log(` Deleted local file: ${localFilePath}`);
 
             return {
                 url: result.Location,
                 key: fileName,
             };
         } catch (error) {
-            console.error("❌ Upload failed:", error);
+            console.error("Upload failed:", error);
             throw error;
         }
-    }
-
-    findAll() {
-        return `This action returns all testaws`;
-    }
-
-    findOne(id: number) {
-        return `This action returns a #${id} testaw`;
     }
 }

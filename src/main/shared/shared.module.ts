@@ -1,11 +1,10 @@
 import { Module } from "@nestjs/common";
 
-import { awsModule } from "./aws/aws.module";
-
+import { UploadAwsModule } from "./aws-upload/aws-upload.module";
 import { PrivateMessageModule } from "./private-message/private-message.module";
 
 @Module({
-    imports: [PrivateMessageModule, awsModule],
+    imports: [PrivateMessageModule, UploadAwsModule],
     controllers: [],
     providers: [],
     exports: [],

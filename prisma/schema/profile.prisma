@@ -1,14 +1,29 @@
 model Profile {
-  user_id           String   @id @unique
-  user              User     @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  user_id String @id
+  user    User   @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
   profile_image_url String?
   short_bio         String?
-  instagram         String?
-  facebook          String?
-  tiktok            String?
-  youtube           String?
-  created_at        DateTime @default(now())
-  updated_at        DateTime @updatedAt
+
+  socialProfiles SocialProfile[]
+
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
 
   @@map("user_profiles")
+}
+
+model SocialProfile {
+  id        String  @id @default(uuid())
+  profileId String
+  profile   Profile @relation(fields: [profileId], references: [user_id], onDelete: Cascade)
+
+  orderId      Int
+  platformName String
+  platformLink String
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("social_profiles")
 }

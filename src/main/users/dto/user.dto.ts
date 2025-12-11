@@ -1,6 +1,8 @@
-import { ApiProperty } from "@nestjs/swagger";
+import { ApiHideProperty, ApiProperty, ApiPropertyOptional } from "@nestjs/swagger";
 import { AuthProvider, Role, ValidationType } from "@prisma/client";
+import { Expose, Transform, Type } from "class-transformer";
 import {
+    IsArray,
     IsBoolean,
     IsDateString,
     IsEmail,
@@ -9,6 +11,7 @@ import {
     IsOptional,
     IsString,
     MinLength,
+    ValidateNested,
 } from "class-validator";
 
 export class CreateUserDto {
@@ -220,12 +223,12 @@ export class UpdateMeDto {
     @IsString()
     phone?: string;
 
-    @ApiProperty({ example: "https://example.com/profile.jpg", required: false })
+    @ApiHideProperty()
     @IsOptional()
     @IsString()
     profilePhoto?: string;
 
-    @ApiProperty({ example: "https://example.com/image.jpg", required: false })
+    @ApiHideProperty()
     @IsOptional()
     @IsString()
     profile_image_url?: string;
@@ -235,25 +238,45 @@ export class UpdateMeDto {
     @IsString()
     short_bio?: string;
 
-    @ApiProperty({ example: "john_instagram", required: false })
+    @ApiPropertyOptional({ type: () => [SocialProfileInput] })
     @IsOptional()
-    @IsString()
-    instagram?: string;
+    @IsArray()
+    @ValidateNested({ each: true })
+    @Type(() => SocialProfileInput)
+    @Transform(({ value }) => {
+        if (value === undefined || value === null || value === "") return undefined;
+        // If already an array, keep it
+        if (Array.isArray(value)) return value;
+        // Swagger UI sends JSON string for multipart; try to parse
+        if (typeof value === "string") {
+            try {
+                const parsed = JSON.parse(value);
+                return Array.isArray(parsed) ? parsed : [parsed];
+            } catch (e) {
+                return value; // let validator handle invalid JSON
+            }
+        }
+        return value;
+    })
+    socialProfiles?: SocialProfileInput[];
+}
 
-    @ApiProperty({ example: "john.facebook", required: false })
-    @IsOptional()
-    @IsString()
-    facebook?: string;
+export class SocialProfileInput {
+    @ApiProperty({ example: 1 })
+    @Expose()
+    @Type(() => Number)
+    @IsInt()
+    orderId: number;
 
-    @ApiProperty({ example: "john.tiktok", required: false })
-    @IsOptional()
+    @ApiProperty({ example: "Instagram" })
+    @Expose()
     @IsString()
-    tiktok?: string;
+    platformName: string;
 
-    @ApiProperty({ example: "@johnchannel", required: false })
-    @IsOptional()
+    @ApiProperty({ example: "https://instagram.com/johnartist" })
+    @Expose()
     @IsString()
-    youtube?: string;
+    platformLink: string;
 }
 
 export class reset_password {
