@@ -20,7 +20,7 @@ import { PrismaService } from "src/lib/prisma/prisma.service";
 
 @WebSocketGateway({
     cors: { origin: "*" },
-    namespace: "/dj/notification",
+    namespace: "/notification",
 })
 @Injectable()
 export class NotificationGateway
@@ -67,12 +67,10 @@ export class NotificationGateway
 
             // Ensure the user has a NotificationToggle record
             if (!user.notificationToggles?.length) {
-                // Create a new toggle record for the user
                 await this.prisma.notificationToggle.create({
                     data: { userId: user.id },
                 });
 
-                // Reload the toggles
                 user.notificationToggles = await this.prisma.notificationToggle.findMany({
                     where: { userId: user.id },
                 });
@@ -160,7 +158,7 @@ export class NotificationGateway
         client.broadcast.emit(purpose, {});
     }
 
-    // ------LISTEN TO CREATE REGISTER----------------
+    // ------LISTEN TO USER REGISTRATION EVENT----------------
     @OnEvent(EVENT_TYPES.USERREGISTRATION_CREATE)
     async handleUserRegistrationCreated(payload: UserRegistration) {
         this.logger.log("User Registration EVENT RECEIVED");
@@ -173,38 +171,48 @@ export class NotificationGateway
 
         this.logger.log(`Total recipients: ${payload.info.recipients.length}`);
 
+        // Check if user has notification toggle enabled
+        const enabledRecipients = await this.prisma.notificationToggle.findMany({
+            where: {
+                userId: { in: payload.info.recipients.map((r) => r.id) },
+                userRegistration: true,
+            },
+            select: { userId: true },
+        });
+
+        const enabledUserIds = new Set(enabledRecipients.map((r) => r.userId));
+
         for (const recipient of payload.info.recipients) {
-            this.logger.log(`--- Processing recipient: ${recipient.id} (${recipient.email}) ---`);
-
-            const clients = this.getClientsForUser(recipient.id);
-            this.logger.log(`  → Connected sockets: ${clients.size}`);
-
-            if (clients.size === 0) {
-                this.logger.warn(
-                    `  No active socket for user ${recipient.id} → notification skipped`,
-                );
+            // Skip if user has disabled this notification type
+            if (!enabledUserIds.has(recipient.id)) {
+                this.logger.log(`User ${recipient.id} has disabled userRegistration notifications`);
                 continue;
             }
 
+            this.logger.log(`--- Processing recipient: ${recipient.id} (${recipient.email}) ---`);
+
+            const notificationData: Notification = {
+                type: EVENT_TYPES.USERREGISTRATION_CREATE,
+                title: "New User Registered",
+                message: `${payload.info.name} has registered as ${payload.info.role}`,
+                createdAt: new Date(),
+                meta: {
+                    id: payload.info.id,
+                    email: payload.info.email,
+                    name: payload.info.name,
+                    role: payload.info.role,
+                    action: payload.action,
+                    ...payload.meta,
+                },
+            };
+
+            // Send real-time notification via socket
+            const clients = this.getClientsForUser(recipient.id);
+            this.logger.log(`  → Connected sockets: ${clients.size}`);
+
             for (const client of clients) {
                 this.logger.log(`  Sending notification to socket ${client.id}`);
-
-                client.emit(EVENT_TYPES.USERREGISTRATION_CREATE, {
-                    type: EVENT_TYPES.USERREGISTRATION_CREATE,
-                    title: "New User Registered",
-                    message: `${payload.info.name} has registered as ${payload.info.role}`,
-                    createdAt: new Date(),
-
-                    meta: {
-                        id: payload.info.id,
-                        email: payload.info.email,
-                        name: payload.info.name,
-                        role: payload.info.role,
-                        action: payload.action,
-                        ...payload.meta,
-                    },
-                } satisfies Notification);
-
+                client.emit(EVENT_TYPES.USERREGISTRATION_CREATE, notificationData);
                 this.logger.log(
                     `  ✔ Notification sent to ${recipient.id} via socket ${client.id}`,
                 );
@@ -214,6 +222,7 @@ export class NotificationGateway
         this.logger.log("USERREGISTRATION_CREATE event processing complete");
     }
 
+    // ------LISTEN TO SERVICE CREATE EVENT----------------
     @OnEvent(EVENT_TYPES.SERVICE_CREATE)
     async handleServiceCreated(payload: ServiceEvent) {
         this.logger.log("SERVICE_CREATE EVENT RECEIVED");
@@ -224,12 +233,28 @@ export class NotificationGateway
             return;
         }
 
+        // Check if user has notification toggle enabled
+        const enabledRecipients = await this.prisma.notificationToggle.findMany({
+            where: {
+                userId: { in: payload.info.recipients.map((r) => r.id) },
+                serviceCreate: true,
+            },
+            select: { userId: true },
+        });
+
+        const enabledUserIds = new Set(enabledRecipients.map((r) => r.userId));
+
         for (const recipient of payload.info.recipients) {
+            // Skip if user has disabled this notification type
+            if (!enabledUserIds.has(recipient.id)) {
+                this.logger.log(`User ${recipient.id} has disabled serviceCreate notifications`);
+                continue;
+            }
+
             const clients = this.getClientsForUser(recipient.id);
 
             if (!clients.size) {
                 this.logger.warn(`No active socket for user ${recipient.id}`);
-                continue;
             }
 
             const socketPayload: Notification = {
@@ -242,6 +267,7 @@ export class NotificationGateway
                 },
             };
 
+            // Send real-time notification via socket
             for (const client of clients) {
                 client.emit(EVENT_TYPES.SERVICE_CREATE, socketPayload);
                 this.logger.log(`Notification sent to ${recipient.id} (socket: ${client.id})`);
