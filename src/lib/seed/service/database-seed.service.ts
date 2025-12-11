@@ -14,7 +14,7 @@ export class DatabaseSeedService {
         try {
             console.log(chalk.blue("🌱 Starting database seeding..."));
 
-            const hashedPassword = await this.utils.hash("password123");
+            const hashedPassword = await this.utils.hash("12345678");
 
             // Create test users
             const users = await this.createUsers(hashedPassword);
@@ -122,15 +122,40 @@ export class DatabaseSeedService {
                 data: {
                     user_id: users[0].id,
                     short_bio: "Professional artist with 5 years experience",
-                    instagram: "@johnartist",
-                    facebook: "johnartist",
+                    socialProfiles: {
+                        create: [
+                            {
+                                orderId: 1,
+                                platformName: "Instagram",
+                                platformLink: "https://instagram.com/johnartist",
+                            },
+                            {
+                                orderId: 2,
+                                platformName: "Facebook",
+                                platformLink: "https://facebook.com/johnartist",
+                            },
+                        ],
+                    },
                 },
             }),
             this.prisma.profile.create({
                 data: {
                     user_id: users[1].id,
                     short_bio: "Creative content creator",
-                    instagram: "@sarahcreator",
+                    socialProfiles: {
+                        create: [
+                            {
+                                orderId: 1,
+                                platformName: "Instagram",
+                                platformLink: "https://instagram.com/sarahcreator",
+                            },
+                            {
+                                orderId: 2,
+                                platformName: "YouTube",
+                                platformLink: "https://youtube.com/@sarahcreator",
+                            },
+                        ],
+                    },
                 },
             }),
         ]);
@@ -153,6 +178,7 @@ export class DatabaseSeedService {
             this.prisma.service.create({
                 data: {
                     serviceName: "Instagram Shoutout",
+                    serviceType: "Social Post",
                     description: "Professional Instagram shoutout",
                     price: 50.0,
                     creatorId: users[0].id,
@@ -162,6 +188,7 @@ export class DatabaseSeedService {
             this.prisma.service.create({
                 data: {
                     serviceName: "TikTok Video",
+                    serviceType: "Social Post",
                     description: "Custom TikTok video",
                     price: 100.0,
                     creatorId: users[1].id,

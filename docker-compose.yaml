@@ -19,14 +19,14 @@ services:
         networks:
             - jconnect-backend
         command: >
-          sh -c "
-            echo '🏁 Waiting for DB...';
-            sleep 5;
-            npx prisma migrate deploy;
-            echo '🚀 Starting app...';
-            npm run db:seed;
-            npm run start:docker
-          "
+            sh -c "
+              echo '🏁 Waiting for DB...';
+              sleep 5;
+              npx prisma migrate deploy;
+              echo '🚀 Starting app...';
+              npm run db:seed;
+              npm run start:docker
+            "
 
     db:
         image: postgres:16-alpine
@@ -39,10 +39,12 @@ services:
             - POSTGRES_PASSWORD=jconnect123Pass
             - POSTGRES_DB=jconnect_db
             - PGDATA=/var/lib/postgresql/data/pgdata
+        ports:
+            - "5433:5432"
         volumes:
             - jconnect_db:/var/lib/postgresql/data
         healthcheck:
-            test: ["CMD-SHELL", "pg_isready -U jconnect_user -d jconnect_db"]
+            test: [ "CMD-SHELL", "pg_isready -U jconnect_user -d jconnect_db" ]
             interval: 10s
             timeout: 5s
             retries: 5

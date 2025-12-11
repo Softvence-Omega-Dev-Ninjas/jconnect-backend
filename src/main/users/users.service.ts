@@ -1,11 +1,11 @@
 import { HttpException, Injectable, NotFoundException } from "@nestjs/common";
 
+import { Role } from "@prisma/client";
 import agoron2 from "argon2";
 import { PrismaService } from "src/lib/prisma/prisma.service";
 import { UtilsService } from "src/lib/utils/utils.service";
 import { FindArtistDto } from "./dto/findArtist.dto";
-import { CreateUserDto, UpdateUserDto } from "./dto/user.dto";
-import { Role } from "@prisma/client";
+import { CreateUserDto, UpdateMeDto, UpdateUserDto } from "./dto/user.dto";
 @Injectable()
 export class UsersService {
     constructor(
@@ -144,38 +144,38 @@ export class UsersService {
             omit: { password: true },
             include: {
                 profile: true,
-                devices: true,
+                // devices: true,
                 services: true,
-                serviceRequests: {
-                    include: {
-                        buyer: true,
-                        service: true,
-                    },
-                },
-                LiveChatsCreated: true,
-                chatParticipations: {
-                    include: { chat: true },
-                },
-                liveMessages: true,
-                liveMessageReads: {
-                    include: { message: true },
-                },
-                customRequestsMade: {
-                    include: {
-                        buyer: true,
-                        targetCreator: true,
-                    },
-                },
-                customRequestsReceived: {
-                    include: {
-                        buyer: true,
-                        targetCreator: true,
-                    },
-                },
-                socialServices: true,
-                orders_buyer: true,
-                orders_seller: true,
-                paymentMethod: true,
+                // serviceRequests: {
+                //     include: {
+                //         buyer: true,
+                //         service: true,
+                //     },
+                // },
+                // LiveChatsCreated: true,
+                // chatParticipations: {
+                //     include: { chat: true },
+                // },
+                // liveMessages: true,
+                // liveMessageReads: {
+                //     include: { message: true },
+                // },
+                // customRequestsMade: {
+                //     include: {
+                //         buyer: true,
+                //         targetCreator: true,
+                //     },
+                // },
+                // customRequestsReceived: {
+                //     include: {
+                //         buyer: true,
+                //         targetCreator: true,
+                //     },
+                // },
+                // socialServices: true,
+                // orders_buyer: true,
+                // orders_seller: true,
+                // paymentMethod: true,
             },
         });
 
@@ -230,12 +230,84 @@ export class UsersService {
         };
     }
 
+    async updateMe(userId: string, dto: UpdateMeDto) {
+        const existingUser = await this.prisma.user.findUnique({ where: { id: userId } });
+        if (!existingUser) throw new NotFoundException("User not found");
+
+        const userPayload: UpdateUserDto = {};
+        if (dto.full_name !== undefined) userPayload.full_name = dto.full_name;
+        if (dto.phone !== undefined) userPayload.phone = dto.phone;
+        if (dto.profilePhoto !== undefined) userPayload.profilePhoto = dto.profilePhoto;
+
+        const profilePayload = {
+            profile_image_url: dto.profile_image_url ?? undefined,
+            short_bio: dto.short_bio ?? undefined,
+        };
+
+        const socialProfiles = dto.socialProfiles?.map((sp) => ({
+            orderId: sp.orderId,
+            platformName: sp.platformName,
+            platformLink: sp.platformLink,
+        }));
+
+        const hasProfileChanges =
+            Object.values(profilePayload).some((value) => value !== undefined) || !!socialProfiles;
+
+        await this.prisma.$transaction(async (tx) => {
+            if (Object.keys(userPayload).length) {
+                await tx.user.update({
+                    where: { id: userId },
+                    data: userPayload,
+                    omit: { password: true },
+                });
+            }
+
+            if (hasProfileChanges) {
+                const profileExists = await tx.profile.findUnique({ where: { user_id: userId } });
+
+                if (profileExists) {
+                    await tx.profile.update({
+                        where: { user_id: userId },
+                        data: {
+                            ...profilePayload,
+                            ...(socialProfiles
+                                ? {
+                                      socialProfiles: {
+                                          deleteMany: {},
+                                          create: socialProfiles,
+                                      },
+                                  }
+                                : {}),
+                        },
+                    });
+                } else {
+                    await tx.profile.create({
+                        data: {
+                            user_id: userId,
+                            ...profilePayload,
+                            ...(socialProfiles
+                                ? {
+                                      socialProfiles: {
+                                          create: socialProfiles,
+                                      },
+                                  }
+                                : {}),
+                        },
+                    });
+                }
+            }
+        });
+
+        return this.findMe(userId);
+    }
+
     async findAllArtist({ page = 1, limit = 10, filter, search }: FindArtistDto) {
         const skip = (page - 1) * limit;
 
         const baseWhere: any = {
             isDeleted: false,
             isActive: true,
+            role: Role.ARTIST,
         };
 
         // 🔹 Add search system (artist_name OR service_name)
@@ -330,7 +402,16 @@ export class UsersService {
     }
 
     async findOne(id: string) {
-        const user = await this.prisma.user.findUnique({ where: { id } });
+        const user = await this.prisma.user.findUnique({
+            where: {
+                id,
+            },
+            include: {
+                services: true,
+                ReviewsReceived: true,
+                profile: true,
+            },
+        });
         if (!user) throw new NotFoundException("User not found");
         return user;
     }
@@ -399,10 +480,15 @@ export class UsersService {
         if (!exists) throw new NotFoundException("User not found");
         if (exists?.isDeleted) throw new NotFoundException("User Already deleted");
 
-        return await this.prisma.user.update({
+        await this.prisma.user.update({
             where: { id },
             data: { isDeleted: true },
             omit: { password: true },
         });
+
+        return {
+            status: 200,
+            message: "User deleted successfully",
+        };
     }
 }

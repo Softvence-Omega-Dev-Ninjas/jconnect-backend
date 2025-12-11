@@ -1,6 +1,8 @@
-import { ApiProperty } from "@nestjs/swagger";
+import { ApiHideProperty, ApiProperty, ApiPropertyOptional } from "@nestjs/swagger";
 import { AuthProvider, Role, ValidationType } from "@prisma/client";
+import { Expose, Transform, Type } from "class-transformer";
 import {
+    IsArray,
     IsBoolean,
     IsDateString,
     IsEmail,
@@ -9,6 +11,7 @@ import {
     IsOptional,
     IsString,
     MinLength,
+    ValidateNested,
 } from "class-validator";
 
 export class CreateUserDto {
@@ -207,6 +210,73 @@ export class UpdateUserDto {
     @IsOptional()
     @IsDateString()
     token_expires_at?: Date;
+}
+
+export class UpdateMeDto {
+    @ApiProperty({ example: "John Doe", required: false })
+    @IsOptional()
+    @IsString()
+    full_name?: string;
+
+    @ApiProperty({ example: "+8801700000000", required: false })
+    @IsOptional()
+    @IsString()
+    phone?: string;
+
+    @ApiHideProperty()
+    @IsOptional()
+    @IsString()
+    profilePhoto?: string;
+
+    @ApiHideProperty()
+    @IsOptional()
+    @IsString()
+    profile_image_url?: string;
+
+    @ApiProperty({ example: "DJ / Producer", required: false })
+    @IsOptional()
+    @IsString()
+    short_bio?: string;
+
+    @ApiPropertyOptional({ type: () => [SocialProfileInput] })
+    @IsOptional()
+    @IsArray()
+    @ValidateNested({ each: true })
+    @Type(() => SocialProfileInput)
+    @Transform(({ value }) => {
+        if (value === undefined || value === null || value === "") return undefined;
+        // If already an array, keep it
+        if (Array.isArray(value)) return value;
+        // Swagger UI sends JSON string for multipart; try to parse
+        if (typeof value === "string") {
+            try {
+                const parsed = JSON.parse(value);
+                return Array.isArray(parsed) ? parsed : [parsed];
+            } catch (e) {
+                return value; // let validator handle invalid JSON
+            }
+        }
+        return value;
+    })
+    socialProfiles?: SocialProfileInput[];
+}
+
+export class SocialProfileInput {
+    @ApiProperty({ example: 1 })
+    @Expose()
+    @Type(() => Number)
+    @IsInt()
+    orderId: number;
+
+    @ApiProperty({ example: "Instagram" })
+    @Expose()
+    @IsString()
+    platformName: string;
+
+    @ApiProperty({ example: "https://instagram.com/johnartist" })
+    @Expose()
+    @IsString()
+    platformLink: string;
 }
 
 export class reset_password {

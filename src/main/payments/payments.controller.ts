@@ -21,7 +21,7 @@ import {
     ApiResponse,
     ApiTags,
 } from "@nestjs/swagger";
-import { ConfirmSetupIntentDto, CreateSetupIntentDto } from "./dto/confirm-setup-intent.dto";
+import { ConfirmSetupIntentDto } from "./dto/confirm-setup-intent.dto";
 import { WithdrawDto } from "./dto/withdraw.dto";
 import { PaymentService } from "./payments.service";
 
@@ -43,7 +43,7 @@ export class PaymentController {
 
     @ApiBearerAuth()
     @ValidateUser()
-    @Get("create-setup-intent")
+    @Post("create-setup-intent")
     @ApiOperation({ summary: "get client secret for payment method" })
     async createSetupIntent(@GetUser() user: any) {
         return this.paymentService.createSetupIntent(user);
@@ -56,6 +56,27 @@ export class PaymentController {
     @ApiBody({ type: ConfirmSetupIntentDto })
     async confirmSetupIntent(@Body() body: ConfirmSetupIntentDto, @GetUser() user: any) {
         return this.paymentService.confirmSetupIntent(body, user);
+    }
+
+    // ----------------------------
+    // Delete Payment Method
+    // ----------------------------
+    @ApiBearerAuth()
+    @ValidateUser()
+    @Delete("delete-payment-method")
+    @ApiOperation({ summary: "Delete a payment method" })
+    @ApiBody({
+        description: "Payment method ID to delete",
+        schema: {
+            type: "object",
+            properties: {
+                paymentMethodId: { type: "string", example: "cmidkddvy0000vsy0l8xxxxxxx" },
+            },
+            required: ["paymentMethodId"],
+        },
+    })
+    async DeletePaymentMethode(@Body() body: { paymentMethodId: string }, @GetUser() user: any) {
+        return this.paymentService.delete_payment_methode(body.paymentMethodId, user);
     }
 
     @ApiBearerAuth()
@@ -133,27 +154,6 @@ This endpoint is used by Admin/Buyer only.
         @GetUser() user: any,
     ) {
         return this.paymentService.approvePayment(body.orderID, user);
-    }
-
-    // ----------------------------
-    // Delete Payment Method
-    // ----------------------------
-    @ApiBearerAuth()
-    @ValidateUser()
-    @Delete("delete")
-    @ApiOperation({ summary: "Delete a payment method" })
-    @ApiBody({
-        description: "Payment method ID to delete",
-        schema: {
-            type: "object",
-            properties: {
-                paymentMethodId: { type: "string", example: "cmidkddvy0000vsy0l8xxxxxxx" },
-            },
-            required: ["paymentMethodId"],
-        },
-    })
-    async DeletePaymentMethode(@Body() body: { paymentMethodId: string }, @GetUser() user: any) {
-        return this.paymentService.delete_payment_methode(body.paymentMethodId, user);
     }
 
     // ----------------------------

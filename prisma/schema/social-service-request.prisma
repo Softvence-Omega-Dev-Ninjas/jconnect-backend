@@ -1,16 +1,16 @@
 model SocialServiceRequest {
-  id                    String       @id @default(uuid())
+  id                    String   @id @default(uuid())
   serviceName           String
   socialServiceId       String
-  platform              PlatformName
+  platforms             String[]
   artistName            String
   price                 Float
   preferredDeliveryDate DateTime
   specialNotes          String?
   attachedFiles         String[]
-  status                String       @default("Pending")
-  createdAt             DateTime     @default(now())
-  updatedAt             DateTime     @default(now()) @updatedAt
+  status                String   @default("Pending")
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @default(now()) @updatedAt
 
   // Buyer/Creator Relation
   buyerId            String
