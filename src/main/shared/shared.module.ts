@@ -1,7 +1,5 @@
 import { Module } from "@nestjs/common";
 
-
-
 import { UploadAwsModule } from "./aws-upload/aws-upload.module";
 import { PrivateMessageModule } from "./private-message/private-message.module";
 
@@ -11,4 +9,4 @@ import { PrivateMessageModule } from "./private-message/private-message.module";
     providers: [],
     exports: [],
 })
-export class SharedModule { }
+export class SharedModule {}
