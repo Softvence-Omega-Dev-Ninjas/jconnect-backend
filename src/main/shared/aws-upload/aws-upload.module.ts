@@ -4,8 +4,8 @@ import { AwsS3Service } from "./additional.service";
 
 @Global()
 @Module({
-    providers: [AwsS3Service],  
-    exports: [AwsS3Service],  
-    controllers: [AwsS3Controller],   
+    providers: [AwsS3Service],
+    exports: [AwsS3Service],
+    controllers: [AwsS3Controller],
 })
-export class UploadAwsModule { }
+export class UploadAwsModule {}

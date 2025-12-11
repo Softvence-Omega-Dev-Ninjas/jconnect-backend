@@ -1,8 +1,8 @@
-import { S3 } from '@aws-sdk/client-s3';
-import { Upload } from '@aws-sdk/lib-storage';
-import fs from 'fs';
-import mime from 'mime-types';
-import path from 'path';
+import { S3 } from "@aws-sdk/client-s3";
+import { Upload } from "@aws-sdk/lib-storage";
+import fs from "fs";
+import mime from "mime-types";
+import path from "path";
 
 const s3 = new S3({
     region: process.env.AWS_BUCKET_REGION,
@@ -16,7 +16,7 @@ const UploadFileToAwsS3 = async (filePath: string) => {
     const fileContent = fs.readFileSync(filePath);
     const ext = path.extname(filePath);
     const fileName = `${Date.now()}-${path.basename(filePath)}`;
-    const contentType = mime.lookup(ext) || 'application/octet-stream';
+    const contentType = mime.lookup(ext) || "application/octet-stream";
 
     const upload = new Upload({
         client: s3,
@@ -38,7 +38,7 @@ const UploadFileToAwsS3 = async (filePath: string) => {
         };
     } catch (error) {
         fs.unlinkSync(filePath);
-        console.error(' S3 Upload Error:', error);
+        console.error(" S3 Upload Error:", error);
         throw error;
     }
 };
