@@ -1,3 +1,4 @@
+import { AllExceptionsFilter } from "@common/filter/all-exceptions.filter";
 import { ValidationPipe } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
 import { NestFactory } from "@nestjs/core";
@@ -22,7 +23,7 @@ async function bootstrap() {
             transform: true,
         }),
     );
-
+    app.useGlobalFilters(new AllExceptionsFilter());
     const document = SwaggerModule.createDocument(app, config);
     SwaggerModule.setup("api-docs", app, document, {
         swaggerOptions: {
