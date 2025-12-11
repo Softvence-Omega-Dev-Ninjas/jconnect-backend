@@ -6,7 +6,7 @@ import { CreateProfileDto, UpdateProfileDto } from "./dto/profile.dto";
 
 @Injectable()
 export class ProfileService {
-    constructor(private prisma: PrismaService) {}
+    constructor(private prisma: PrismaService) { }
 
     async create(data: CreateProfileDto) {
         const user = await this.prisma.user.findUnique({
@@ -19,21 +19,23 @@ export class ProfileService {
         });
         if (existing) throw new BadRequestException("Profile already exists for this user");
 
-        const normalizeUrl = (input: string | null | undefined, base: string) => {
-            if (!input) return null;
-            if (input.startsWith("http")) return input;
-            return `${base}${input}`;
-        };
-
-        const profileData = {
+        const profileData: any = {
             user_id: data.userId,
-            instagram: normalizeUrl(data.instagram, "https://instagram.com/"),
-            facebook: normalizeUrl(data.facebook, "https://facebook.com/"),
-            tiktok: normalizeUrl(data.tiktok, "https://tiktok.com/@"),
-            youtube: normalizeUrl(data.youtube, "https://youtube.com/"),
+            profile_image_url: data.profile_image_url ?? undefined,
+            short_bio: data.short_bio ?? undefined,
         };
 
-        // 4️⃣ Create Profile
+        if (data.socialProfiles && Array.isArray(data.socialProfiles) && data.socialProfiles.length) {
+            profileData.socialProfiles = {
+                create: data.socialProfiles.map((sp) => ({
+                    orderId: Number(sp.orderId),
+                    platformName: sp.platformName,
+                    platformLink: sp.platformLink,
+                })),
+            };
+        }
+
+        // 4️⃣ Create Profile with nested socialProfiles when provided
         return this.prisma.profile.create({ data: profileData });
     }
 
@@ -68,25 +70,26 @@ export class ProfileService {
         });
         if (!profile) throw new NotFoundException("Profile not found");
 
-        // 2️⃣ Normalize URLs (handle username or full URL)
-        const normalizeUrl = (input: string | null | undefined, base: string) => {
-            if (!input) return undefined; // skip undefined fields
-            if (input.startsWith("http")) return input; // already full URL
-            return `${base}${input}`;
+        const updatePayload: any = {
+            profile_image_url: data.profile_image_url ?? undefined,
+            short_bio: data.short_bio ?? undefined,
         };
 
-        const updatedData = {
-            ...data,
-            instagram: normalizeUrl(data.instagram, "https://instagram.com/"),
-            facebook: normalizeUrl(data.facebook, "https://facebook.com/"),
-            tiktok: normalizeUrl(data.tiktok, "https://tiktok.com/@"),
-            youtube: normalizeUrl(data.youtube, "https://youtube.com/"),
-        };
+        if (data.socialProfiles && Array.isArray(data.socialProfiles)) {
+            updatePayload.socialProfiles = {
+                deleteMany: {},
+                create: data.socialProfiles.map((sp) => ({
+                    orderId: Number(sp.orderId),
+                    platformName: sp.platformName,
+                    platformLink: sp.platformLink,
+                })),
+            };
+        }
 
-        // 3️⃣ Update the profile
+        // 3️⃣ Update the profile; nested socialProfiles will be replaced if provided
         return this.prisma.profile.update({
             where: { user_id },
-            data: updatedData,
+            data: updatePayload,
         });
     }
 
