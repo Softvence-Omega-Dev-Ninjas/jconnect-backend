@@ -3,7 +3,7 @@ import { PrismaService } from "src/lib/prisma/prisma.service";
 
 @Injectable()
 export class AdminDashboardStatsService {
-    constructor(private prisma: PrismaService) {}
+    constructor(private prisma: PrismaService) { }
 
     //* Aggregate key metrics for the dashboard overview cards
     async getAdminStats() {
@@ -226,21 +226,54 @@ export class AdminDashboardStatsService {
     }
 
     //* Top Performing Users (by amount of money spent/paid)
+    // async getTopPerformingUsers() {
+    //     const res = await this.prisma.order.groupBy({
+    //         by: ["buyerId"],
+    //         include: {
+    //             buyer: true
+    //         },
+    //         _sum: {
+    //             amount: true,
+    //         },
+    //         orderBy: {
+    //             _sum: {
+    //                 amount: "desc",
+    //             },
+    //         },
+    //         take: 10,
+    //     });
+    //     return res;
+    // }
+
     async getTopPerformingUsers() {
-        const res = await this.prisma.order.groupBy({
+        const grouped = await this.prisma.order.groupBy({
             by: ["buyerId"],
             _sum: {
                 amount: true,
             },
             orderBy: {
-                _sum: {
-                    amount: "desc",
-                },
+                _sum: { amount: "desc" },
             },
             take: 10,
         });
-        return res;
+
+        // Now fetch buyer data manually
+        const result = await Promise.all(
+            grouped.map(async (item) => {
+                const buyer = await this.prisma.user.findUnique({
+                    where: { id: item.buyerId },
+                });
+
+                return {
+                    name: buyer?.full_name,
+                    totalAmount: item._sum.amount,
+                };
+            })
+        );
+
+        return result;
     }
+
 
     //* Get Active User counts grouped by the day of the week over the last 7 days.
     async getUserActivityWeekly() {
