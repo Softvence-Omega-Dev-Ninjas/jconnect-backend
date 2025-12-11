@@ -205,7 +205,9 @@ export class NotificationGateway
                     },
                 } satisfies Notification);
 
-                this.logger.log(`  ✔ Notification sent to ${recipient.id} via socket ${client.id}`);
+                this.logger.log(
+                    `  ✔ Notification sent to ${recipient.id} via socket ${client.id}`,
+                );
             }
         }
 
