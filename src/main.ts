@@ -1,3 +1,4 @@
+import { AllExceptionsFilter } from "@common/filter/all-exceptions.filter";
 import { ValidationPipe } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
 import { NestFactory } from "@nestjs/core";
@@ -22,7 +23,7 @@ async function bootstrap() {
             transform: true,
         }),
     );
-
+    app.useGlobalFilters(new AllExceptionsFilter());
     const document = SwaggerModule.createDocument(app, config);
     SwaggerModule.setup("api-docs", app, document, {
         swaggerOptions: {
@@ -43,7 +44,7 @@ async function bootstrap() {
     console.log(`🚀 Server running at: ${process.env.BACKEND_URL}:${PORT}`);
     console.log(`📘 Swagger docs: ${process.env.BACKEND_URL}:${PORT}/api-docs`);
     // ---------local run swagger url----------------
-     console.log(`📘 Swagger docs: http://localhost:${PORT}/api-docs`);
+    console.log(`📘 Swagger docs: http://localhost:${PORT}/api-docs`);
 }
 
 bootstrap();
