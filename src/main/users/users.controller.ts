@@ -4,7 +4,7 @@ import {
     ValidateSuperAdmin,
     ValidateUser,
 } from "@common/jwt/jwt.decorator";
-import { AwsService } from "@main/aws/aws.service";
+
 import {
     BadRequestException,
     Body,
@@ -34,6 +34,7 @@ import { Role } from "@prisma/client";
 import { FindArtistDto } from "./dto/findArtist.dto";
 import { reset_password, UpdateMeDto, UpdateUserDto } from "./dto/user.dto";
 import { UsersService } from "./users.service";
+import { AwsService } from "@main/aws/aws.service";
 
 @ApiTags("Users")
 @Controller("users")
