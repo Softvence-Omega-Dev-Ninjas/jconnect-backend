@@ -195,10 +195,10 @@ async function main() {
     console.log("✅ Custom Service Requests created");
 
     // Create Social Services
-    await prisma.socialService.create({
+    const socialService = await prisma.socialService.create({
         data: {
             serviceName: "Instagram Story",
-            platform: "Instagram",
+            platforms: ["Instagram"],
             artistName: users[0].full_name,
             price: 75.0,
             preferredDeliveryDate: new Date(Date.now() + 5 * 24 * 60 * 60 * 1000),
@@ -212,8 +212,8 @@ async function main() {
     await prisma.socialServiceRequest.create({
         data: {
             serviceName: "Facebook Post",
-            socialServiceId: "social-service-1",
-            platform: "Facebook",
+            socialServiceId: socialService.id,
+            platforms: ["Facebook"],
             artistName: users[1].full_name,
             price: 60.0,
             preferredDeliveryDate: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000),

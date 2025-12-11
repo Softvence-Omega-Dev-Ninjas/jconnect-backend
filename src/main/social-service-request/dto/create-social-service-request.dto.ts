@@ -1,8 +1,7 @@
 import { PartialType } from "@nestjs/mapped-types";
 
 import { ApiProperty, ApiPropertyOptional } from "@nestjs/swagger";
-import { PlatformName } from "@prisma/client";
-import { IsArray, IsDateString, IsEnum, IsNumber, IsOptional, IsString } from "class-validator";
+import { IsArray, IsDateString, IsNumber, IsOptional, IsString } from "class-validator";
 
 export class CreateSocialServiceRequestDto {
     @ApiProperty({ example: "Instagram Shoutout", description: "Name of the requested service" })
@@ -14,12 +13,13 @@ export class CreateSocialServiceRequestDto {
     socialServiceId: string;
 
     @ApiProperty({
-        enum: PlatformName,
-        example: PlatformName.Instagram,
-        description: "Platform name (must be a valid enum value)",
+        example: ["Instagram", "YouTube"],
+        description: "Platform names as plain strings",
+        type: [String],
     })
-    @IsEnum(PlatformName)
-    platform: PlatformName;
+    @IsArray()
+    @IsString({ each: true })
+    platforms: string[];
 
     @ApiProperty({ example: "John Doe", description: "Name of the artist for the service" })
     @IsString()

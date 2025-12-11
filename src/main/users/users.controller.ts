@@ -64,13 +64,21 @@ export class UsersController {
                 image: { type: "string", format: "binary", description: "Profile image" },
                 full_name: { type: "string" },
                 phone: { type: "string" },
-                profilePhoto: { type: "string" },
-                profile_image_url: { type: "string" },
                 short_bio: { type: "string" },
-                instagram: { type: "string" },
-                facebook: { type: "string" },
-                tiktok: { type: "string" },
-                youtube: { type: "string" },
+                socialProfiles: {
+                    type: "array",
+                    items: {
+                        type: "object",
+                        properties: {
+                            orderId: { type: "integer", example: 1 },
+                            platformName: { type: "string", example: "Instagram" },
+                            platformLink: {
+                                type: "string",
+                                example: "https://instagram.com/example",
+                            },
+                        },
+                    },
+                },
             },
         },
     })
@@ -90,6 +98,8 @@ export class UsersController {
         @Body() updateMeDto: UpdateMeDto,
         @UploadedFile() file?: Express.Multer.File,
     ) {
+        delete (updateMeDto as any).profilePhoto;
+
         if (file) {
             const uploaded = await this.awsservice.upload(file);
             updateMeDto.profilePhoto = uploaded.url;

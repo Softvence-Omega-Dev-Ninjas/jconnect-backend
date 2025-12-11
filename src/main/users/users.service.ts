@@ -234,15 +234,6 @@ export class UsersService {
         const existingUser = await this.prisma.user.findUnique({ where: { id: userId } });
         if (!existingUser) throw new NotFoundException("User not found");
 
-        const normalizeUrl = (input: string | null | undefined, base?: string) => {
-            if (input === undefined) return undefined;
-            const trimmed = input?.trim();
-            if (!trimmed) return null; // allow clearing value
-            if (trimmed.startsWith("http")) return trimmed;
-            if (!base) return trimmed;
-            return `${base}${trimmed}`;
-        };
-
         const userPayload: UpdateUserDto = {};
         if (dto.full_name !== undefined) userPayload.full_name = dto.full_name;
         if (dto.phone !== undefined) userPayload.phone = dto.phone;
@@ -251,15 +242,16 @@ export class UsersService {
         const profilePayload = {
             profile_image_url: dto.profile_image_url ?? undefined,
             short_bio: dto.short_bio ?? undefined,
-            instagram: normalizeUrl(dto.instagram, "https://instagram.com/"),
-            facebook: normalizeUrl(dto.facebook, "https://facebook.com/"),
-            tiktok: normalizeUrl(dto.tiktok, "https://tiktok.com/@"),
-            youtube: normalizeUrl(dto.youtube, "https://youtube.com/"),
         };
 
-        const hasProfileChanges = Object.values(profilePayload).some(
-            (value) => value !== undefined,
-        );
+        const socialProfiles = dto.socialProfiles?.map((sp) => ({
+            orderId: sp.orderId,
+            platformName: sp.platformName,
+            platformLink: sp.platformLink,
+        }));
+
+        const hasProfileChanges =
+            Object.values(profilePayload).some((value) => value !== undefined) || !!socialProfiles;
 
         await this.prisma.$transaction(async (tx) => {
             if (Object.keys(userPayload).length) {
@@ -274,12 +266,32 @@ export class UsersService {
                 const profileExists = await tx.profile.findUnique({ where: { user_id: userId } });
 
                 if (profileExists) {
-                    await tx.profile.update({ where: { user_id: userId }, data: profilePayload });
+                    await tx.profile.update({
+                        where: { user_id: userId },
+                        data: {
+                            ...profilePayload,
+                            ...(socialProfiles
+                                ? {
+                                      socialProfiles: {
+                                          deleteMany: {},
+                                          create: socialProfiles,
+                                      },
+                                  }
+                                : {}),
+                        },
+                    });
                 } else {
                     await tx.profile.create({
                         data: {
                             user_id: userId,
                             ...profilePayload,
+                            ...(socialProfiles
+                                ? {
+                                      socialProfiles: {
+                                          create: socialProfiles,
+                                      },
+                                  }
+                                : {}),
                         },
                     });
                 }
