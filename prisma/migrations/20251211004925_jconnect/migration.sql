@@ -35,9 +35,6 @@ CREATE TYPE "PaymentStatus" AS ENUM ('PENDING', 'COMPLETED', 'CANCELLED');
 CREATE TYPE "MessageDeliveryStatus" AS ENUM ('SENT', 'DELIVERED', 'READ');
 
 -- CreateEnum
-CREATE TYPE "PlatformName" AS ENUM ('Instagram', 'Facebook', 'YouTube', 'TikTok');
-
--- CreateEnum
 CREATE TYPE "SupportStatus" AS ENUM ('OPEN', 'IN_PROGRESS', 'RESOLVED', 'CLOSED');
 
 -- CreateEnum
@@ -287,14 +284,23 @@ CREATE TABLE "user_profiles" (
     "user_id" TEXT NOT NULL,
     "profile_image_url" TEXT,
     "short_bio" TEXT,
-    "instagram" TEXT,
-    "facebook" TEXT,
-    "tiktok" TEXT,
-    "youtube" TEXT,
     "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updated_at" TIMESTAMP(3) NOT NULL,
 
     CONSTRAINT "user_profiles_pkey" PRIMARY KEY ("user_id")
+);
+
+-- CreateTable
+CREATE TABLE "social_profiles" (
+    "id" TEXT NOT NULL,
+    "profileId" TEXT NOT NULL,
+    "orderId" INTEGER NOT NULL,
+    "platformName" TEXT NOT NULL,
+    "platformLink" TEXT NOT NULL,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+
+    CONSTRAINT "social_profiles_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
@@ -330,6 +336,7 @@ CREATE TABLE "ServiceRequest" (
 CREATE TABLE "services" (
     "id" TEXT NOT NULL,
     "serviceName" TEXT NOT NULL,
+    "serviceType" TEXT NOT NULL,
     "description" TEXT,
     "price" DOUBLE PRECISION NOT NULL,
     "currency" TEXT NOT NULL DEFAULT 'USD',
@@ -358,7 +365,7 @@ CREATE TABLE "social_service_request" (
     "id" TEXT NOT NULL,
     "serviceName" TEXT NOT NULL,
     "socialServiceId" TEXT NOT NULL,
-    "platform" "PlatformName" NOT NULL,
+    "platforms" TEXT[],
     "artistName" TEXT NOT NULL,
     "price" DOUBLE PRECISION NOT NULL,
     "preferredDeliveryDate" TIMESTAMP(3) NOT NULL,
@@ -377,7 +384,7 @@ CREATE TABLE "social_service_request" (
 CREATE TABLE "social_service" (
     "id" TEXT NOT NULL,
     "serviceName" TEXT NOT NULL,
-    "platform" "PlatformName" NOT NULL,
+    "platforms" TEXT[],
     "artistName" TEXT NOT NULL,
     "price" DOUBLE PRECISION NOT NULL,
     "preferredDeliveryDate" TIMESTAMP(3) NOT NULL,
@@ -555,9 +562,6 @@ CREATE UNIQUE INDEX "PrivateConversation_user1Id_user2Id_key" ON "PrivateConvers
 CREATE UNIQUE INDEX "PrivateMessageStatus_messageId_userId_key" ON "PrivateMessageStatus"("messageId", "userId");
 
 -- CreateIndex
-CREATE UNIQUE INDEX "user_profiles_user_id_key" ON "user_profiles"("user_id");
-
--- CreateIndex
 CREATE UNIQUE INDEX "reviews_reviewerId_artistId_key" ON "reviews"("reviewerId", "artistId");
 
 -- CreateIndex
@@ -673,6 +677,9 @@ ALTER TABLE "PrivateMessageStatus" ADD CONSTRAINT "PrivateMessageStatus_userId_f
 
 -- AddForeignKey
 ALTER TABLE "user_profiles" ADD CONSTRAINT "user_profiles_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "users"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "social_profiles" ADD CONSTRAINT "social_profiles_profileId_fkey" FOREIGN KEY ("profileId") REFERENCES "user_profiles"("user_id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "reviews" ADD CONSTRAINT "reviews_reviewerId_fkey" FOREIGN KEY ("reviewerId") REFERENCES "users"("id") ON DELETE CASCADE ON UPDATE CASCADE;
