@@ -102,17 +102,45 @@ async function main() {
             data: {
                 user_id: users[0].id,
                 short_bio: "Professional artist with 5 years experience",
-                instagram: "@johnartist",
-                facebook: "johnartist",
-                tiktok: "@johnartist",
+                socialProfiles: {
+                    create: [
+                        {
+                            orderId: 1,
+                            platformName: "Instagram",
+                            platformLink: "https://instagram.com/johnartist",
+                        },
+                        {
+                            orderId: 2,
+                            platformName: "Facebook",
+                            platformLink: "https://facebook.com/johnartist",
+                        },
+                        {
+                            orderId: 3,
+                            platformName: "TikTok",
+                            platformLink: "https://tiktok.com/@johnartist",
+                        },
+                    ],
+                },
             },
         }),
         prisma.profile.create({
             data: {
                 user_id: users[1].id,
                 short_bio: "Creative content creator",
-                instagram: "@sarahcreator",
-                youtube: "sarahcreator",
+                socialProfiles: {
+                    create: [
+                        {
+                            orderId: 1,
+                            platformName: "Instagram",
+                            platformLink: "https://instagram.com/sarahcreator",
+                        },
+                        {
+                            orderId: 2,
+                            platformName: "YouTube",
+                            platformLink: "https://youtube.com/sarahcreator",
+                        },
+                    ],
+                },
             },
         }),
     ]);
@@ -139,6 +167,7 @@ async function main() {
         prisma.service.create({
             data: {
                 serviceName: "Instagram Shoutout",
+                serviceType: "Social Post",
                 description: "Professional Instagram shoutout for your brand",
                 price: 50.0,
                 creatorId: users[0].id,
@@ -148,6 +177,7 @@ async function main() {
         prisma.service.create({
             data: {
                 serviceName: "TikTok Video Creation",
+                serviceType: "Social Post",
                 description: "Custom TikTok video for your product",
                 price: 100.0,
                 creatorId: users[1].id,
@@ -160,6 +190,7 @@ async function main() {
                 description: "Detailed product review on YouTube",
                 price: 150.0,
                 creatorId: users[0].id,
+                serviceType: "Social Post",
             },
         }),
     ]);

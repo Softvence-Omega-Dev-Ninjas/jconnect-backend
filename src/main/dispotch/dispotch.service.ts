@@ -8,6 +8,7 @@ import {
 import { AwsService } from "@main/aws/aws.service";
 import { PrismaService } from "src/lib/prisma/prisma.service";
 import { CreateDisputeDto } from "./dto/create-dispute.dto";
+import { FindDisputesDto } from "./dto/find-disputes.dto";
 import { UpdateDisputeDto } from "./dto/update-dispute.dto";
 
 @Injectable()
@@ -15,7 +16,7 @@ export class DisputeService {
     constructor(
         private prisma: PrismaService,
         private awsService: AwsService,
-    ) {}
+    ) { }
 
     async create(userId: string, dto: CreateDisputeDto, files?: Express.Multer.File[]) {
         // 1️⃣ Check if order exists and belongs to user
@@ -77,6 +78,43 @@ export class DisputeService {
             },
             orderBy: { createdAt: "desc" },
         });
+    }
+
+    async findQuery(query?: FindDisputesDto) {
+        const page = query?.page ?? 1;
+        const perPage = query?.perPage ?? 10;
+        const skip = (page - 1) * perPage;
+
+        const where: any = {};
+        if (query?.status) where.status = query.status;
+        if (query?.startDate || query?.endDate) {
+            where.createdAt = {} as any;
+            if (query.startDate) where.createdAt.gte = query.startDate;
+            if (query.endDate) where.createdAt.lte = query.endDate;
+        }
+
+        const [data, total] = await this.prisma.$transaction([
+            this.prisma.dispute.findMany({
+                where,
+                include: {
+                    order: true,
+                    user: { select: { id: true, full_name: true } },
+                },
+                orderBy: { createdAt: "desc" },
+                skip,
+                take: perPage,
+            }),
+            this.prisma.dispute.count({ where }),
+        ]);
+
+        return {
+            success: true,
+            page,
+            perPage,
+            total,
+            totalPages: Math.ceil(total / perPage),
+            data,
+        };
     }
 
     async findMyDisputes(userId: string) {
