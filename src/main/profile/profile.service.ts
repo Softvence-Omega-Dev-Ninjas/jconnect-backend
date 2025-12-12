@@ -6,7 +6,7 @@ import { CreateProfileDto, UpdateProfileDto } from "./dto/profile.dto";
 
 @Injectable()
 export class ProfileService {
-    constructor(private prisma: PrismaService) { }
+    constructor(private prisma: PrismaService) {}
 
     async create(data: CreateProfileDto) {
         const user = await this.prisma.user.findUnique({
@@ -25,7 +25,11 @@ export class ProfileService {
             short_bio: data.short_bio ?? undefined,
         };
 
-        if (data.socialProfiles && Array.isArray(data.socialProfiles) && data.socialProfiles.length) {
+        if (
+            data.socialProfiles &&
+            Array.isArray(data.socialProfiles) &&
+            data.socialProfiles.length
+        ) {
             profileData.socialProfiles = {
                 create: data.socialProfiles.map((sp) => ({
                     orderId: Number(sp.orderId),

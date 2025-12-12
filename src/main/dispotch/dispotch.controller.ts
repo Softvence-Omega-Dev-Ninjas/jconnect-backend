@@ -1,4 +1,5 @@
 import {
+    BadRequestException,
     Body,
     Controller,
     Delete,
@@ -6,6 +7,7 @@ import {
     Param,
     Patch,
     Post,
+    Query,
     UploadedFiles,
     UseInterceptors,
 } from "@nestjs/common";
@@ -17,6 +19,7 @@ import { GetUser, ValidateAdmin, ValidateUser } from "@common/jwt/jwt.decorator"
 import { FilesInterceptor } from "@nestjs/platform-express";
 import { ApiBearerAuth, ApiBody, ApiConsumes, ApiOperation, ApiTags } from "@nestjs/swagger";
 import { DisputeService } from "./dispotch.service";
+import { FindDisputesDto } from "./dto/find-disputes.dto";
 
 @ApiTags("disputes")
 @ApiBearerAuth()
@@ -56,6 +59,23 @@ export class DisputeController {
     @ApiOperation({ summary: "Get all disputes (admin)" })
     findAll() {
         return this.disputeService.findAll();
+    }
+
+    @ApiBearerAuth()
+    @ValidateAdmin()
+    @Get("filter")
+    @ApiOperation({ summary: "Get all disputes (admin) with filtering & pagination" })
+    async findQuery(@Query() query: FindDisputesDto) {
+        try {
+            const result = await this.disputeService.findQuery(query);
+            return {
+                ...result,
+                success: true,
+                message: "Disputes fetched successfully",
+            };
+        } catch (error) {
+            throw new BadRequestException(error?.message || "Failed to fetch disputes");
+        }
     }
 
     @ApiBearerAuth()

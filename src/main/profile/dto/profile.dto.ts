@@ -1,14 +1,7 @@
 // src/profile/dto/profile.dto.ts
 import { ApiPropertyOptional } from "@nestjs/swagger";
 import { Transform, Type } from "class-transformer";
-import {
-    IsArray,
-    IsInt,
-    IsOptional,
-    IsString,
-    IsUrl,
-    ValidateNested,
-} from "class-validator";
+import { IsArray, IsInt, IsOptional, IsString, IsUrl, ValidateNested } from "class-validator";
 
 export class SocialProfileInput {
     @ApiPropertyOptional({ example: 1 })
