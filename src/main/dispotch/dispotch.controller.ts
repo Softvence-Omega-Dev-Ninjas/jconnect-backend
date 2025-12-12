@@ -25,7 +25,7 @@ import { FindDisputesDto } from "./dto/find-disputes.dto";
 @ApiBearerAuth()
 @Controller("disputes")
 export class DisputeController {
-    constructor(private readonly disputeService: DisputeService) { }
+    constructor(private readonly disputeService: DisputeService) {}
 
     @ValidateUser()
     @Post()
@@ -74,7 +74,7 @@ export class DisputeController {
                 message: "Disputes fetched successfully",
             };
         } catch (error) {
-            throw new BadRequestException(error?.message || 'Failed to fetch disputes');
+            throw new BadRequestException(error?.message || "Failed to fetch disputes");
         }
     }
 
