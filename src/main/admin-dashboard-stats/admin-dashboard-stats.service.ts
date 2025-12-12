@@ -3,7 +3,7 @@ import { PrismaService } from "src/lib/prisma/prisma.service";
 
 @Injectable()
 export class AdminDashboardStatsService {
-    constructor(private prisma: PrismaService) { }
+    constructor(private prisma: PrismaService) {}
 
     //* Aggregate key metrics for the dashboard overview cards
     async getAdminStats() {
@@ -268,12 +268,11 @@ export class AdminDashboardStatsService {
                     name: buyer?.full_name,
                     totalAmount: item._sum.amount,
                 };
-            })
+            }),
         );
 
         return result;
     }
-
 
     //* Get Active User counts grouped by the day of the week over the last 7 days.
     async getUserActivityWeekly() {
