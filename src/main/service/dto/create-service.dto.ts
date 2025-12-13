@@ -76,6 +76,14 @@ export class UpdateServiceDto extends PartialType(CreateServiceDto) {
     serviceName?: string;
 
     @ApiProperty({
+        example: "Service Type",
+        description: "The type/category of the service (e.g., Social Post, Service).",
+    })
+    @IsString()
+    @IsNotEmpty()
+    serviceType: string;
+
+    @ApiProperty({
         example: "Updated service description",
         required: false,
     })
