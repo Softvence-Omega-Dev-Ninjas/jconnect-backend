@@ -201,7 +201,6 @@ export class NotificationGateway
                     email: payload.info.email,
                     name: payload.info.name,
                     role: payload.info.role,
-                    action: payload.action,
                     ...payload.meta,
                 },
             };
