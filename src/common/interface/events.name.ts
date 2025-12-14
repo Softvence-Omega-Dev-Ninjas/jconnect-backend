@@ -1,8 +1,23 @@
+import { AuthProvider, Role, ValidationType } from "@constant/enums";
+
 // Event payload interfaces (aligned with NotificationToggle schema)
 export interface UserRegistrationMeta {
-    userId: string;
-    userName?: string;
-    registeredAt: Date;
+    action: "created";
+    info: {
+        id: string;
+        email: string;
+        name: string;
+        role: Role;
+        phone?: string;
+        authProvider?: AuthProvider;
+        validationType?: ValidationType;
+        createdAt: Date;
+        recipients: Array<{
+            id: string;
+            email: string;
+        }>;
+    };
+    meta?: Record<string, any>;
 }
 
 export interface PostMeta {

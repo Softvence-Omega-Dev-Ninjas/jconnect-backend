@@ -163,7 +163,7 @@ export class AuthService {
             where: { id: user.id },
             data: {
                 emailOtp: otp,
-                otpExpiresAt: expiryTime, // Fixed: use otpExpiresAt instead of otpExpiry
+                otpExpiresAt: expiryTime,
             },
         });
 
@@ -242,6 +242,36 @@ export class AuthService {
         const safeUser = this.utils.sanitizedResponse(UserResponseDto, updatedUser);
         const devices = await this.deviceService.getUserDevices(user.id);
 
+        // Example location: after user is created in database
+
+        // Get all SUPERADMIN users
+        const superAdmins = await this.prisma.user.findMany({
+            where: {
+                role: Role.SUPER_ADMIN,
+                isActive: true,
+                isDeleted: false,
+            },
+            select: { id: true, email: true },
+        });
+
+        // Emit registration event
+        this.eventEmitter.emit(EVENT_TYPES.USERREGISTRATION_CREATE, {
+            action: "CREATE",
+            info: {
+                id: updatedUser.id,
+                email: updatedUser.email,
+                name: updatedUser.full_name,
+                role: updatedUser.role,
+                phone: updatedUser.phone,
+                authProvider: updatedUser.auth_provider,
+                validationType: updatedUser.validation_type,
+                createdAt: updatedUser.created_at,
+                recipients: superAdmins,
+            },
+            meta: {
+                registrationMethod: "email",
+            },
+        } as unknown as UserRegistration);
         return {
             success: true,
             message: "OTP verified successfully",
