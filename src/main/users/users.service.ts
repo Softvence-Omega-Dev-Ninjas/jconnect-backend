@@ -11,7 +11,7 @@ export class UsersService {
     constructor(
         private prisma: PrismaService,
         private utils: UtilsService,
-    ) {}
+    ) { }
 
     async create(Userdata: CreateUserDto) {
         const { password, ...users } = Userdata;
@@ -231,75 +231,83 @@ export class UsersService {
     }
 
     async updateMe(userId: string, dto: UpdateMeDto) {
-        const existingUser = await this.prisma.user.findUnique({ where: { id: userId } });
-        if (!existingUser) throw new NotFoundException("User not found");
+        console.log("DTO:", dto);
 
-        const userPayload: UpdateUserDto = {};
-        if (dto.full_name !== undefined) userPayload.full_name = dto.full_name;
-        if (dto.phone !== undefined) userPayload.phone = dto.phone;
-        if (dto.profilePhoto !== undefined) userPayload.profilePhoto = dto.profilePhoto;
+        const existingUser = await this.prisma.user.findUnique({
+            where: { id: userId },
+        });
 
-        const profilePayload = {
-            profile_image_url: dto.profile_image_url ?? undefined,
-            short_bio: dto.short_bio ?? undefined,
+        if (!existingUser) {
+            throw new NotFoundException("User not found");
+        }
+
+        const userPayload: UpdateUserDto = {
+            ...(dto.full_name && { full_name: dto.full_name }),
+            ...(dto.phone && { phone: dto.phone }),
+            ...(dto.profilePhoto && { profilePhoto: dto.profilePhoto }),
         };
 
-        const socialProfiles = dto.socialProfiles?.map((sp) => ({
-            orderId: sp.orderId,
-            platformName: sp.platformName,
-            platformLink: sp.platformLink,
-        }));
+        const profilePayload = {
+            ...(dto.profile_image_url !== undefined && {
+                profile_image_url: dto.profile_image_url,
+            }),
+            ...(dto.short_bio !== undefined && {
+                short_bio: dto.short_bio,
+            }),
+        };
 
-        const hasProfileChanges =
-            Object.values(profilePayload).some((value) => value !== undefined) || !!socialProfiles;
+        const validSocialProfiles =
+            dto.socialProfiles?.filter(
+                (sp) =>
+                    sp.orderId !== undefined &&
+                    sp.platformName?.trim() &&
+                    sp.platformLink?.trim(),
+            ) ?? [];
 
         await this.prisma.$transaction(async (tx) => {
+            // User update
             if (Object.keys(userPayload).length) {
                 await tx.user.update({
                     where: { id: userId },
                     data: userPayload,
-                    omit: { password: true },
                 });
             }
 
-            if (hasProfileChanges) {
-                const profileExists = await tx.profile.findUnique({ where: { user_id: userId } });
+            const profileExists = await tx.profile.findUnique({
+                where: { user_id: userId },
+            });
 
-                if (profileExists) {
-                    await tx.profile.update({
-                        where: { user_id: userId },
-                        data: {
-                            ...profilePayload,
-                            ...(socialProfiles
-                                ? {
-                                      socialProfiles: {
-                                          deleteMany: {},
-                                          create: socialProfiles,
-                                      },
-                                  }
-                                : {}),
+            if (profileExists) {
+                await tx.profile.update({
+                    where: { user_id: userId },
+                    data: {
+                        ...profilePayload,
+                        ...(dto.socialProfiles
+                            ? {
+                                socialProfiles: {
+                                    deleteMany: {}, // old remove
+                                    create: validSocialProfiles,
+                                },
+                            }
+                            : {}),
+                    },
+                });
+            } else {
+                await tx.profile.create({
+                    data: {
+                        user_id: userId,
+                        ...profilePayload,
+                        socialProfiles: {
+                            create: validSocialProfiles,
                         },
-                    });
-                } else {
-                    await tx.profile.create({
-                        data: {
-                            user_id: userId,
-                            ...profilePayload,
-                            ...(socialProfiles
-                                ? {
-                                      socialProfiles: {
-                                          create: socialProfiles,
-                                      },
-                                  }
-                                : {}),
-                        },
-                    });
-                }
+                    },
+                });
             }
         });
 
         return this.findMe(userId);
     }
+
 
     async findAllArtist({ page = 1, limit = 10, filter, search }: FindArtistDto) {
         const skip = (page - 1) * limit;
@@ -358,12 +366,12 @@ export class UsersService {
                 const avgA =
                     a.ReviewsReceived.length > 0
                         ? a.ReviewsReceived.reduce((sum, r) => sum + r.rating, 0) /
-                          a.ReviewsReceived.length
+                        a.ReviewsReceived.length
                         : 0;
                 const avgB =
                     b.ReviewsReceived.length > 0
                         ? b.ReviewsReceived.reduce((sum, r) => sum + r.rating, 0) /
-                          b.ReviewsReceived.length
+                        b.ReviewsReceived.length
                         : 0;
                 return avgB - avgA;
             });
@@ -401,6 +409,20 @@ export class UsersService {
         };
     }
 
+    // async findOne(id: string) {
+    //     const user = await this.prisma.user.findUnique({
+    //         where: {
+    //             id,
+    //         },
+    //         include: {
+    //             services: true,
+    //             ReviewsReceived: true,
+    //             profile: true,
+    //         },
+    //     });
+    //     return user;
+    // }
+
     async findOne(id: string) {
         const user = await this.prisma.user.findUnique({
             where: {
@@ -408,8 +430,26 @@ export class UsersService {
             },
             include: {
                 services: true,
-                ReviewsReceived: true,
-                profile: true,
+                profile: {
+                    include: {
+                        socialProfiles: true,
+                    }
+                },
+
+                ReviewsReceived: {
+                    include: {
+                        reviewer: {
+                            select: {
+                                id: true,
+                                full_name: true,
+                                profilePhoto: true,
+                            },
+                        },
+                    },
+                    orderBy: {
+                        createdAt: 'desc',
+                    },
+                },
             },
         });
         if (!user) throw new NotFoundException("User not found");

@@ -5,7 +5,7 @@ import { CreateSocialServiceDto, UpdateSocialServiceDto } from "./dto/create-soc
 
 @Injectable()
 export class SocialServiceService {
-    constructor(private prisma: PrismaService) {}
+    constructor(private prisma: PrismaService) { }
 
     async create(dto: CreateSocialServiceDto) {
         const artist = await this.prisma.user.findUnique({

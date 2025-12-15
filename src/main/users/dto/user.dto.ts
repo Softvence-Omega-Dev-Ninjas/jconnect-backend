@@ -1,6 +1,6 @@
 import { ApiHideProperty, ApiProperty, ApiPropertyOptional } from "@nestjs/swagger";
 import { AuthProvider, Role, ValidationType } from "@prisma/client";
-import { Expose, Transform, Type } from "class-transformer";
+import { Type } from "class-transformer";
 import {
     IsArray,
     IsBoolean,
@@ -211,14 +211,29 @@ export class UpdateUserDto {
     @IsDateString()
     token_expires_at?: Date;
 }
+export class SocialProfileInput {
+    @ApiProperty({ example: 1 })
+    @Type(() => Number)
+    @IsInt()
+    orderId: number;
+
+    @ApiProperty({ example: "Instagram" })
+    @IsString()
+    platformName: string;
+
+    @ApiProperty({ example: "https://instagram.com/johnartist" })
+    @IsString()
+    platformLink: string;
+}
+
 
 export class UpdateMeDto {
-    @ApiProperty({ example: "John Doe", required: false })
+    @ApiPropertyOptional({ example: "John Doe" })
     @IsOptional()
     @IsString()
     full_name?: string;
 
-    @ApiProperty({ example: "+8801700000000", required: false })
+    @ApiPropertyOptional({ example: "+8801700000000" })
     @IsOptional()
     @IsString()
     phone?: string;
@@ -233,51 +248,20 @@ export class UpdateMeDto {
     @IsString()
     profile_image_url?: string;
 
-    @ApiProperty({ example: "DJ / Producer", required: false })
+    @ApiPropertyOptional({ example: "DJ / Producer" })
     @IsOptional()
     @IsString()
     short_bio?: string;
 
-    @ApiPropertyOptional({ type: () => [SocialProfileInput] })
+    @ApiPropertyOptional({ type: [SocialProfileInput] })
     @IsOptional()
     @IsArray()
     @ValidateNested({ each: true })
     @Type(() => SocialProfileInput)
-    @Transform(({ value }) => {
-        if (value === undefined || value === null || value === "") return undefined;
-        // If already an array, keep it
-        if (Array.isArray(value)) return value;
-        // Swagger UI sends JSON string for multipart; try to parse
-        if (typeof value === "string") {
-            try {
-                const parsed = JSON.parse(value);
-                return Array.isArray(parsed) ? parsed : [parsed];
-            } catch (e) {
-                return value; // let validator handle invalid JSON
-            }
-        }
-        return value;
-    })
     socialProfiles?: SocialProfileInput[];
 }
 
-export class SocialProfileInput {
-    @ApiProperty({ example: 1 })
-    @Expose()
-    @Type(() => Number)
-    @IsInt()
-    orderId: number;
 
-    @ApiProperty({ example: "Instagram" })
-    @Expose()
-    @IsString()
-    platformName: string;
-
-    @ApiProperty({ example: "https://instagram.com/johnartist" })
-    @Expose()
-    @IsString()
-    platformLink: string;
-}
 
 export class reset_password {
     @ApiProperty({ example: "xxxxxx", required: true })
