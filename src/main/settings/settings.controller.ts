@@ -7,10 +7,9 @@ import { Announcement } from "./dto/announcement.dto";
 import { UpdateSettingDto } from "./dto/create-dto";
 
 @ApiTags("settings")
-
 @Controller("settings")
 export class SettingsController {
-    constructor(private readonly settingsService: SettingsService) { }
+    constructor(private readonly settingsService: SettingsService) {}
     @ApiBearerAuth()
     @ValidateUser()
     @Get()

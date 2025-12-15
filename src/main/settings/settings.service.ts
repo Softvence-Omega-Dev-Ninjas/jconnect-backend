@@ -7,7 +7,7 @@ import { UpdateSettingDto } from "./dto/create-dto";
 
 @Injectable()
 export class SettingsService {
-    constructor(private prisma: PrismaService) { }
+    constructor(private prisma: PrismaService) {}
 
     async getSettings() {
         const settings = await this.prisma.setting.findUnique({
@@ -60,7 +60,7 @@ export class SettingsService {
                 title: dto.title,
                 description: dto.description,
             },
-        })
+        });
 
         return successResponse(announcement, "Announcement created");
     }
@@ -97,5 +97,4 @@ export class SettingsService {
         });
         return successResponse(announcement, "Announcement updated");
     }
-
 }
