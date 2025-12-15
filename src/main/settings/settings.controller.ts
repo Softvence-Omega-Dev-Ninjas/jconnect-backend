@@ -2,7 +2,7 @@ import { Body, Controller, Get, Patch } from "@nestjs/common";
 import { ApiBearerAuth, ApiOperation, ApiTags } from "@nestjs/swagger";
 import { SettingsService } from "./settings.service";
 
-import { ValidateAdmin, ValidateUser } from "@common/jwt/jwt.decorator";
+import { GetUser, ValidateAdmin, ValidateUser } from "@common/jwt/jwt.decorator";
 import { UpdateSettingDto } from "./dto/create-dto";
 
 @ApiTags("settings")
@@ -23,5 +23,13 @@ export class SettingsController {
     @ApiOperation({ summary: "Update platform settings" })
     update(@Body() dto: UpdateSettingDto) {
         return this.settingsService.updateSettings(dto);
+    }
+
+    // ----------------- notification settings ---------------------
+    @ValidateAdmin()
+    @Patch("notification-toggle-settings-only-admin")
+    @ApiOperation({ summary: "Update notification settings for only admin" })
+    updateNotificationSettingsToggleAdmin(@GetUser("userId") userId: string) {
+        return this.settingsService.updateNotificationSettingsToggleAdmin(userId);
     }
 }

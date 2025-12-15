@@ -1,3 +1,4 @@
+import { HandleError } from "@common/error/handle-error.decorator";
 import { Injectable, NotFoundException } from "@nestjs/common";
 import { PrismaService } from "src/lib/prisma/prisma.service";
 import { UpdateSettingDto } from "./dto/create-dto";
@@ -17,8 +18,7 @@ export class SettingsService {
     }
 
     async updateSettings(dto: UpdateSettingDto) {
-        await this.getSettings(); // exists check
-
+        await this.getSettings();
         return this.prisma.setting.update({
             where: { id: "platform_settings" },
             data: {
@@ -26,5 +26,27 @@ export class SettingsService {
                 minimum_payout: dto.minimum_payout ?? undefined,
             },
         });
+    }
+
+    // ----------------------------- NOTIFICATION SETTINGS -----------------------------
+    @HandleError("Failed to update notification settings")
+    async updateNotificationSettingsToggleAdmin(userId: string) {
+        const user = await this.prisma.user.findUnique({
+            where: {
+                id: userId,
+            },
+            include: {
+                notificationToggles: true,
+            },
+        });
+
+        if (!user) {
+            throw new NotFoundException("Admin user not found");
+        }
+
+        return {
+            message: "Notification settings updated successfully",
+            data: user.notificationToggles,
+        };
     }
 }
