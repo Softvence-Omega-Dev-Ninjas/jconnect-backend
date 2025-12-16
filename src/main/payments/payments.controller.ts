@@ -255,4 +255,17 @@ This endpoint is used by Admin/Buyer only.
 
         return this.paymentService.transferToSeller(user.userId, body.amount);
     }
+
+    @ApiBearerAuth()
+    @ValidateUser()
+    @Get("earnings-payouts")
+    @ApiOperation({ summary: "Get earnings and payouts data for individual user" })
+    @ApiResponse({
+        status: 200,
+        description:
+            "Returns monthly earnings, total earnings, pending clearance, and available to withdraw",
+    })
+    async getEarningsAndPayouts(@GetUser() user: any) {
+        return this.paymentService.getEarningsAndPayouts(user.userId);
+    }
 }
