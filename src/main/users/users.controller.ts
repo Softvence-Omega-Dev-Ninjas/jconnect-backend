@@ -5,6 +5,7 @@ import {
     ValidateUser,
 } from "@common/jwt/jwt.decorator";
 
+import { AwsService } from "@main/aws/aws.service";
 import {
     BadRequestException,
     Body,
@@ -34,7 +35,6 @@ import { Role } from "@prisma/client";
 import { FindArtistDto } from "./dto/findArtist.dto";
 import { reset_password, UpdateMeDto, UpdateUserDto } from "./dto/user.dto";
 import { UsersService } from "./users.service";
-import { AwsService } from "@main/aws/aws.service";
 
 @ApiTags("Users")
 @Controller("users")
@@ -67,18 +67,10 @@ export class UsersController {
                 phone: { type: "string" },
                 short_bio: { type: "string" },
                 socialProfiles: {
-                    type: "array",
-                    items: {
-                        type: "object",
-                        properties: {
-                            orderId: { type: "integer", example: 1 },
-                            platformName: { type: "string", example: "Instagram" },
-                            platformLink: {
-                                type: "string",
-                                example: "https://instagram.com/example",
-                            },
-                        },
-                    },
+                    type: "string",
+                    description: "JSON string of social profiles array",
+                    example:
+                        '[{"orderId":1,"platformName":"Instagram","platformLink":"https://instagram.com/example"}]',
                 },
             },
         },
@@ -96,16 +88,68 @@ export class UsersController {
     )
     async updateMe(
         @GetUser() user: any,
-        @Body() updateMeDto: UpdateMeDto,
+        @Body() body: any,
         @UploadedFile() file?: Express.Multer.File,
     ) {
-        delete (updateMeDto as any).profilePhoto;
+        console.log("Raw body received:", body);
+
+        // Create proper DTO
+        const updateMeDto: UpdateMeDto = {
+            full_name: body.full_name,
+            phone: body.phone,
+            short_bio: body.short_bio,
+            profile_image_url: body.profile_image_url,
+        };
+
+        // Handle socialProfiles
+        if (body.socialProfiles) {
+            try {
+                let socialProfiles;
+
+                // Parse if string
+                if (typeof body.socialProfiles === "string") {
+                    socialProfiles = JSON.parse(body.socialProfiles);
+                } else {
+                    socialProfiles = body.socialProfiles;
+                }
+
+                // Validate and filter
+                if (Array.isArray(socialProfiles)) {
+                    const validProfiles = socialProfiles.filter(
+                        (sp) =>
+                            sp &&
+                            sp.platformName &&
+                            sp.platformLink &&
+                            sp.platformName.trim() !== "" &&
+                            sp.platformLink.trim() !== "",
+                    );
+
+                    updateMeDto.socialProfiles =
+                        validProfiles.length > 0 ? validProfiles : undefined;
+                }
+            } catch (error) {
+                console.error("Error parsing socialProfiles:", error);
+                updateMeDto.socialProfiles = undefined;
+            }
+        }
+
+        console.log("Processed DTO:", updateMeDto);
 
         if (file) {
             const uploaded = await this.awsservice.upload(file);
             updateMeDto.profilePhoto = uploaded.url;
         }
 
+        return this.usersService.updateMe(user.userId, updateMeDto);
+    }
+
+    @ApiBearerAuth()
+    @ValidateUser()
+    @Patch("me/json")
+    @ApiOperation({ summary: "Update my account and profile (JSON only, no file upload)" })
+    @ApiBody({ type: UpdateMeDto })
+    async updateMeJson(@GetUser() user: any, @Body() updateMeDto: UpdateMeDto) {
+        console.log("JSON body received:", updateMeDto);
         return this.usersService.updateMe(user.userId, updateMeDto);
     }
 

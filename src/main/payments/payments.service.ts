@@ -11,7 +11,8 @@ import { OrderStatus, Role } from "@prisma/client";
 import { MailService } from "src/lib/mail/mail.service";
 import { PrismaService } from "src/lib/prisma/prisma.service";
 import Stripe from "stripe";
-import { ConfirmSetupIntentDto, CreateSetupIntentDto } from "./dto/confirm-setup-intent.dto";
+import { ConfirmSetupIntentDto } from "./dto/confirm-setup-intent.dto";
+import { PaginationDto } from "./dto/pagination.dto";
 
 @Injectable()
 export class PaymentService {
@@ -116,7 +117,101 @@ export class PaymentService {
         return withdrawal_history;
     }
 
-    // // if you dont add payment methode then use session for create link for payment
+    // All transaction history
+    async allTransactionHistory(paginationDto: PaginationDto) {
+        const { page = 1, limit = 10, status, month, sortOrder = "desc" } = paginationDto;
+
+        const skip = (page - 1) * limit;
+        const validStatuses = [
+            "PENDING",
+            "IN_PROGRESS",
+            "PROOF_SUBMITTED",
+            "CANCELLED",
+            "RELEASED",
+        ];
+        const monthNames = [
+            "January",
+            "February",
+            "March",
+            "April",
+            "May",
+            "June",
+            "July",
+            "August",
+            "September",
+            "October",
+            "November",
+            "December",
+        ];
+
+        // Build where clause for filtering
+        const where: any = {};
+
+        if (status) {
+            if (!validStatuses.includes(status)) {
+                throw new BadRequestException(
+                    `Invalid status. Valid statuses are: ${validStatuses.join(", ")}`,
+                );
+            }
+            where.status = status;
+        }
+
+        if (month) {
+            const monthIndex = monthNames.indexOf(month);
+            if (monthIndex === -1) {
+                throw new BadRequestException(
+                    `Invalid month. Valid months are: ${monthNames.join(", ")}`,
+                );
+            }
+
+            const currentYear = new Date().getFullYear();
+            const startDate = new Date(currentYear, monthIndex, 1);
+            const endDate = new Date(currentYear, monthIndex + 1, 0, 23, 59, 59);
+
+            where.createdAt = {
+                gte: startDate,
+                lte: endDate,
+            };
+        }
+
+        const orderBy: any = { createdAt: sortOrder };
+
+        const [transactions, total] = await this.prisma.$transaction([
+            this.prisma.order.findMany({
+                skip,
+                take: limit,
+                where,
+                orderBy,
+                include: {
+                    seller: {
+                        select: {
+                            full_name: true,
+                            email: true,
+                            id: true,
+                        },
+                    },
+                },
+            }),
+            this.prisma.order.count({ where }),
+        ]);
+
+        const lastPage = Math.ceil(total / limit);
+
+        return {
+            success: true,
+            message: "Successfully fetched transactions",
+            data: transactions,
+            meta: {
+                total,
+                page,
+                limit,
+                lastPage,
+                hasNext: page < lastPage,
+                hasPrev: page > 1,
+            },
+        };
+    }
+
     // async createCheckoutSession(userFromReq: any, serviceId: string, frontendUrl: string) {
     //     const user: any = await this.prisma.user.findUnique({ where: { id: userFromReq?.userId } });
     //     // console.log("ami to asol user", user, userFromReq.userId);
@@ -921,5 +1016,125 @@ export class PaymentService {
     private async findServiceCreatorId(serviceId: string) {
         const svc = await this.prisma.service.findUnique({ where: { id: serviceId } });
         return svc?.creatorId ?? "unknown";
+    }
+
+    async getEarningsAndPayouts(userId: string) {
+        const user = await this.prisma.user.findUnique({
+            where: { id: userId },
+            select: { withdrawn_amount: true },
+        });
+
+        if (!user) {
+            throw new NotFoundException("User not found");
+        }
+
+        const totalReleased = await this.prisma.order.aggregate({
+            where: { sellerId: userId, status: OrderStatus.RELEASED },
+            _sum: { seller_amount: true },
+        });
+
+        const totalCancelled = await this.prisma.order.aggregate({
+            where: { sellerId: userId, status: OrderStatus.CANCELLED },
+            _sum: { seller_amount: true },
+        });
+
+        const onlyPending = await this.prisma.order.aggregate({
+            where: {
+                sellerId: userId,
+                status: OrderStatus.PENDING,
+            },
+            _sum: { seller_amount: true },
+        });
+
+        const totalEarnings =
+            (totalReleased._sum.seller_amount || 0) -
+            (totalCancelled._sum.seller_amount || 0) -
+            (onlyPending._sum.seller_amount || 0);
+
+        const pendingOrders = await this.prisma.order.aggregate({
+            where: {
+                sellerId: userId,
+                status: {
+                    in: [OrderStatus.IN_PROGRESS, OrderStatus.PROOF_SUBMITTED],
+                },
+            },
+            _sum: { seller_amount: true },
+        });
+
+        const pendingClearance = pendingOrders._sum.seller_amount || 0;
+
+        const availableToWithdraw = totalEarnings - pendingClearance - (user.withdrawn_amount || 0);
+
+        const sixMonthsAgo = new Date();
+        sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
+        sixMonthsAgo.setDate(1);
+        sixMonthsAgo.setHours(0, 0, 0, 0);
+
+        const monthlyOrders = await this.prisma.order.findMany({
+            where: {
+                sellerId: userId,
+                status: OrderStatus.RELEASED,
+                createdAt: {
+                    gte: sixMonthsAgo,
+                },
+            },
+            select: {
+                seller_amount: true,
+                createdAt: true,
+            },
+        });
+
+        const monthlyEarningsMap = new Map<string, number>();
+
+        const monthNames = [
+            "JAN",
+            "FEB",
+            "MAR",
+            "APR",
+            "MAY",
+            "JUN",
+            "JUL",
+            "AUG",
+            "SEP",
+            "OCT",
+            "NOV",
+            "DEC",
+        ];
+        const monthlyData: { month: string; amount: number }[] = [];
+
+        for (let i = 5; i >= 0; i--) {
+            const date = new Date();
+            date.setMonth(date.getMonth() - i);
+            const monthKey = `${date.getFullYear()}-${date.getMonth()}`;
+            const monthName = monthNames[date.getMonth()];
+            monthlyEarningsMap.set(monthKey, 0);
+            monthlyData.push({ month: monthName, amount: 0 });
+        }
+
+        monthlyOrders.forEach((order) => {
+            const date = new Date(order.createdAt);
+            const monthKey = `${date.getFullYear()}-${date.getMonth()}`;
+            const currentAmount = monthlyEarningsMap.get(monthKey) || 0;
+            monthlyEarningsMap.set(monthKey, currentAmount + (order.seller_amount || 0));
+        });
+
+        let index = 0;
+        for (let i = 5; i >= 0; i--) {
+            const date = new Date();
+            date.setMonth(date.getMonth() - i);
+            const monthKey = `${date.getFullYear()}-${date.getMonth()}`;
+            const amount = monthlyEarningsMap.get(monthKey) || 0;
+            monthlyData[index].amount = Math.round(amount / 100);
+            index++;
+        }
+
+        const monthlyEarnings = monthlyData;
+
+        return {
+            monthlyEarnings,
+            totalEarnings: Math.round(totalEarnings / 100),
+            pendingClearance: Math.round(pendingClearance / 100),
+            availableToWithdraw: Math.round(Math.max(0, availableToWithdraw) / 100),
+        };
     }
 }

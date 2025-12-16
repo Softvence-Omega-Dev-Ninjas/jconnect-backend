@@ -1,4 +1,4 @@
-import { GetUser, ValidateUser } from "@common/jwt/jwt.decorator";
+import { GetUser, ValidateSuperAdmin, ValidateUser } from "@common/jwt/jwt.decorator";
 import {
     BadRequestException,
     Body,
@@ -10,6 +10,7 @@ import {
     HttpStatus,
     Param,
     Post,
+    Query,
     Req,
 } from "@nestjs/common";
 import {
@@ -18,10 +19,12 @@ import {
     ApiExcludeEndpoint,
     ApiOperation,
     ApiParam,
+    ApiQuery,
     ApiResponse,
     ApiTags,
 } from "@nestjs/swagger";
 import { ConfirmSetupIntentDto } from "./dto/confirm-setup-intent.dto";
+import { PaginationDto } from "./dto/pagination.dto";
 import { WithdrawDto } from "./dto/withdraw.dto";
 import { PaymentService } from "./payments.service";
 
@@ -81,10 +84,66 @@ export class PaymentController {
 
     @ApiBearerAuth()
     @ValidateUser()
-    @Get("WithDrawal-history")
+    @Get("my-withdrawal-history")
     @ApiOperation({ summary: "my withdrawal history" })
     async withdrawalHistory(@GetUser() user: any) {
         return this.paymentService.withdrawalHistory(user);
+    }
+
+    // all transaction history
+    @ApiBearerAuth()
+    @ValidateSuperAdmin()
+    @Get("all-transaction-history")
+    @ApiOperation({ summary: "all transaction history for admin" })
+    @ApiQuery({
+        name: "page",
+        required: false,
+        type: Number,
+        description: "Page number",
+        example: 1,
+    })
+    @ApiQuery({
+        name: "limit",
+        required: false,
+        type: Number,
+        description: "Items per page",
+        example: 10,
+    })
+    @ApiQuery({
+        name: "status",
+        required: false,
+        enum: ["PENDING", "IN_PROGRESS", "PROOF_SUBMITTED", "CANCELLED", "RELEASED"],
+        description: "Filter by order status",
+    })
+    @ApiQuery({
+        name: "month",
+        required: false,
+        enum: [
+            "January",
+            "February",
+            "March",
+            "April",
+            "May",
+            "June",
+            "July",
+            "August",
+            "September",
+            "October",
+            "November",
+            "December",
+        ],
+        description: "Filter by month name",
+        example: "December",
+    })
+    @ApiQuery({
+        name: "sortOrder",
+        required: false,
+        enum: ["asc", "desc"],
+        description: "Sort order (ascending or descending)",
+        example: "desc",
+    })
+    async allTransactionHistory(@Query() paginationDto: PaginationDto) {
+        return this.paymentService.allTransactionHistory(paginationDto);
     }
 
     // ----------------------------
@@ -195,5 +254,18 @@ This endpoint is used by Admin/Buyer only.
         }
 
         return this.paymentService.transferToSeller(user.userId, body.amount);
+    }
+
+    @ApiBearerAuth()
+    @ValidateUser()
+    @Get("earnings-payouts")
+    @ApiOperation({ summary: "Get earnings and payouts data for individual user" })
+    @ApiResponse({
+        status: 200,
+        description:
+            "Returns monthly earnings, total earnings, pending clearance, and available to withdraw",
+    })
+    async getEarningsAndPayouts(@GetUser() user: any) {
+        return this.paymentService.getEarningsAndPayouts(user.userId);
     }
 }

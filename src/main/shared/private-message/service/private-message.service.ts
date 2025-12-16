@@ -331,4 +331,107 @@ export class PrivateChatService {
             where: { id: conversationId },
         });
     }
+
+    /**
+     * Get all users who have chatted with current user
+     * Includes unread message count and last message info
+     */
+    @HandleError("Failed to get users who chatted with me", "PRIVATE_CHAT")
+    async getAllUsersChatWithMe(userId: string) {
+        const conversations = await this.prisma.privateConversation.findMany({
+            where: {
+                OR: [{ user1Id: userId }, { user2Id: userId }],
+            },
+            include: {
+                lastMessage: {
+                    include: {
+                        sender: {
+                            select: {
+                                id: true,
+                                profilePhoto: true,
+                                full_name: true,
+                            },
+                        },
+                        service: true,
+                        statuses: {
+                            where: {
+                                userId: userId,
+                            },
+                            select: {
+                                status: true,
+                            },
+                        },
+                    },
+                },
+                user1: {
+                    select: {
+                        id: true,
+                        email: true,
+                        profilePhoto: true,
+                        full_name: true,
+                    },
+                },
+                user2: {
+                    select: {
+                        id: true,
+                        email: true,
+                        profilePhoto: true,
+                        full_name: true,
+                    },
+                },
+                messages: {
+                    where: {
+                        senderId: {
+                            not: userId, // Messages sent TO me
+                        },
+                        statuses: {
+                            some: {
+                                userId: userId,
+                                status: {
+                                    not: "READ",
+                                },
+                            },
+                        },
+                    },
+                    select: {
+                        id: true,
+                    },
+                },
+            },
+            orderBy: { updatedAt: "desc" },
+        });
+
+        const formattedUsers = conversations.map((conversation) => {
+            const otherUser =
+                conversation.user1Id === userId ? conversation.user2 : conversation.user1;
+
+            const unreadCount = conversation.messages.length;
+
+            const lastMessageStatus = conversation.lastMessage?.statuses?.[0]?.status || null;
+            const isLastMessageRead = lastMessageStatus === "READ";
+
+            return {
+                userId: otherUser.id,
+                email: otherUser.email,
+                fullName: otherUser.full_name,
+                profilePhoto: otherUser.profilePhoto,
+                conversationId: conversation.id,
+                unreadCount,
+                lastMessage: conversation.lastMessage
+                    ? {
+                          id: conversation.lastMessage.id,
+                          content: conversation.lastMessage.content,
+                          createdAt: conversation.lastMessage.createdAt,
+                          senderId: conversation.lastMessage.senderId,
+                          sender: conversation.lastMessage.sender,
+                          service: conversation.lastMessage.service,
+                          isRead: isLastMessageRead,
+                      }
+                    : null,
+                updatedAt: conversation.updatedAt,
+            };
+        });
+
+        return successResponse(formattedUsers, "Users who chatted with you fetched successfully");
+    }
 }

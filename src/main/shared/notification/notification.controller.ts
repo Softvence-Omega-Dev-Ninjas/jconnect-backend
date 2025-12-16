@@ -67,4 +67,6 @@ export class NotificationSettingController {
     async getUnreadCount(@GetUser("userId") userId: string): Promise<TResponse<any>> {
         return await this.notificationSettingService.getUnreadCount(userId);
     }
+
+    // ------------------- get all user with chant me -----
 }

@@ -1,5 +1,6 @@
 import { AwsService } from "@main/aws/aws.service";
-import { Module } from "@nestjs/common";
+import { MiddlewareConsumer, Module, NestModule } from "@nestjs/common";
+import { MultipartParserMiddleware } from "@common/middleware/multipart-parser.middleware";
 import { UsersController } from "./users.controller";
 import { UsersService } from "./users.service";
 
@@ -7,4 +8,8 @@ import { UsersService } from "./users.service";
     controllers: [UsersController],
     providers: [UsersService, AwsService],
 })
-export class UsersModule {}
+export class UsersModule implements NestModule {
+    configure(consumer: MiddlewareConsumer) {
+        consumer.apply(MultipartParserMiddleware).forRoutes("users/me");
+    }
+}
