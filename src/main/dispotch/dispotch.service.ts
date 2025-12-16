@@ -16,7 +16,7 @@ export class DisputeService {
     constructor(
         private prisma: PrismaService,
         private awsService: AwsService,
-    ) { }
+    ) {}
 
     async create(userId: string, dto: CreateDisputeDto, files?: Express.Multer.File[]) {
         // 1️⃣ Check if order exists and belongs to user
