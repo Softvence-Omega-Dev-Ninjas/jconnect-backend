@@ -20,6 +20,8 @@ export class AdminDashboardStatsService {
             lastMonthRevenueObj,
             totalRefundObj,
             lastMonthRefundObj,
+            stripePayoutsObj,
+            lastMonthStripePayoutsObj,
         ] = await Promise.all([
             this.prisma.user.count(),
 
@@ -70,10 +72,35 @@ export class AdminDashboardStatsService {
                 },
                 _sum: { amount: true },
             }),
+
+            this.prisma.order.findMany({
+                where: { status: "RELEASED" },
+                select: { amount: true, stripeFee: true, platformFee: true },
+            }),
+
+            this.prisma.order.findMany({
+                where: {
+                    status: "RELEASED",
+                    createdAt: {
+                        gte: startOfLastMonth,
+                        lte: endOfLastMonth,
+                    },
+                },
+                select: { amount: true, stripeFee: true, platformFee: true },
+            }),
         ]);
 
         const calcPercentage = (current: number, last: number) =>
             last === 0 ? 100 : ((current - last) / last) * 100;
+
+        const stripePayoutsTotal = stripePayoutsObj.reduce(
+            (sum, order) => sum + (order.amount - order.stripeFee - order.platformFee),
+            0,
+        );
+        const lastMonthStripePayoutsTotal = lastMonthStripePayoutsObj.reduce(
+            (sum, order) => sum + (order.amount - order.stripeFee - order.platformFee),
+            0,
+        );
 
         return {
             totalUser,
@@ -89,6 +116,11 @@ export class AdminDashboardStatsService {
             refundPercentage: calcPercentage(
                 totalRefundObj._sum.amount || 0,
                 lastMonthRefundObj._sum.amount || 0,
+            ),
+            stripePayouts: stripePayoutsTotal,
+            stripePayoutsPercentage: calcPercentage(
+                stripePayoutsTotal,
+                lastMonthStripePayoutsTotal,
             ),
         };
     }
