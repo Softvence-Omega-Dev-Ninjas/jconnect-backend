@@ -243,38 +243,15 @@ export class UpdateMeDto {
     @IsArray()
     @ValidateNested({ each: true })
     @Type(() => SocialProfileInput)
-    @Transform(({ value }) => {
-        if (value === undefined || value === null || value === "") return undefined;
-        // If already an array, keep it
-        if (Array.isArray(value)) return value;
-        // Swagger UI sends JSON string for multipart; try to parse
-        if (typeof value === "string") {
-            try {
-                const parsed = JSON.parse(value);
-                return Array.isArray(parsed) ? parsed : [parsed];
-            } catch (e) {
-                return value; // let validator handle invalid JSON
-            }
-        }
-        return value;
-    })
     socialProfiles?: SocialProfileInput[];
 }
 
 export class SocialProfileInput {
-    @ApiProperty({ example: 1 })
-    @Expose()
-    @Type(() => Number)
-    @IsInt()
-    orderId: number;
-
     @ApiProperty({ example: "Instagram" })
-    @Expose()
     @IsString()
     platformName: string;
 
     @ApiProperty({ example: "https://instagram.com/johnartist" })
-    @Expose()
     @IsString()
     platformLink: string;
 }
