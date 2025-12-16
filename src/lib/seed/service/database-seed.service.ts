@@ -1,5 +1,6 @@
 import { Injectable } from "@nestjs/common";
 import chalk from "chalk";
+import { ServiceType } from "@prisma/client";
 import { PrismaService } from "src/lib/prisma/prisma.service";
 import { UtilsService } from "src/lib/utils/utils.service";
 
@@ -178,7 +179,7 @@ export class DatabaseSeedService {
             this.prisma.service.create({
                 data: {
                     serviceName: "Instagram Shoutout",
-                    serviceType: "Social Post",
+                    serviceType: ServiceType.SOCIAL_POST,
                     description: "Professional Instagram shoutout",
                     price: 50.0,
                     creatorId: users[0].id,
@@ -188,7 +189,7 @@ export class DatabaseSeedService {
             this.prisma.service.create({
                 data: {
                     serviceName: "TikTok Video",
-                    serviceType: "Social Post",
+                    serviceType: ServiceType.SOCIAL_POST,
                     description: "Custom TikTok video",
                     price: 100.0,
                     creatorId: users[1].id,
