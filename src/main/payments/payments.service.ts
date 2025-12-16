@@ -11,7 +11,8 @@ import { OrderStatus, Role } from "@prisma/client";
 import { MailService } from "src/lib/mail/mail.service";
 import { PrismaService } from "src/lib/prisma/prisma.service";
 import Stripe from "stripe";
-import { ConfirmSetupIntentDto, CreateSetupIntentDto } from "./dto/confirm-setup-intent.dto";
+import { ConfirmSetupIntentDto } from "./dto/confirm-setup-intent.dto";
+import { PaginationDto } from "./dto/pagination.dto";
 
 @Injectable()
 export class PaymentService {
@@ -116,7 +117,101 @@ export class PaymentService {
         return withdrawal_history;
     }
 
-    // // if you dont add payment methode then use session for create link for payment
+    // All transaction history
+    async allTransactionHistory(paginationDto: PaginationDto) {
+        const { page = 1, limit = 10, status, month, sortOrder = "desc" } = paginationDto;
+
+        const skip = (page - 1) * limit;
+        const validStatuses = [
+            "PENDING",
+            "IN_PROGRESS",
+            "PROOF_SUBMITTED",
+            "CANCELLED",
+            "RELEASED",
+        ];
+        const monthNames = [
+            "January",
+            "February",
+            "March",
+            "April",
+            "May",
+            "June",
+            "July",
+            "August",
+            "September",
+            "October",
+            "November",
+            "December",
+        ];
+
+        // Build where clause for filtering
+        const where: any = {};
+
+        if (status) {
+            if (!validStatuses.includes(status)) {
+                throw new BadRequestException(
+                    `Invalid status. Valid statuses are: ${validStatuses.join(", ")}`,
+                );
+            }
+            where.status = status;
+        }
+
+        if (month) {
+            const monthIndex = monthNames.indexOf(month);
+            if (monthIndex === -1) {
+                throw new BadRequestException(
+                    `Invalid month. Valid months are: ${monthNames.join(", ")}`,
+                );
+            }
+
+            const currentYear = new Date().getFullYear();
+            const startDate = new Date(currentYear, monthIndex, 1);
+            const endDate = new Date(currentYear, monthIndex + 1, 0, 23, 59, 59);
+
+            where.createdAt = {
+                gte: startDate,
+                lte: endDate,
+            };
+        }
+
+        const orderBy: any = { createdAt: sortOrder };
+
+        const [transactions, total] = await this.prisma.$transaction([
+            this.prisma.order.findMany({
+                skip,
+                take: limit,
+                where,
+                orderBy,
+                include: {
+                    seller: {
+                        select: {
+                            full_name: true,
+                            email: true,
+                            id: true,
+                        },
+                    },
+                },
+            }),
+            this.prisma.order.count({ where }),
+        ]);
+
+        const lastPage = Math.ceil(total / limit);
+
+        return {
+            success: true,
+            message: "Successfully fetched transactions",
+            data: transactions,
+            meta: {
+                total,
+                page,
+                limit,
+                lastPage,
+                hasNext: page < lastPage,
+                hasPrev: page > 1,
+            },
+        };
+    }
+
     // async createCheckoutSession(userFromReq: any, serviceId: string, frontendUrl: string) {
     //     const user: any = await this.prisma.user.findUnique({ where: { id: userFromReq?.userId } });
     //     // console.log("ami to asol user", user, userFromReq.userId);
