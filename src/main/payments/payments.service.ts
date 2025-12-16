@@ -23,7 +23,7 @@ export class PaymentService {
         @Inject("STRIPE_CLIENT")
         private readonly stripe: Stripe,
         private readonly mail: MailService,
-    ) {}
+    ) { }
 
     async createCustomerID(user: any) {
         const customers = await this.stripe.customers.create({
@@ -199,7 +199,7 @@ export class PaymentService {
 
         return {
             success: true,
-            message: "Success fetching transactions",
+            message: "Successfully fetched transactions",
             data: transactions,
             meta: {
                 total,
