@@ -11,7 +11,7 @@ export class UsersService {
     constructor(
         private prisma: PrismaService,
         private utils: UtilsService,
-    ) { }
+    ) {}
 
     async create(Userdata: CreateUserDto) {
         const { password, ...users } = Userdata;
@@ -145,8 +145,8 @@ export class UsersService {
             include: {
                 profile: {
                     include: {
-                        socialProfiles: true
-                    }
+                        socialProfiles: true,
+                    },
                 },
                 // devices: true,
                 services: true,
@@ -235,8 +235,8 @@ export class UsersService {
     }
 
     async updateMe(userId: string, dto: UpdateMeDto) {
-        console.log('Received DTO:', JSON.stringify(dto, null, 2));
-        
+        console.log("Received DTO:", JSON.stringify(dto, null, 2));
+
         const existingUser = await this.prisma.user.findUnique({ where: { id: userId } });
         if (!existingUser) throw new NotFoundException("User not found");
 
@@ -253,22 +253,23 @@ export class UsersService {
         };
 
         // Social profiles processing
-        let validSocialProfiles: { orderId: number; platformName: string; platformLink: string }[] = [];
-        
+        let validSocialProfiles: { orderId: number; platformName: string; platformLink: string }[] =
+            [];
+
         if (dto.socialProfiles && Array.isArray(dto.socialProfiles)) {
-            console.log('Processing socialProfiles:', dto.socialProfiles);
-            
-            validSocialProfiles = dto.socialProfiles.map(sp => ({
-                orderId: Number(sp.orderId),
+            console.log("Processing socialProfiles:", dto.socialProfiles);
+
+            validSocialProfiles = dto.socialProfiles.map((sp, index) => ({
+                orderId: index + 1,
                 platformName: String(sp.platformName).trim(),
                 platformLink: String(sp.platformLink).trim(),
             }));
-            
-            console.log('Valid social profiles:', validSocialProfiles);
+
+            console.log("Valid social profiles:", validSocialProfiles);
         }
 
         const hasProfileChanges =
-            Object.values(profilePayload).some((value) => value !== undefined) || 
+            Object.values(profilePayload).some((value) => value !== undefined) ||
             validSocialProfiles.length > 0;
 
         await this.prisma.$transaction(async (tx) => {
@@ -282,9 +283,9 @@ export class UsersService {
 
             // Update or create profile if needed
             if (hasProfileChanges) {
-                const profileExists = await tx.profile.findUnique({ 
+                const profileExists = await tx.profile.findUnique({
                     where: { user_id: userId },
-                    include: { socialProfiles: true }
+                    include: { socialProfiles: true },
                 });
 
                 const profileData = {
@@ -292,7 +293,7 @@ export class UsersService {
                 };
 
                 // Remove undefined values
-                Object.keys(profileData).forEach(key => {
+                Object.keys(profileData).forEach((key) => {
                     if (profileData[key] === undefined) {
                         delete profileData[key];
                     }
@@ -309,17 +310,17 @@ export class UsersService {
                     if (dto.socialProfiles !== undefined) {
                         // Delete existing social profiles
                         await tx.socialProfile.deleteMany({
-                            where: { profileId: userId }
+                            where: { profileId: userId },
                         });
 
                         // Create new social profiles if any
                         if (validSocialProfiles.length > 0) {
-                            console.log('Creating social profiles:', validSocialProfiles);
+                            console.log("Creating social profiles:", validSocialProfiles);
                             await tx.socialProfile.createMany({
-                                data: validSocialProfiles.map(sp => ({
+                                data: validSocialProfiles.map((sp) => ({
                                     ...sp,
-                                    profileId: userId
-                                }))
+                                    profileId: userId,
+                                })),
                             });
                         }
                     }
@@ -335,10 +336,10 @@ export class UsersService {
                     // Create social profiles if any
                     if (validSocialProfiles.length > 0) {
                         await tx.socialProfile.createMany({
-                            data: validSocialProfiles.map(sp => ({
+                            data: validSocialProfiles.map((sp) => ({
                                 ...sp,
-                                profileId: userId
-                            }))
+                                profileId: userId,
+                            })),
                         });
                     }
                 }
@@ -405,12 +406,12 @@ export class UsersService {
                 const avgA =
                     a.ReviewsReceived.length > 0
                         ? a.ReviewsReceived.reduce((sum, r) => sum + r.rating, 0) /
-                        a.ReviewsReceived.length
+                          a.ReviewsReceived.length
                         : 0;
                 const avgB =
                     b.ReviewsReceived.length > 0
                         ? b.ReviewsReceived.reduce((sum, r) => sum + r.rating, 0) /
-                        b.ReviewsReceived.length
+                          b.ReviewsReceived.length
                         : 0;
                 return avgB - avgA;
             });

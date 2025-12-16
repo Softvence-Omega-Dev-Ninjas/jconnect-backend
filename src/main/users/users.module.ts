@@ -10,8 +10,6 @@ import { UsersService } from "./users.service";
 })
 export class UsersModule implements NestModule {
     configure(consumer: MiddlewareConsumer) {
-        consumer
-            .apply(MultipartParserMiddleware)
-            .forRoutes('users/me');
+        consumer.apply(MultipartParserMiddleware).forRoutes("users/me");
     }
 }

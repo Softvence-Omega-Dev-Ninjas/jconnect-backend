@@ -243,74 +243,15 @@ export class UpdateMeDto {
     @IsArray()
     @ValidateNested({ each: true })
     @Type(() => SocialProfileInput)
-    @Transform(({ value }) => {
-        if (value === undefined || value === null || value === "") return undefined;
-
-        // If already an array, filter out empty objects
-        if (Array.isArray(value)) {
-            const filtered = value.filter(item =>
-                item &&
-                typeof item === 'object' &&
-                Object.keys(item).length > 0 &&
-                item.orderId !== undefined &&
-                item.platformName &&
-                item.platformLink
-            );
-            return filtered.length > 0 ? filtered : undefined;
-        }
-
-        // Swagger UI sends JSON string for multipart; try to parse
-        if (typeof value === "string") {
-            try {
-                const parsed = JSON.parse(value);
-                if (Array.isArray(parsed)) {
-                    const filtered = parsed.filter(item =>
-                        item &&
-                        typeof item === 'object' &&
-                        Object.keys(item).length > 0 &&
-                        item.orderId !== undefined &&
-                        item.platformName &&
-                        item.platformLink
-                    );
-                    return filtered.length > 0 ? filtered : undefined;
-                }
-                return parsed && Object.keys(parsed).length > 0 ? [parsed] : undefined;
-            } catch (e) {
-                return undefined;
-            }
-        }
-        return value;
-    })
     socialProfiles?: SocialProfileInput[];
 }
 
 export class SocialProfileInput {
-    @ApiProperty({ example: 1 })
-    @Expose()
-    @Type(() => Number)
-    @Transform(({ value }) => {
-        if (value === undefined || value === null || value === '') return undefined;
-        const num = Number(value);
-        return isNaN(num) ? undefined : num;
-    })
-    @IsInt()
-    orderId: number;
-
     @ApiProperty({ example: "Instagram" })
-    @Expose()
-    @Transform(({ value }) => {
-        if (value === undefined || value === null || value === '') return undefined;
-        return String(value).trim();
-    })
     @IsString()
     platformName: string;
 
     @ApiProperty({ example: "https://instagram.com/johnartist" })
-    @Expose()
-    @Transform(({ value }) => {
-        if (value === undefined || value === null || value === '') return undefined;
-        return String(value).trim();
-    })
     @IsString()
     platformLink: string;
 }
