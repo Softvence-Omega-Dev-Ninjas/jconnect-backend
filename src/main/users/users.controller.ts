@@ -143,15 +143,15 @@ export class UsersController {
         return this.usersService.updateMe(user.userId, updateMeDto);
     }
 
-    @ApiBearerAuth()
-    @ValidateUser()
-    @Patch("me/json")
-    @ApiOperation({ summary: "Update my account and profile (JSON only, no file upload)" })
-    @ApiBody({ type: UpdateMeDto })
-    async updateMeJson(@GetUser() user: any, @Body() updateMeDto: UpdateMeDto) {
-        console.log("JSON body received:", updateMeDto);
-        return this.usersService.updateMe(user.userId, updateMeDto);
-    }
+    // @ApiBearerAuth()
+    // @ValidateUser()
+    // @Patch("me/json")
+    // @ApiOperation({ summary: "Update my account and profile (JSON only, no file upload)" })
+    // @ApiBody({ type: UpdateMeDto })
+    // async updateMeJson(@GetUser() user: any, @Body() updateMeDto: UpdateMeDto) {
+    //     console.log("JSON body received:", updateMeDto);
+    //     return this.usersService.updateMe(user.userId, updateMeDto);
+    // }
 
     @ApiBearerAuth()
     @ValidateUser()

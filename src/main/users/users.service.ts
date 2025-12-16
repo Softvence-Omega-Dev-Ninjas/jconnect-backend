@@ -11,7 +11,7 @@ export class UsersService {
     constructor(
         private prisma: PrismaService,
         private utils: UtilsService,
-    ) {}
+    ) { }
 
     async create(Userdata: CreateUserDto) {
         const { password, ...users } = Userdata;
@@ -400,12 +400,12 @@ export class UsersService {
                 const avgA =
                     a.ReviewsReceived.length > 0
                         ? a.ReviewsReceived.reduce((sum, r) => sum + r.rating, 0) /
-                          a.ReviewsReceived.length
+                        a.ReviewsReceived.length
                         : 0;
                 const avgB =
                     b.ReviewsReceived.length > 0
                         ? b.ReviewsReceived.reduce((sum, r) => sum + r.rating, 0) /
-                          b.ReviewsReceived.length
+                        b.ReviewsReceived.length
                         : 0;
                 return avgB - avgA;
             });
@@ -459,17 +459,17 @@ export class UsersService {
 
     async findOne(id: string) {
         const user = await this.prisma.user.findUnique({
-            where: {
-                id,
-            },
+            where: { id },
+            omit: { password: true },
             include: {
-                services: true,
+                services: {
+                    orderBy: { createdAt: "desc" },
+                },
                 profile: {
                     include: {
                         socialProfiles: true,
                     },
                 },
-
                 ReviewsReceived: {
                     include: {
                         reviewer: {
@@ -486,10 +486,23 @@ export class UsersService {
                 },
             },
         });
+
         if (!user) throw new NotFoundException("User not found");
-        return user;
+
+        const avgRating = await this.prisma.review.aggregate({
+            _avg: { rating: true },
+            _count: { rating: true },
+            where: { artistId: id },
+        });
+
+        return {
+            ...user,
+            averageRating: avgRating._avg.rating ? parseFloat(avgRating._avg.rating.toFixed(2)) : 0,
+            totalReviews: avgRating._count.rating,
+        };
     }
 
+    // Update user
     async update(id: string, data: UpdateUserDto) {
         const exists = await this.prisma.user.findUnique({
             where: { id },
@@ -507,6 +520,7 @@ export class UsersService {
         });
     }
 
+    // reset password
     async reset_password(id: string, old: string, newPass: string) {
         const exists = await this.prisma.user.findUnique({ where: { id } });
         if (!exists) throw new NotFoundException("User not found");

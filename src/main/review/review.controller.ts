@@ -28,19 +28,25 @@ export class ReviewController {
         return this.reviewService.create(createReviewDto, user);
     }
 
-    // GET /reviews/artist/:artistId
-    @Get("artist/:artistId")
-    findAllByArtist(@Param("artistId") artistId: string) {
+    // GET /reviews/my-reviews
+    @ApiBearerAuth()
+    @ValidateUser()
+    @Get("my-reviews")
+    findAllByArtist(@GetUser("userId") artistId: string) {
         return this.reviewService.findAllByArtist(artistId);
     }
 
     // PATCH /reviews/:id
+    @ApiBearerAuth()
+    @ValidateUser()
     @Patch(":id")
     update(@Param("id") id: string, @Body() updateReviewDto: UpdateReviewDto) {
         return this.reviewService.update(id, updateReviewDto);
     }
 
     // DELETE /reviews/:id
+    @ApiBearerAuth()
+    @ValidateUser()
     @Delete(":id")
     remove(@Param("id") id: string) {
         return this.reviewService.remove(id);
