@@ -28,7 +28,7 @@ import { PaymentService } from "./payments.service";
 @ApiTags("Payment")
 @Controller("payments")
 export class PaymentController {
-    constructor(private readonly paymentService: PaymentService) {}
+    constructor(private readonly paymentService: PaymentService) { }
 
     @ApiBearerAuth()
     @ValidateUser()
@@ -75,6 +75,7 @@ export class PaymentController {
             required: ["paymentMethodId"],
         },
     })
+
     async DeletePaymentMethode(@Body() body: { paymentMethodId: string }, @GetUser() user: any) {
         return this.paymentService.delete_payment_methode(body.paymentMethodId, user);
     }

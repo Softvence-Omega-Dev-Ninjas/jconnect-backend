@@ -138,12 +138,15 @@ export class UsersService {
     // }
 
     async findMe(id: string) {
-        // 🔹 Step 1: User full data আগের মতো
         const user = await this.prisma.user.findUnique({
             where: { id },
             omit: { password: true },
             include: {
-                profile: true,
+                profile: {
+                    include: {
+                        socialProfiles: true,
+                    },
+                },
                 // devices: true,
                 services: true,
                 // serviceRequests: {
@@ -181,12 +184,10 @@ export class UsersService {
 
         if (!user) throw new Error("User not found");
 
-        // 🔹 Step 2: এই মাসের শুরু আর শেষ (pure JS)
         const now = new Date();
-        const startDate = new Date(now.getFullYear(), now.getMonth(), 1); // এই মাসের ১ তারিখ
-        const endDate = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59, 999); // এই মাসের শেষ দিন
+        const startDate = new Date(now.getFullYear(), now.getMonth(), 1);
+        const endDate = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59, 999);
 
-        // 🔹 Step 3: Total completed deals (এই মাসে)
         const totalDeals = await this.prisma.payment.count({
             where: {
                 userId: id,
@@ -195,7 +196,6 @@ export class UsersService {
             },
         });
 
-        // 🔹 Step 4: Total earnings (sum of completed payments এই মাসে)
         const totalEarningsResult = await this.prisma.payment.aggregate({
             _sum: { amount: true },
             where: {
@@ -206,7 +206,6 @@ export class UsersService {
         });
         const totalEarnings = totalEarningsResult._sum.amount ?? 0;
 
-        // 🔹 Step 5: Average rating (এই মাসে পাওয়া reviews)
         const avgRatingResult = await this.prisma.review.aggregate({
             _avg: { rating: true },
             where: {
@@ -215,7 +214,6 @@ export class UsersService {
         });
         const avgRating = avgRatingResult._avg.rating ?? 0;
 
-        // 🔹 Step 6: সব একসাথে রিটার্ন (আগের ডেটা + stats)
         return {
             ...user,
             stats: {
@@ -231,69 +229,113 @@ export class UsersService {
     }
 
     async updateMe(userId: string, dto: UpdateMeDto) {
+        console.log("Received DTO:", JSON.stringify(dto, null, 2));
+
         const existingUser = await this.prisma.user.findUnique({ where: { id: userId } });
         if (!existingUser) throw new NotFoundException("User not found");
 
+        // User table updates
         const userPayload: UpdateUserDto = {};
         if (dto.full_name !== undefined) userPayload.full_name = dto.full_name;
         if (dto.phone !== undefined) userPayload.phone = dto.phone;
         if (dto.profilePhoto !== undefined) userPayload.profilePhoto = dto.profilePhoto;
 
+        // Profile table updates
         const profilePayload = {
             profile_image_url: dto.profile_image_url ?? undefined,
             short_bio: dto.short_bio ?? undefined,
         };
 
-        const socialProfiles = dto.socialProfiles?.map((sp) => ({
-            orderId: sp.orderId,
-            platformName: sp.platformName,
-            platformLink: sp.platformLink,
-        }));
+        // Social profiles processing
+        let validSocialProfiles: { orderId: number; platformName: string; platformLink: string }[] =
+            [];
+
+        if (dto.socialProfiles && Array.isArray(dto.socialProfiles)) {
+            console.log("Processing socialProfiles:", dto.socialProfiles);
+
+            validSocialProfiles = dto.socialProfiles.map((sp, index) => ({
+                orderId: index + 1,
+                platformName: String(sp.platformName).trim(),
+                platformLink: String(sp.platformLink).trim(),
+            }));
+
+            console.log("Valid social profiles:", validSocialProfiles);
+        }
 
         const hasProfileChanges =
-            Object.values(profilePayload).some((value) => value !== undefined) || !!socialProfiles;
+            Object.values(profilePayload).some((value) => value !== undefined) ||
+            validSocialProfiles.length > 0;
 
         await this.prisma.$transaction(async (tx) => {
-            if (Object.keys(userPayload).length) {
+            // Update user table if needed
+            if (Object.keys(userPayload).length > 0) {
                 await tx.user.update({
                     where: { id: userId },
                     data: userPayload,
-                    omit: { password: true },
                 });
             }
 
+            // Update or create profile if needed
             if (hasProfileChanges) {
-                const profileExists = await tx.profile.findUnique({ where: { user_id: userId } });
+                const profileExists = await tx.profile.findUnique({
+                    where: { user_id: userId },
+                    include: { socialProfiles: true },
+                });
+
+                const profileData = {
+                    ...profilePayload,
+                };
+
+                // Remove undefined values
+                Object.keys(profileData).forEach((key) => {
+                    if (profileData[key] === undefined) {
+                        delete profileData[key];
+                    }
+                });
 
                 if (profileExists) {
+                    // Update existing profile
                     await tx.profile.update({
                         where: { user_id: userId },
-                        data: {
-                            ...profilePayload,
-                            ...(socialProfiles
-                                ? {
-                                      socialProfiles: {
-                                          deleteMany: {},
-                                          create: socialProfiles,
-                                      },
-                                  }
-                                : {}),
-                        },
+                        data: profileData,
                     });
+
+                    // Always handle social profiles if provided
+                    if (dto.socialProfiles !== undefined) {
+                        // Delete existing social profiles
+                        await tx.socialProfile.deleteMany({
+                            where: { profileId: userId },
+                        });
+
+                        // Create new social profiles if any
+                        if (validSocialProfiles.length > 0) {
+                            console.log("Creating social profiles:", validSocialProfiles);
+                            await tx.socialProfile.createMany({
+                                data: validSocialProfiles.map((sp) => ({
+                                    ...sp,
+                                    profileId: userId,
+                                })),
+                            });
+                        }
+                    }
                 } else {
+                    // Create new profile
                     await tx.profile.create({
                         data: {
                             user_id: userId,
-                            ...profilePayload,
-                            ...(socialProfiles
-                                ? {
-                                      socialProfiles: {
-                                          create: socialProfiles,
-                                      },
-                                  }
-                                : {}),
+                            ...profileData,
                         },
                     });
+
+                    // Create social profiles if any
+                    if (validSocialProfiles.length > 0) {
+                        await tx.socialProfile.createMany({
+                            data: validSocialProfiles.map((sp) => ({
+                                ...sp,
+                                profileId: userId,
+                            })),
+                        });
+                    }
                 }
             }
         });
@@ -401,6 +443,20 @@ export class UsersService {
         };
     }
 
+    // async findOne(id: string) {
+    //     const user = await this.prisma.user.findUnique({
+    //         where: {
+    //             id,
+    //         },
+    //         include: {
+    //             services: true,
+    //             ReviewsReceived: true,
+    //             profile: true,
+    //         },
+    //     });
+    //     return user;
+    // }
+
     async findOne(id: string) {
         const user = await this.prisma.user.findUnique({
             where: {
@@ -408,8 +464,26 @@ export class UsersService {
             },
             include: {
                 services: true,
-                ReviewsReceived: true,
-                profile: true,
+                profile: {
+                    include: {
+                        socialProfiles: true,
+                    },
+                },
+
+                ReviewsReceived: {
+                    include: {
+                        reviewer: {
+                            select: {
+                                id: true,
+                                full_name: true,
+                                profilePhoto: true,
+                            },
+                        },
+                    },
+                    orderBy: {
+                        createdAt: "desc",
+                    },
+                },
             },
         });
         if (!user) throw new NotFoundException("User not found");

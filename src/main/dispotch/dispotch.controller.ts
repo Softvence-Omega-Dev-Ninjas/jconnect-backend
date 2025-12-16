@@ -74,7 +74,7 @@ export class DisputeController {
                 message: "Disputes fetched successfully",
             };
         } catch (error) {
-            throw new BadRequestException(error?.message || 'Failed to fetch disputes');
+            throw new BadRequestException(error?.message || "Failed to fetch disputes");
         }
     }
 

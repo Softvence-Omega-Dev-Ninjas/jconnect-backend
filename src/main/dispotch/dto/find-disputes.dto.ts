@@ -9,13 +9,19 @@ export class FindDisputesDto {
     @IsEnum(DisputeStatus)
     status?: DisputeStatus;
 
-    @ApiPropertyOptional({ example: "2025-10-01T00:00:00Z", description: "Start date (inclusive) in ISO 8601 format" })
+    @ApiPropertyOptional({
+        example: "2025-10-01T00:00:00Z",
+        description: "Start date (inclusive) in ISO 8601 format",
+    })
     @IsOptional()
     @Type(() => Date)
     @IsDate()
     startDate?: Date;
 
-    @ApiPropertyOptional({ example: "2025-10-31T23:59:59Z", description: "End date (inclusive) in ISO 8601 format" })
+    @ApiPropertyOptional({
+        example: "2025-10-31T23:59:59Z",
+        description: "End date (inclusive) in ISO 8601 format",
+    })
     @IsOptional()
     @Type(() => Date)
     @IsDate()

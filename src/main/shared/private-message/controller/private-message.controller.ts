@@ -86,4 +86,10 @@ export class PrivateChatController implements OnModuleInit {
     async deleteConversation(@Param("conversationId") conversationId: string) {
         return await this.privateService.deleteConversation(conversationId);
     }
+
+    @Get("users/chatted-with-me")
+    @ApiOperation({ summary: "Get all users who have chatted with me with unread counts" })
+    async getAllUsersChatWithMe(@GetUser("userId") userId: string) {
+        return await this.privateService.getAllUsersChatWithMe(userId);
+    }
 }
