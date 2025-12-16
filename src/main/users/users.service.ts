@@ -143,7 +143,11 @@ export class UsersService {
             where: { id },
             omit: { password: true },
             include: {
-                profile: true,
+                profile: {
+                    include: {
+                        socialProfiles: true
+                    }
+                },
                 // devices: true,
                 services: true,
                 // serviceRequests: {
@@ -231,83 +235,118 @@ export class UsersService {
     }
 
     async updateMe(userId: string, dto: UpdateMeDto) {
-        console.log("DTO:", dto);
+        console.log('Received DTO:', JSON.stringify(dto, null, 2));
+        
+        const existingUser = await this.prisma.user.findUnique({ where: { id: userId } });
+        if (!existingUser) throw new NotFoundException("User not found");
 
-        const existingUser = await this.prisma.user.findUnique({
-            where: { id: userId },
-        });
+        // User table updates
+        const userPayload: UpdateUserDto = {};
+        if (dto.full_name !== undefined) userPayload.full_name = dto.full_name;
+        if (dto.phone !== undefined) userPayload.phone = dto.phone;
+        if (dto.profilePhoto !== undefined) userPayload.profilePhoto = dto.profilePhoto;
 
-        if (!existingUser) {
-            throw new NotFoundException("User not found");
+        // Profile table updates
+        const profilePayload = {
+            profile_image_url: dto.profile_image_url ?? undefined,
+            short_bio: dto.short_bio ?? undefined,
+        };
+
+        // Social profiles processing
+        let validSocialProfiles: { orderId: number; platformName: string; platformLink: string }[] = [];
+        
+        if (dto.socialProfiles && Array.isArray(dto.socialProfiles)) {
+            console.log('Processing socialProfiles:', dto.socialProfiles);
+            
+            validSocialProfiles = dto.socialProfiles.map(sp => ({
+                orderId: Number(sp.orderId),
+                platformName: String(sp.platformName).trim(),
+                platformLink: String(sp.platformLink).trim(),
+            }));
+            
+            console.log('Valid social profiles:', validSocialProfiles);
         }
 
-        const userPayload: UpdateUserDto = {
-            ...(dto.full_name && { full_name: dto.full_name }),
-            ...(dto.phone && { phone: dto.phone }),
-            ...(dto.profilePhoto && { profilePhoto: dto.profilePhoto }),
-        };
-
-        const profilePayload = {
-            ...(dto.profile_image_url !== undefined && {
-                profile_image_url: dto.profile_image_url,
-            }),
-            ...(dto.short_bio !== undefined && {
-                short_bio: dto.short_bio,
-            }),
-        };
-
-        const validSocialProfiles =
-            dto.socialProfiles?.filter(
-                (sp) =>
-                    sp.orderId !== undefined &&
-                    sp.platformName?.trim() &&
-                    sp.platformLink?.trim(),
-            ) ?? [];
+        const hasProfileChanges =
+            Object.values(profilePayload).some((value) => value !== undefined) || 
+            validSocialProfiles.length > 0;
 
         await this.prisma.$transaction(async (tx) => {
-            // User update
-            if (Object.keys(userPayload).length) {
+            // Update user table if needed
+            if (Object.keys(userPayload).length > 0) {
                 await tx.user.update({
                     where: { id: userId },
                     data: userPayload,
                 });
             }
 
-            const profileExists = await tx.profile.findUnique({
-                where: { user_id: userId },
-            });
-
-            if (profileExists) {
-                await tx.profile.update({
+            // Update or create profile if needed
+            if (hasProfileChanges) {
+                const profileExists = await tx.profile.findUnique({ 
                     where: { user_id: userId },
-                    data: {
-                        ...profilePayload,
-                        ...(dto.socialProfiles
-                            ? {
-                                socialProfiles: {
-                                    deleteMany: {}, // old remove
-                                    create: validSocialProfiles,
-                                },
-                            }
-                            : {}),
-                    },
+                    include: { socialProfiles: true }
                 });
-            } else {
-                await tx.profile.create({
-                    data: {
-                        user_id: userId,
-                        ...profilePayload,
-                        socialProfiles: {
-                            create: validSocialProfiles,
+
+                const profileData = {
+                    ...profilePayload,
+                };
+
+                // Remove undefined values
+                Object.keys(profileData).forEach(key => {
+                    if (profileData[key] === undefined) {
+                        delete profileData[key];
+                    }
+                });
+
+                if (profileExists) {
+                    // Update existing profile
+                    await tx.profile.update({
+                        where: { user_id: userId },
+                        data: profileData,
+                    });
+
+                    // Always handle social profiles if provided
+                    if (dto.socialProfiles !== undefined) {
+                        // Delete existing social profiles
+                        await tx.socialProfile.deleteMany({
+                            where: { profileId: userId }
+                        });
+
+                        // Create new social profiles if any
+                        if (validSocialProfiles.length > 0) {
+                            console.log('Creating social profiles:', validSocialProfiles);
+                            await tx.socialProfile.createMany({
+                                data: validSocialProfiles.map(sp => ({
+                                    ...sp,
+                                    profileId: userId
+                                }))
+                            });
+                        }
+                    }
+                } else {
+                    // Create new profile
+                    await tx.profile.create({
+                        data: {
+                            user_id: userId,
+                            ...profileData,
                         },
-                    },
-                });
+                    });
+
+                    // Create social profiles if any
+                    if (validSocialProfiles.length > 0) {
+                        await tx.socialProfile.createMany({
+                            data: validSocialProfiles.map(sp => ({
+                                ...sp,
+                                profileId: userId
+                            }))
+                        });
+                    }
+                }
             }
         });
 
         return this.findMe(userId);
     }
-
 
     async findAllArtist({ page = 1, limit = 10, filter, search }: FindArtistDto) {
         const skip = (page - 1) * limit;
@@ -433,7 +472,7 @@ export class UsersService {
                 profile: {
                     include: {
                         socialProfiles: true,
-                    }
+                    },
                 },
 
                 ReviewsReceived: {
@@ -447,7 +486,7 @@ export class UsersService {
                         },
                     },
                     orderBy: {
-                        createdAt: 'desc',
+                        createdAt: "desc",
                     },
                 },
             },

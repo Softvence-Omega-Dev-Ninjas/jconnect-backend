@@ -1,6 +1,6 @@
 import { ApiHideProperty, ApiProperty, ApiPropertyOptional } from "@nestjs/swagger";
 import { AuthProvider, Role, ValidationType } from "@prisma/client";
-import { Type } from "class-transformer";
+import { Expose, Transform, Type } from "class-transformer";
 import {
     IsArray,
     IsBoolean,
@@ -211,29 +211,14 @@ export class UpdateUserDto {
     @IsDateString()
     token_expires_at?: Date;
 }
-export class SocialProfileInput {
-    @ApiProperty({ example: 1 })
-    @Type(() => Number)
-    @IsInt()
-    orderId: number;
-
-    @ApiProperty({ example: "Instagram" })
-    @IsString()
-    platformName: string;
-
-    @ApiProperty({ example: "https://instagram.com/johnartist" })
-    @IsString()
-    platformLink: string;
-}
-
 
 export class UpdateMeDto {
-    @ApiPropertyOptional({ example: "John Doe" })
+    @ApiProperty({ example: "John Doe", required: false })
     @IsOptional()
     @IsString()
     full_name?: string;
 
-    @ApiPropertyOptional({ example: "+8801700000000" })
+    @ApiProperty({ example: "+8801700000000", required: false })
     @IsOptional()
     @IsString()
     phone?: string;
@@ -248,20 +233,87 @@ export class UpdateMeDto {
     @IsString()
     profile_image_url?: string;
 
-    @ApiPropertyOptional({ example: "DJ / Producer" })
+    @ApiProperty({ example: "DJ / Producer", required: false })
     @IsOptional()
     @IsString()
     short_bio?: string;
 
-    @ApiPropertyOptional({ type: [SocialProfileInput] })
+    @ApiPropertyOptional({ type: () => [SocialProfileInput] })
     @IsOptional()
     @IsArray()
     @ValidateNested({ each: true })
     @Type(() => SocialProfileInput)
+    @Transform(({ value }) => {
+        if (value === undefined || value === null || value === "") return undefined;
+
+        // If already an array, filter out empty objects
+        if (Array.isArray(value)) {
+            const filtered = value.filter(item =>
+                item &&
+                typeof item === 'object' &&
+                Object.keys(item).length > 0 &&
+                item.orderId !== undefined &&
+                item.platformName &&
+                item.platformLink
+            );
+            return filtered.length > 0 ? filtered : undefined;
+        }
+
+        // Swagger UI sends JSON string for multipart; try to parse
+        if (typeof value === "string") {
+            try {
+                const parsed = JSON.parse(value);
+                if (Array.isArray(parsed)) {
+                    const filtered = parsed.filter(item =>
+                        item &&
+                        typeof item === 'object' &&
+                        Object.keys(item).length > 0 &&
+                        item.orderId !== undefined &&
+                        item.platformName &&
+                        item.platformLink
+                    );
+                    return filtered.length > 0 ? filtered : undefined;
+                }
+                return parsed && Object.keys(parsed).length > 0 ? [parsed] : undefined;
+            } catch (e) {
+                return undefined;
+            }
+        }
+        return value;
+    })
     socialProfiles?: SocialProfileInput[];
 }
 
+export class SocialProfileInput {
+    @ApiProperty({ example: 1 })
+    @Expose()
+    @Type(() => Number)
+    @Transform(({ value }) => {
+        if (value === undefined || value === null || value === '') return undefined;
+        const num = Number(value);
+        return isNaN(num) ? undefined : num;
+    })
+    @IsInt()
+    orderId: number;
 
+    @ApiProperty({ example: "Instagram" })
+    @Expose()
+    @Transform(({ value }) => {
+        if (value === undefined || value === null || value === '') return undefined;
+        return String(value).trim();
+    })
+    @IsString()
+    platformName: string;
+
+    @ApiProperty({ example: "https://instagram.com/johnartist" })
+    @Expose()
+    @Transform(({ value }) => {
+        if (value === undefined || value === null || value === '') return undefined;
+        return String(value).trim();
+    })
+    @IsString()
+    platformLink: string;
+}
 
 export class reset_password {
     @ApiProperty({ example: "xxxxxx", required: true })
