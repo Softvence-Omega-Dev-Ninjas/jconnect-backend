@@ -11,7 +11,7 @@ export class UsersService {
     constructor(
         private prisma: PrismaService,
         private utils: UtilsService,
-    ) {}
+    ) { }
 
     async create(Userdata: CreateUserDto) {
         const { password, ...users } = Userdata;
@@ -138,7 +138,6 @@ export class UsersService {
     // }
 
     async findMe(id: string) {
-        // 🔹 Step 1: User full data আগের মতো
         const user = await this.prisma.user.findUnique({
             where: { id },
             omit: { password: true },
@@ -185,12 +184,10 @@ export class UsersService {
 
         if (!user) throw new Error("User not found");
 
-        // 🔹 Step 2: এই মাসের শুরু আর শেষ (pure JS)
         const now = new Date();
-        const startDate = new Date(now.getFullYear(), now.getMonth(), 1); // এই মাসের ১ তারিখ
-        const endDate = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59, 999); // এই মাসের শেষ দিন
+        const startDate = new Date(now.getFullYear(), now.getMonth(), 1);
+        const endDate = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59, 999);
 
-        // 🔹 Step 3: Total completed deals (এই মাসে)
         const totalDeals = await this.prisma.payment.count({
             where: {
                 userId: id,
@@ -199,7 +196,6 @@ export class UsersService {
             },
         });
 
-        // 🔹 Step 4: Total earnings (sum of completed payments এই মাসে)
         const totalEarningsResult = await this.prisma.payment.aggregate({
             _sum: { amount: true },
             where: {
@@ -210,7 +206,6 @@ export class UsersService {
         });
         const totalEarnings = totalEarningsResult._sum.amount ?? 0;
 
-        // 🔹 Step 5: Average rating (এই মাসে পাওয়া reviews)
         const avgRatingResult = await this.prisma.review.aggregate({
             _avg: { rating: true },
             where: {
@@ -219,7 +214,7 @@ export class UsersService {
         });
         const avgRating = avgRatingResult._avg.rating ?? 0;
 
-        // 🔹 Step 6: সব একসাথে রিটার্ন (আগের ডেটা + stats)
+
         return {
             ...user,
             stats: {
@@ -406,12 +401,12 @@ export class UsersService {
                 const avgA =
                     a.ReviewsReceived.length > 0
                         ? a.ReviewsReceived.reduce((sum, r) => sum + r.rating, 0) /
-                          a.ReviewsReceived.length
+                        a.ReviewsReceived.length
                         : 0;
                 const avgB =
                     b.ReviewsReceived.length > 0
                         ? b.ReviewsReceived.reduce((sum, r) => sum + r.rating, 0) /
-                          b.ReviewsReceived.length
+                        b.ReviewsReceived.length
                         : 0;
                 return avgB - avgA;
             });
