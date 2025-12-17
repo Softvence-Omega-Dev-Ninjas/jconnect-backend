@@ -146,6 +146,16 @@ export class PaymentController {
         return this.paymentService.allTransactionHistory(paginationDto);
     }
 
+    // Get single transaction history
+    @ApiBearerAuth()
+    @ValidateSuperAdmin()
+    @Get("transaction-history/:id")
+    @ApiOperation({ summary: "get single transaction history for admin" })
+    @ApiParam({ name: "id" })
+    async getSingleTransactionHistory(@Param("id") id: string) {
+        return this.paymentService.getSingleTransactionHistory(id);
+    }
+
     // ----------------------------
     // Create Checkout Session
     // ----------------------------

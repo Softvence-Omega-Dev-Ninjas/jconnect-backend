@@ -14,7 +14,7 @@ export class RegisterDto {
     full_name: string;
 
     @ApiProperty({
-        example: "shamimranaprofessional.office+1@gmail.com",
+        example: "demo@gmail.com",
         description: "Email address of the user",
     })
     @IsNotEmpty({ message: "Email is required" })

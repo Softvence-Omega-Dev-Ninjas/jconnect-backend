@@ -31,8 +31,8 @@ export class ProfileService {
             data.socialProfiles.length
         ) {
             profileData.socialProfiles = {
-                create: data.socialProfiles.map((sp) => ({
-                    orderId: Number(sp.orderId),
+                create: data.socialProfiles.map((sp, index) => ({
+                    orderId: index + 1,
                     platformName: sp.platformName,
                     platformLink: sp.platformLink,
                 })),
@@ -82,8 +82,8 @@ export class ProfileService {
         if (data.socialProfiles && Array.isArray(data.socialProfiles)) {
             updatePayload.socialProfiles = {
                 deleteMany: {},
-                create: data.socialProfiles.map((sp) => ({
-                    orderId: Number(sp.orderId),
+                create: data.socialProfiles.map((sp, index) => ({
+                    orderId: index + 1,
                     platformName: sp.platformName,
                     platformLink: sp.platformLink,
                 })),

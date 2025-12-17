@@ -4,11 +4,6 @@ import { Transform, Type } from "class-transformer";
 import { IsArray, IsInt, IsOptional, IsString, IsUrl, ValidateNested } from "class-validator";
 
 export class SocialProfileInput {
-    @ApiPropertyOptional({ example: 1 })
-    @Type(() => Number)
-    @IsInt()
-    orderId: number;
-
     @ApiPropertyOptional({ example: "Instagram" })
     @IsString()
     platformName: string;
