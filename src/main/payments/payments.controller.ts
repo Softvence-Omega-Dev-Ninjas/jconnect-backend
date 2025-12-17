@@ -61,6 +61,15 @@ export class PaymentController {
         return this.paymentService.confirmSetupIntent(body, user);
     }
 
+    // show all payment methods
+    @ApiBearerAuth()
+    @ValidateUser()
+    @Get("my-paymentsss-methods")
+    @ApiOperation({ summary: "Get all payment methods of the user" })
+    async getMyPaymentMethods(@GetUser() user: any) {
+        return this.paymentService.getMyPaymentMethods(user);
+    }
+
     // ----------------------------
     // Delete Payment Method
     // ----------------------------
