@@ -212,6 +212,36 @@ export class PaymentService {
         };
     }
 
+    // Get single transaction history
+    async getSingleTransactionHistory(id: string) {
+        const transaction = await this.prisma.order.findUnique({
+            where: { id },
+            include: {
+                seller: {
+                    select: {
+                        id: true,
+                        full_name: true,
+                        email: true,
+                        profilePhoto: true,
+                        phone: true,
+                        is_terms_agreed: true,
+                        withdrawn_amount: true,
+                    },
+                },
+            },
+        });
+
+        if (!transaction) {
+            throw new NotFoundException("Transaction not found");
+        }
+
+        return {
+            success: true,
+            message: "Successfully fetched transaction",
+            data: transaction,
+        };
+    }
+
     // async createCheckoutSession(userFromReq: any, serviceId: string, frontendUrl: string) {
     //     const user: any = await this.prisma.user.findUnique({ where: { id: userFromReq?.userId } });
     //     // console.log("ami to asol user", user, userFromReq.userId);

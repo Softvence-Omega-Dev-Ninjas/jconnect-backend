@@ -4,7 +4,7 @@ import { CreateSocialProfileDto, UpdateSocialProfileDto } from "./dto/social-pro
 
 @Injectable()
 export class SocialProfileService {
-    constructor(private prisma: PrismaService) { }
+    constructor(private prisma: PrismaService) {}
 
     async create(userId: string, data: CreateSocialProfileDto) {
         const profile = await this.prisma.profile.findUnique({
@@ -41,16 +41,16 @@ export class SocialProfileService {
 
     async findOne(userId: string, id: string) {
         const socialProfile = await this.prisma.socialProfile.findFirst({
-            where: { 
+            where: {
                 id,
-                profileId: userId 
+                profileId: userId,
             },
         });
-        
+
         if (!socialProfile) {
             throw new NotFoundException("Social profile not found");
         }
-        
+
         return socialProfile;
     }
 

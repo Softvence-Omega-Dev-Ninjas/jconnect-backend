@@ -9,7 +9,7 @@ import { SocialProfileService } from "./social-profile.service";
 @ValidateUser()
 @Controller("social-profiles")
 export class SocialProfileController {
-    constructor(private readonly socialProfileService: SocialProfileService) { }
+    constructor(private readonly socialProfileService: SocialProfileService) {}
 
     @Post()
     @ApiOperation({ summary: "Add a new social profile link" })
