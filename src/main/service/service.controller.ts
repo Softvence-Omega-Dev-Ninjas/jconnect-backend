@@ -1,7 +1,25 @@
 import { GetUser, ValidateArtist, ValidateUser } from "@common/jwt/jwt.decorator";
-import { Body, Controller, Delete, Get, Param, Patch, Post } from "@nestjs/common";
-import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from "@nestjs/swagger";
-import { Service } from "@prisma/client";
+import {
+    Body,
+    Controller,
+    Delete,
+    Get,
+    Param,
+    Patch,
+    Post,
+    UploadedFiles,
+    UseInterceptors,
+} from "@nestjs/common";
+import {
+    ApiBearerAuth,
+    ApiBody,
+    ApiConsumes,
+    ApiOperation,
+    ApiResponse,
+    ApiTags,
+} from "@nestjs/swagger";
+import { FileFieldsInterceptor } from "@nestjs/platform-express";
+import { Service, ServiceType } from "@prisma/client";
 import { CreateServiceDto, UpdateServiceDto } from "./dto/create-service.dto";
 
 import { ServiceService } from "./service.service";
@@ -15,10 +33,38 @@ export class ServiceController {
     @ValidateArtist()
     @Post()
     @ApiOperation({ summary: "Create a new service listing" })
+    @ApiConsumes("multipart/form-data")
+    @ApiBody({
+        description: "Create Service",
+        schema: {
+            type: "object",
+            properties: {
+                serviceName: { type: "string" },
+                serviceType: {
+                    type: "string",
+                    enum: [ServiceType.SOCIAL_POST, ServiceType.SERVICE],
+                    example: ServiceType.SERVICE,
+                },
+                description: { type: "string" },
+                price: { type: "number" },
+                currency: { type: "string" },
+                isCustom: { type: "boolean" },
+                isPost: { type: "boolean" },
+                files: {
+                    nullable: true,
+                    type: "array",
+                    items: { type: "string", format: "binary" },
+                },
+            },
+            required: ["serviceName", "serviceType", "price"],
+        },
+    })
+    @UseInterceptors(FileFieldsInterceptor([{ name: "files", maxCount: 5 }]))
     @ApiResponse({ status: 201, description: "Service created successfully" })
     async create(
         @Body() createServiceDto: CreateServiceDto,
         @GetUser() user: any,
+        @UploadedFiles() files?: { files?: Express.Multer.File[] },
     ): Promise<Service> {
         return this.serviceService.create(createServiceDto, user);
     }
@@ -55,11 +101,38 @@ export class ServiceController {
     @ValidateArtist()
     @Patch(":id")
     @ApiOperation({ summary: "Update an existing service" })
+    @ApiConsumes("multipart/form-data")
+    @ApiBody({
+        description: "Update Service",
+        schema: {
+            type: "object",
+            properties: {
+                serviceName: { type: "string" },
+                serviceType: {
+                    type: "string",
+                    enum: [ServiceType.SOCIAL_POST, ServiceType.SERVICE],
+                    example: ServiceType.SERVICE,
+                },
+                description: { type: "string" },
+                price: { type: "number" },
+                currency: { type: "string" },
+                isCustom: { type: "boolean" },
+                isPost: { type: "boolean" },
+                files: {
+                    nullable: true,
+                    type: "array",
+                    items: { type: "string", format: "binary" },
+                },
+            },
+        },
+    })
+    @UseInterceptors(FileFieldsInterceptor([{ name: "files", maxCount: 5 }]))
     @ApiResponse({ status: 200, description: "Service updated successfully" })
     async update(
         @Param("id") id: string,
         @Body() updateServiceDto: UpdateServiceDto,
         @GetUser() user: any,
+        @UploadedFiles() files?: { files?: Express.Multer.File[] },
     ) {
         return this.serviceService.update(id, updateServiceDto, user);
     }

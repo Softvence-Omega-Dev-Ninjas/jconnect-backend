@@ -212,7 +212,9 @@ export class NotificationGateway
             for (const client of clients) {
                 this.logger.log(`  Sending notification to socket ${client.id}`);
                 client.emit(EVENT_TYPES.USERREGISTRATION_CREATE, notificationData);
-                this.logger.log(`  ✔ Notification sent to ${recipient.id} via socket ${client.id}`);
+                this.logger.log(
+                    `  ✔ Notification sent to ${recipient.id} via socket ${client.id}`,
+                );
             }
         }
 

@@ -1,4 +1,4 @@
-import { PrismaClient } from "@prisma/client";
+import { PrismaClient, ServiceType } from "@prisma/client";
 import bcrypt from "bcrypt";
 
 const prisma = new PrismaClient();
@@ -167,7 +167,7 @@ async function main() {
         prisma.service.create({
             data: {
                 serviceName: "Instagram Shoutout",
-                serviceType: "Social Post",
+                serviceType: ServiceType.SOCIAL_POST,
                 description: "Professional Instagram shoutout for your brand",
                 price: 50.0,
                 creatorId: users[0].id,
@@ -177,7 +177,7 @@ async function main() {
         prisma.service.create({
             data: {
                 serviceName: "TikTok Video Creation",
-                serviceType: "Social Post",
+                serviceType: ServiceType.SOCIAL_POST,
                 description: "Custom TikTok video for your product",
                 price: 100.0,
                 creatorId: users[1].id,
@@ -190,7 +190,7 @@ async function main() {
                 description: "Detailed product review on YouTube",
                 price: 150.0,
                 creatorId: users[0].id,
-                serviceType: "Social Post",
+                serviceType: ServiceType.SOCIAL_POST,
             },
         }),
     ]);
