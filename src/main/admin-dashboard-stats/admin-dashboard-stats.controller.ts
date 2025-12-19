@@ -49,7 +49,7 @@ export class AdminDashboardStatsController {
     @ApiOperation({ summary: "Get top service sellers with their performance metrics" })
     async getTopSellers(@Query() filter: TopSellerFilterDto) {
         try {
-            const res = await this.adminStatsService.getTopSellers(filter.page, filter.limit);
+            const res = await this.adminStatsService.getTopSellers(filter.page, filter.limit, filter.search);
             return {
                 status: HttpStatus.OK,
                 message: "Top Sellers",

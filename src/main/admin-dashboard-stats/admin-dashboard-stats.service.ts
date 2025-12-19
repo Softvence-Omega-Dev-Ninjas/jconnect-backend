@@ -186,11 +186,18 @@ export class AdminDashboardStatsService {
         return result;
     }
 
-    async getTopSellers(page = 1, limit = 10) {
+    async getTopSellers(page = 1, limit = 10, search?: string) {
         const skip = (page - 1) * limit;
 
         const thirtyDaysAgo = new Date();
         thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+
+        let userFilter: any = {};
+        if (search) {
+            userFilter = {
+                full_name: { contains: search, mode: "insensitive" },
+            };
+        }
 
         // Group by sellers for last 30 days
         const sellers = await this.prisma.order.groupBy({
@@ -200,6 +207,7 @@ export class AdminDashboardStatsService {
                 createdAt: {
                     gte: thirtyDaysAgo,
                 },
+                ...(search ? { seller: userFilter } : {}),
             },
             _count: true,
             _sum: {
@@ -217,7 +225,10 @@ export class AdminDashboardStatsService {
         const sellerIds = sellers.map((s) => s.sellerId);
 
         const users = await this.prisma.user.findMany({
-            where: { id: { in: sellerIds } },
+            where: { 
+                id: { in: sellerIds },
+                ...userFilter
+            },
             select: {
                 id: true,
                 full_name: true,
@@ -244,6 +255,7 @@ export class AdminDashboardStatsService {
                 createdAt: {
                     gte: thirtyDaysAgo,
                 },
+                ...(search ? { seller: userFilter } : {}),
             },
         });
 

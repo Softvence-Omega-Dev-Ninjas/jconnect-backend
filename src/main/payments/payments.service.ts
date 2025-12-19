@@ -136,7 +136,7 @@ export class PaymentService {
 
     // All transaction history
     async allTransactionHistory(paginationDto: PaginationDto) {
-        const { page = 1, limit = 10, status, month, sortOrder = "desc" } = paginationDto;
+        const { page = 1, limit = 10, status, month, sortOrder = "desc", search } = paginationDto;
 
         const skip = (page - 1) * limit;
         const validStatuses = [
@@ -189,6 +189,10 @@ export class PaymentService {
                 gte: startDate,
                 lte: endDate,
             };
+        }
+
+        if (search) {
+            where.orderCode = { contains: search, mode: "insensitive" };
         }
 
         const orderBy: any = { createdAt: sortOrder };
