@@ -151,6 +151,12 @@ export class PaymentController {
         description: "Sort order (ascending or descending)",
         example: "desc",
     })
+    @ApiQuery({
+        name: "search",
+        required: false,
+        type: String,
+        description: "Search by order ID",
+    })
     async allTransactionHistory(@Query() paginationDto: PaginationDto) {
         return this.paymentService.allTransactionHistory(paginationDto);
     }

@@ -1,6 +1,6 @@
 import { ApiProperty } from "@nestjs/swagger";
 import { Type } from "class-transformer";
-import { IsOptional } from "class-validator";
+import { IsOptional, IsString } from "class-validator";
 
 export class TopSellerFilterDto {
     @ApiProperty({
@@ -20,4 +20,13 @@ export class TopSellerFilterDto {
     @IsOptional()
     @Type(() => Number)
     limit: number;
+
+    @ApiProperty({
+        example: "john",
+        description: "Search by username",
+        required: false,
+    })
+    @IsOptional()
+    @IsString()
+    search?: string;
 }

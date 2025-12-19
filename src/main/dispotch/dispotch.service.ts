@@ -70,8 +70,18 @@ export class DisputeService {
         return { dispute };
     }
 
-    async findAll() {
+    async findAll(search?: string) {
+        const where: any = {};
+
+        if (search) {
+            where.OR = [
+                { id: { contains: search, mode: "insensitive" } },
+                { order: { orderCode: { contains: search, mode: "insensitive" } } },
+            ];
+        }
+
         return this.prisma.dispute.findMany({
+            where,
             include: {
                 order: true,
                 user: { select: { id: true, full_name: true } },
@@ -80,7 +90,7 @@ export class DisputeService {
         });
     }
 
-    async findQuery(query?: FindDisputesDto) {
+    async findQuery(query?: FindDisputesDto, search?: string) {
         const page = query?.page ?? 1;
         const perPage = query?.perPage ?? 10;
         const skip = (page - 1) * perPage;
@@ -91,6 +101,13 @@ export class DisputeService {
             where.createdAt = {} as any;
             if (query.startDate) where.createdAt.gte = query.startDate;
             if (query.endDate) where.createdAt.lte = query.endDate;
+        }
+
+        if (search) {
+            where.OR = [
+                { id: { contains: search, mode: "insensitive" } },
+                { order: { orderCode: { contains: search, mode: "insensitive" } } },
+            ];
         }
 
         const [data, total] = await this.prisma.$transaction([

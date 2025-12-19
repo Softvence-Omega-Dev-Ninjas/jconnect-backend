@@ -221,15 +221,23 @@ export class UsersController {
     @ApiQuery({ name: "page", required: false, type: Number, example: 1 })
     @ApiQuery({ name: "limit", required: false, type: Number, example: 10 })
     @ApiQuery({ name: "isActive", required: false, type: Boolean, example: true })
+    @ApiQuery({
+        name: "search",
+        required: false,
+        type: String,
+        description: "Search by username/email",
+    })
     async findAll(
         @Query("page") page = 1,
         @Query("limit") limit = 10,
         @Query("isActive") isActive?: boolean,
+        @Query("search") search?: string,
     ) {
         return this.usersService.findAll({
             page: Number(page),
             limit: Number(limit),
             isActive: isActive !== undefined ? isActive : undefined,
+            search,
         });
     }
 

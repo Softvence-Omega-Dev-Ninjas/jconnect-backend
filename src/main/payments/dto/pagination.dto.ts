@@ -58,4 +58,13 @@ export class PaginationDto {
     @IsOptional()
     @IsIn(["asc", "desc"])
     sortOrder?: "asc" | "desc" = "desc";
+
+    @ApiProperty({
+        required: false,
+        description: "Search by order ID",
+        example: "ORD123",
+    })
+    @IsOptional()
+    @IsString()
+    search?: string;
 }

@@ -35,13 +35,20 @@ export class UsersService {
         }
     }
 
-    async findAll(params: { page: number; limit: number; isActive?: boolean }) {
-        const { page, limit, isActive } = params;
+    async findAll(params: { page: number; limit: number; isActive?: boolean; search?: string }) {
+        const { page, limit, isActive, search } = params;
 
-        const whereCondition = {
+        const whereCondition: any = {
             isDeleted: false,
             ...(isActive !== undefined ? { isActive } : {}),
         };
+
+        if (search) {
+            whereCondition.OR = [
+                { full_name: { contains: search, mode: "insensitive" } },
+                { email: { contains: search, mode: "insensitive" } },
+            ];
+        }
 
         const skip = (page - 1) * limit;
 
