@@ -1,10 +1,11 @@
-import { Body, Controller, Delete, Get, Param, Patch, Post } from "@nestjs/common";
+import { Body, Controller, Delete, Get, Param, Patch, Post, Query } from "@nestjs/common";
 import { ApiBearerAuth, ApiOperation, ApiTags } from "@nestjs/swagger";
 import { SettingsService } from "./settings.service";
 
 import { GetUser, ValidateAdmin, ValidateUser } from "@common/jwt/jwt.decorator";
 import { Announcement } from "./dto/announcement.dto";
 import { UpdateSettingDto } from "./dto/create-dto";
+import { GlobalSearchDto } from "./dto/global-search.dto";
 
 @ApiTags("settings")
 @Controller("settings")
@@ -67,5 +68,14 @@ export class SettingsController {
     @ApiOperation({ summary: "Update announcement" })
     updateAnnouncement(@Param("id") id: string, @Body() dto: Announcement) {
         return this.settingsService.updateAnnouncement(id, dto);
+    }
+
+    // ---------------global search-------------
+    @ValidateAdmin()
+    @ApiBearerAuth()
+    @Get("global-search")
+    @ApiOperation({ summary: "Global search across platform" })
+    globalSearch(@Query() dto: GlobalSearchDto) {
+        return this.settingsService.globalSearch(dto);
     }
 }
