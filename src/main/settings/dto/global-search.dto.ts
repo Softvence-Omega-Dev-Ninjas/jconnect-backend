@@ -7,7 +7,10 @@ export class GlobalSearchDto {
     @MinLength(2, { message: "Search query must be at least 2 characters long" })
     query: string;
 
-    @ApiPropertyOptional({ description: "Search type filter", enum: ["all", "users", "orders", "services", "disputes"] })
+    @ApiPropertyOptional({
+        description: "Search type filter",
+        enum: ["all", "users", "orders", "services", "disputes"],
+    })
     @IsOptional()
     @IsString()
     type?: "all" | "users" | "orders" | "services" | "disputes";
