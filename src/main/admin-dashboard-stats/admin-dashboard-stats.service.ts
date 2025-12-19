@@ -225,9 +225,9 @@ export class AdminDashboardStatsService {
         const sellerIds = sellers.map((s) => s.sellerId);
 
         const users = await this.prisma.user.findMany({
-            where: { 
+            where: {
                 id: { in: sellerIds },
-                ...userFilter
+                ...userFilter,
             },
             select: {
                 id: true,

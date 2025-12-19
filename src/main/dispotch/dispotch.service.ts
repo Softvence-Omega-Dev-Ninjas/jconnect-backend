@@ -72,7 +72,7 @@ export class DisputeService {
 
     async findAll(search?: string) {
         const where: any = {};
-        
+
         if (search) {
             where.OR = [
                 { id: { contains: search, mode: "insensitive" } },
