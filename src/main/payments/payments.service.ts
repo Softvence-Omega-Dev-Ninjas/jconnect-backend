@@ -117,9 +117,26 @@ export class PaymentService {
         return withdrawal_history;
     }
 
+    // show all payment methods
+    async getMyPaymentMethods(ReqUser: any) {
+        if (!ReqUser) {
+            throw new BadRequestException("User is required");
+        }
+
+        const paymentMethods = await this.prisma.paymentMethod.findFirst({
+            where: { userId: ReqUser.userId },
+        });
+
+        if (!paymentMethods) {
+            throw new HttpException("No payment methods found for this user", 404);
+        }
+
+        return paymentMethods;
+    }
+
     // All transaction history
     async allTransactionHistory(paginationDto: PaginationDto) {
-        const { page = 1, limit = 10, status, month, sortOrder = "desc" } = paginationDto;
+        const { page = 1, limit = 10, status, month, sortOrder = "desc", search } = paginationDto;
 
         const skip = (page - 1) * limit;
         const validStatuses = [
@@ -172,6 +189,10 @@ export class PaymentService {
                 gte: startDate,
                 lte: endDate,
             };
+        }
+
+        if (search) {
+            where.orderCode = { contains: search, mode: "insensitive" };
         }
 
         const orderBy: any = { createdAt: sortOrder };
