@@ -23,7 +23,7 @@ export class PaymentService {
         @Inject("STRIPE_CLIENT")
         private readonly stripe: Stripe,
         private readonly mail: MailService,
-    ) { }
+    ) {}
 
     async createCustomerID(user: any) {
         const customers = await this.stripe.customers.create({
@@ -126,7 +126,7 @@ export class PaymentService {
         const paymentMethods = await this.prisma.paymentMethod.findFirst({
             where: { userId: ReqUser.userId },
         });
-        
+
         if (!paymentMethods) {
             throw new HttpException("No payment methods found for this user", 404);
         }
