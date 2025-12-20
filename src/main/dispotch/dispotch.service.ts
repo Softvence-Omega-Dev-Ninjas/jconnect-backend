@@ -16,7 +16,7 @@ export class DisputeService {
     constructor(
         private prisma: PrismaService,
         private awsService: AwsService,
-    ) { }
+    ) {}
 
     async create(userId: string, dto: CreateDisputeDto, files?: Express.Multer.File[]) {
         // 1️⃣ Check if order exists and belongs to user
@@ -163,7 +163,7 @@ export class DisputeService {
         const isAdmin = user.roles === "ADMIN";
         const isSuperAdmin = user.roles === "SUPER_ADMIN";
         const isOwner = dispute.userId === user.userId;
-        console.log("ami user", user,isOwner,isAdmin,dispute,isSuperAdmin)
+        console.log("ami user", user, isOwner, isAdmin, dispute, isSuperAdmin);
         if (!isAdmin && !isOwner && !isSuperAdmin) {
             throw new ForbiddenException("You do not have permission to update this dispute.");
         }
