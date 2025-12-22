@@ -23,7 +23,7 @@ export class PaymentService {
         @Inject("STRIPE_CLIENT")
         private readonly stripe: Stripe,
         private readonly mail: MailService,
-    ) { }
+    ) {}
 
     async createCustomerID(user: any) {
         const customers = await this.stripe.customers.create({
@@ -801,8 +801,7 @@ export class PaymentService {
 
         const sellerId = order.seller.id;
 
-
-         const intent = await this.stripe.paymentIntents.retrieve(order.paymentIntentId);
+        const intent = await this.stripe.paymentIntents.retrieve(order.paymentIntentId);
 
         if (intent.status === "requires_capture") {
             await this.stripe.paymentIntents.cancel(order.paymentIntentId);
@@ -847,8 +846,6 @@ export class PaymentService {
                 "No available balance to refund because seller account is empty",
             );
         }
-
-
 
         // 3) Payment was captured → refund the payment
         const refund = await this.stripe.refunds.create({
