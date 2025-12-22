@@ -44,6 +44,7 @@ export class DisputeController {
             properties: {
                 orderId: { type: "string" },
                 description: { type: "string" },
+                resolution: { type: "string" },
                 files: {
                     type: "array",
                     items: { type: "string", format: "binary" },

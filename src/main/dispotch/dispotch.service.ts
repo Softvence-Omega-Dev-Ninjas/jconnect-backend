@@ -58,6 +58,7 @@ export class DisputeService {
                 userId,
                 orderId: dto.orderId,
                 description: dto.description,
+                resolution: dto.resolution,
                 proofs: proofUrls, // save S3 URLs
                 status: "UNDER_REVIEW",
             },
@@ -137,7 +138,15 @@ export class DisputeService {
     async findMyDisputes(userId: string) {
         return this.prisma.dispute.findMany({
             where: { userId },
-            include: { order: true },
+            include: {
+                order: {
+                    include: {
+                        seller: { omit: { password: true } },
+                        service: true,
+                        buyer: { omit: { password: true } },
+                    },
+                },
+            },
             orderBy: { createdAt: "desc" },
         });
     }

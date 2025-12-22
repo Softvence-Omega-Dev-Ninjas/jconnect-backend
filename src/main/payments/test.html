@@ -87,9 +87,10 @@
                     statusEl.textContent = "Auth token required";
                     return;
                 }
-
+                // const baseURL = "https://jconnect-server.saikat.com.bd"
+                const baseURL = "http://localhost:5050"
                 // 1️⃣ Create SetupIntent
-                const res1 = await fetch("http://localhost:5050/payments/create-setup-intent", {
+                const res1 = await fetch(`${baseURL}/payments/create-setup-intent`, {
                     method: "POST",
                     headers: { "Content-Type": "application/json", Authorization: auth },
                     body: JSON.stringify({}),
@@ -114,7 +115,7 @@
 
                 // 3️⃣ Send client_secret + token to backend for confirm
                 statusEl.textContent = "Confirming SetupIntent via backend...";
-                const res2 = await fetch("http://localhost:5050/payments/confirm-setup-intent", {
+                const res2 = await fetch(`${baseURL}/payments/confirm-setup-intent`, {
                     method: "POST",
                     headers: { "Content-Type": "application/json", Authorization: auth },
                     body: JSON.stringify({ clientSecret: client_secret, token: token.id }),
