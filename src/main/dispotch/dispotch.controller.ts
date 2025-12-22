@@ -32,7 +32,7 @@ import { FindDisputesDto } from "./dto/find-disputes.dto";
 @ApiBearerAuth()
 @Controller("disputes")
 export class DisputeController {
-    constructor(private readonly disputeService: DisputeService) {}
+    constructor(private readonly disputeService: DisputeService) { }
 
     @ValidateUser()
     @Post()
@@ -44,6 +44,7 @@ export class DisputeController {
             properties: {
                 orderId: { type: "string" },
                 description: { type: "string" },
+                resolution: { type: "string" },
                 files: {
                     type: "array",
                     items: { type: "string", format: "binary" },
