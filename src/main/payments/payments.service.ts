@@ -100,6 +100,50 @@ export class PaymentService {
         };
     }
 
+    // payment_method_attached
+    async payment_method_attached(payment_method_id: string, userReq: any) {
+        // console.log("ussssssssssssssssss", userReq);
+
+        const user: any = await this.prisma.user.findUnique({ where: { id: userReq.userId } });
+        // console.log("ami user ==============----", user);
+        if (!user) {
+            throw new HttpException("user not found ", 404);
+        }
+        if (!user.customerIdStripe) {
+            throw new HttpException("customer id not found with this user", 404);
+        }
+
+        try {
+            const methods = await this.prisma.paymentMethod.findMany({
+                where: { userId: userReq.userId },
+            });
+
+            if (methods.length > 0) {
+                throw new Error("User already has a payment method");
+            }
+
+            const res = await this.stripe.paymentMethods.attach(payment_method_id, {
+                customer: user.customerIdStripe,
+            });
+            console.log("ss44444444444444444444444444444444444sssssss", res);
+
+            await this.prisma.paymentMethod.create({
+                data: {
+                    paymentMethod: res.id, // stripe payment_method id
+                    userId: userReq.userId,
+                    cardBrand: res.card?.brand,
+                    last4: res.card?.last4,
+                    expMonth: res.card?.exp_month,
+                    expYear: res.card?.exp_year,
+                },
+            });
+        } catch (error) {
+            throw new HttpException(error.message, 404);
+        }
+
+        return "successfully attached payment methode";
+    }
+
     async delete_payment_methode(paymentMethodId: string, reqUser: any) {
         const deleted = await this.prisma.paymentMethod.delete({
             where: { id: paymentMethodId },
