@@ -640,7 +640,7 @@ export class PaymentService {
         const feeAmount = service.price * (setting?.platformFee_percents / 100);
         const finalPrice = service.price + feeAmount;
         const paymentIntent = await this.stripe.paymentIntents.create({
-            amount: finalPrice,
+            amount: Math.round(finalPrice),
             currency: service.currency?.toLowerCase() || "usd",
             customer: user?.customerIdStripe,
             payment_method: user.paymentMethod?.[0]?.paymentMethod,
@@ -830,10 +830,11 @@ export class PaymentService {
             throw new HttpException("You cannot request a refund for this order.", 403);
         }
 
-        if (!order.paymentIntentId)
+        if (!order.paymentIntentId) {
             throw new BadRequestException(
                 "buyer not paid yet/PaymentIntent ID not found for this order",
             );
+        }
 
         const sellerId = order.seller.id;
 
@@ -849,7 +850,7 @@ export class PaymentService {
                     seller_amount: 0,
                     buyerPay: 0,
                     stripeFee: 0,
-                    PlatfromRevinue: order.buyerPay - order.amount,
+                    PlatfromRevinue: 0,
                     platformFee: 0,
                 },
             });
@@ -858,10 +859,10 @@ export class PaymentService {
                 order.buyer.email,
                 "Payment Cancelled",
                 `
-            <h1>Your payment was cancelled.</h1>
-            <p>Order Code: ${order.orderCode}</p>
-            <p>Status: Cancelled</p>
-        `,
+                    <h1>Your payment was cancelled.</h1>
+                    <p>Order Code: ${order.orderCode}</p>
+                    <p>Status: Cancelled</p>
+                `,
             );
 
             return { message: "Payment authorization cancelled. No refund needed." };
