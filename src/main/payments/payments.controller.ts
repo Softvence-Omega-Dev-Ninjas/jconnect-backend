@@ -31,7 +31,7 @@ import { PaymentService } from "./payments.service";
 @ApiTags("Payment")
 @Controller("payments")
 export class PaymentController {
-    constructor(private readonly paymentService: PaymentService) { }
+    constructor(private readonly paymentService: PaymentService) {}
 
     @ApiBearerAuth()
     @ValidateUser()
@@ -66,14 +66,17 @@ export class PaymentController {
     @ApiQuery({
         name: "payment_method_id",
         type: String,
-        required: true
+        required: true,
     })
     @Post("payment_method_attached")
     async payment_method_attached(@GetUser() user: any, @Query() payment_method_id: any) {
         console.log("ami methode id ========", payment_method_id);
 
-        const res = await this.paymentService.payment_method_attached(payment_method_id.payment_method_id, user)
-        return { message: "success", res }
+        const res = await this.paymentService.payment_method_attached(
+            payment_method_id.payment_method_id,
+            user,
+        );
+        return { message: "success", res };
     }
 
     // show all payment methods
