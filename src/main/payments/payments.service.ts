@@ -23,7 +23,7 @@ export class PaymentService {
         @Inject("STRIPE_CLIENT")
         private readonly stripe: Stripe,
         private readonly mail: MailService,
-    ) {}
+    ) { }
 
     async createCustomerID(user: any) {
         const customers = await this.stripe.customers.create({
@@ -148,6 +148,8 @@ export class PaymentService {
         const deleted = await this.prisma.paymentMethod.delete({
             where: { id: paymentMethodId },
         });
+
+        return { message: "Payment method deleted successfully", deleted }
     }
 
     //withdrawal history

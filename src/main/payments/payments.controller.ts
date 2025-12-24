@@ -31,7 +31,7 @@ import { PaymentService } from "./payments.service";
 @ApiTags("Payment")
 @Controller("payments")
 export class PaymentController {
-    constructor(private readonly paymentService: PaymentService) {}
+    constructor(private readonly paymentService: PaymentService) { }
 
     @ApiBearerAuth()
     @ValidateUser()
@@ -224,7 +224,7 @@ export class PaymentController {
     @ValidateUser()
     @Post("approve-payment")
     @ApiOperation({
-        summary: "Admin approves escrow payment & transfers money to seller",
+        summary: "is Admin/Buyer approve payment release to seller",
         description: `
 This endpoint is used by Admin/Buyer only.
 ✔ Finds the order using paymentIntentId  
