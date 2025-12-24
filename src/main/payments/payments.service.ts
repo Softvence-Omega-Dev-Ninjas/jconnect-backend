@@ -23,7 +23,7 @@ export class PaymentService {
         @Inject("STRIPE_CLIENT")
         private readonly stripe: Stripe,
         private readonly mail: MailService,
-    ) {}
+    ) { }
 
     async createCustomerID(user: any) {
         const customers = await this.stripe.customers.create({
@@ -114,6 +114,17 @@ export class PaymentService {
         }
 
         try {
+
+            const methods = await this.prisma.paymentMethod.findMany({
+                where: { userId: userReq.userId },
+            });
+
+            if (methods.length > 0) {
+                throw new Error("User already has a payment method");
+            }
+
+
+
             const res = await this.stripe.paymentMethods.attach(payment_method_id, {
                 customer: user.customerIdStripe,
             });
