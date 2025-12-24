@@ -34,7 +34,7 @@ export class OrdersController {
         private readonly ordersService: OrdersService,
         private readonly prisma: PrismaService,
         private awsservice: AwsService,
-    ) { }
+    ) {}
 
     // @ApiBearerAuth()
     // @ValidateUser()
@@ -64,9 +64,7 @@ export class OrdersController {
     @ApiBearerAuth()
     @ValidateUser()
     @Get("my_service_orders")
-    async myServiceOrders(
-        @GetUser() user: any
-    ) {
+    async myServiceOrders(@GetUser() user: any) {
         return this.ordersService.myServiceOrder(user.userId);
     }
 

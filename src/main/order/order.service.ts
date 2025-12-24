@@ -18,7 +18,7 @@ const orderStatusFilter = {
 
 @Injectable()
 export class OrdersService {
-    constructor(private prisma: PrismaService) { }
+    constructor(private prisma: PrismaService) {}
 
     // CREATE ORDER
     async createOrder(buyerId: string, dto: any) {
@@ -225,7 +225,7 @@ export class OrdersService {
         if (filter && orderStatusFilter[filter]) {
             where.status = { in: orderStatusFilter[filter] };
         }
-        const seller = buyerId
+        const seller = buyerId;
         return this.prisma.order.findMany({
             where,
             include: {
@@ -235,9 +235,7 @@ export class OrdersService {
             orderBy: { createdAt: "desc" },
         });
     }
-    async myServiceOrder(
-        sellerId: string
-    ) {
+    async myServiceOrder(sellerId: string) {
         // console.log("ami call hoychi buyer order ", buyerId);
 
         const where: any = { sellerId };
