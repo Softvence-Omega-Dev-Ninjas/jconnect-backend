@@ -15,7 +15,7 @@
         "start:prod": "node dist/main",
         "lint": "eslint \"{src,apps,libs,test}/**/*.ts\" --fix",
         "generate:enum": "tsx src/scripts/generate.enum.ts",
-        "prisma:generate": "npm run generate:enum && npx prisma generate",
+        "prisma:generate": "npx prisma generate",
         "prisma:migrate": "npx prisma migrate deploy",
         "prisma:reset": "npx prisma migrate reset",
         "start:docker": "prisma generate && prisma migrate deploy && node dist/main",
