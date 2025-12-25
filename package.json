@@ -27,7 +27,8 @@
         "db:seed:prod": "tsx prisma/seed.ts",
         "db:fetch-prod": "tsx src/scripts/fetch-production-data.ts",
         "db:sync-prod": "tsx src/scripts/sync-production-db.ts",
-        "prepare": "husky"
+        "prepare": "husky",
+        "postinstall": "npx prisma generate"
     },
     "dependencies": {
         "@aws-sdk/client-s3": "^3.929.0",
