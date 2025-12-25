@@ -98,13 +98,13 @@ jobs:
                   script: |
                       cd /home/${{ secrets.VPS_USER }}/server
                       # Pull the latest images
-                      docker compose --profile prod pull
+                      sudo docker compose --profile prod pull
 
                       # Stop and remove existing containers safely
-                      docker compose --profile prod down --remove-orphans
+                      sudo docker compose --profile prod down --remove-orphans
 
                       # Start containers in detached mode
-                      docker compose --profile prod up -d
+                      sudo docker compose --profile prod up -d
 
                       # Prune unused Docker objects (optional, cleans disk)
-                      docker system prune -f
+                      sudo docker system prune -f
