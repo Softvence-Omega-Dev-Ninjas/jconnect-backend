@@ -17,7 +17,14 @@ import { UpdateDisputeDto } from "./dto/update-dispute.dto";
 
 import { GetUser, ValidateAdmin, ValidateUser } from "@common/jwt/jwt.decorator";
 import { FilesInterceptor } from "@nestjs/platform-express";
-import { ApiBearerAuth, ApiBody, ApiConsumes, ApiOperation, ApiTags } from "@nestjs/swagger";
+import {
+    ApiBearerAuth,
+    ApiBody,
+    ApiConsumes,
+    ApiOperation,
+    ApiQuery,
+    ApiTags,
+} from "@nestjs/swagger";
 import { DisputeService } from "./dispotch.service";
 import { FindDisputesDto } from "./dto/find-disputes.dto";
 
@@ -37,6 +44,7 @@ export class DisputeController {
             properties: {
                 orderId: { type: "string" },
                 description: { type: "string" },
+                resolution: { type: "string" },
                 files: {
                     type: "array",
                     items: { type: "string", format: "binary" },
@@ -57,17 +65,29 @@ export class DisputeController {
     @ValidateAdmin()
     @Get()
     @ApiOperation({ summary: "Get all disputes (admin)" })
-    findAll() {
-        return this.disputeService.findAll();
+    @ApiQuery({
+        name: "search",
+        required: false,
+        type: String,
+        description: "Search by dispute ID or order ID",
+    })
+    findAll(@Query("search") search?: string) {
+        return this.disputeService.findAll(search);
     }
 
     @ApiBearerAuth()
     @ValidateAdmin()
     @Get("filter")
     @ApiOperation({ summary: "Get all disputes (admin) with filtering & pagination" })
-    async findQuery(@Query() query: FindDisputesDto) {
+    @ApiQuery({
+        name: "search",
+        required: false,
+        type: String,
+        description: "Search by dispute ID or order ID",
+    })
+    async findQuery(@Query() query: FindDisputesDto, @Query("search") search?: string) {
         try {
-            const result = await this.disputeService.findQuery(query);
+            const result = await this.disputeService.findQuery(query, search);
             return {
                 ...result,
                 success: true,

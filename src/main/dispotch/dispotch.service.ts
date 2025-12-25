@@ -58,6 +58,7 @@ export class DisputeService {
                 userId,
                 orderId: dto.orderId,
                 description: dto.description,
+                resolution: dto.resolution,
                 proofs: proofUrls, // save S3 URLs
                 status: "UNDER_REVIEW",
             },
@@ -70,8 +71,18 @@ export class DisputeService {
         return { dispute };
     }
 
-    async findAll() {
+    async findAll(search?: string) {
+        const where: any = {};
+
+        if (search) {
+            where.OR = [
+                { id: { contains: search, mode: "insensitive" } },
+                { order: { orderCode: { contains: search, mode: "insensitive" } } },
+            ];
+        }
+
         return this.prisma.dispute.findMany({
+            where,
             include: {
                 order: true,
                 user: { select: { id: true, full_name: true } },
@@ -80,7 +91,7 @@ export class DisputeService {
         });
     }
 
-    async findQuery(query?: FindDisputesDto) {
+    async findQuery(query?: FindDisputesDto, search?: string) {
         const page = query?.page ?? 1;
         const perPage = query?.perPage ?? 10;
         const skip = (page - 1) * perPage;
@@ -91,6 +102,13 @@ export class DisputeService {
             where.createdAt = {} as any;
             if (query.startDate) where.createdAt.gte = query.startDate;
             if (query.endDate) where.createdAt.lte = query.endDate;
+        }
+
+        if (search) {
+            where.OR = [
+                { id: { contains: search, mode: "insensitive" } },
+                { order: { orderCode: { contains: search, mode: "insensitive" } } },
+            ];
         }
 
         const [data, total] = await this.prisma.$transaction([
@@ -120,7 +138,15 @@ export class DisputeService {
     async findMyDisputes(userId: string) {
         return this.prisma.dispute.findMany({
             where: { userId },
-            include: { order: true },
+            include: {
+                order: {
+                    include: {
+                        seller: { omit: { password: true } },
+                        service: true,
+                        buyer: { omit: { password: true } },
+                    },
+                },
+            },
             orderBy: { createdAt: "desc" },
         });
     }
@@ -143,10 +169,11 @@ export class DisputeService {
         const dispute = await this.findOne(id); // assuming findOne throws NotFoundException if not found
 
         // 2️⃣ Check permissions
-        const isAdmin = user.role === "ADMIN";
+        const isAdmin = user.roles === "ADMIN";
+        const isSuperAdmin = user.roles === "SUPER_ADMIN";
         const isOwner = dispute.userId === user.userId;
-
-        if (!isAdmin && !isOwner) {
+        console.log("ami user", user, isOwner, isAdmin, dispute, isSuperAdmin);
+        if (!isAdmin && !isOwner && !isSuperAdmin) {
             throw new ForbiddenException("You do not have permission to update this dispute.");
         }
 

@@ -100,10 +100,56 @@ export class PaymentService {
         };
     }
 
+    // payment_method_attached
+    async payment_method_attached(payment_method_id: string, userReq: any) {
+        // console.log("ussssssssssssssssss", userReq);
+
+        const user: any = await this.prisma.user.findUnique({ where: { id: userReq.userId } });
+        // console.log("ami user ==============----", user);
+        if (!user) {
+            throw new HttpException("user not found ", 404);
+        }
+        if (!user.customerIdStripe) {
+            throw new HttpException("customer id not found with this user", 404);
+        }
+
+        try {
+            const methods = await this.prisma.paymentMethod.findMany({
+                where: { userId: userReq.userId },
+            });
+
+            if (methods.length > 0) {
+                throw new Error("User already has a payment method");
+            }
+
+            const res = await this.stripe.paymentMethods.attach(payment_method_id, {
+                customer: user.customerIdStripe,
+            });
+            console.log("ss44444444444444444444444444444444444sssssss", res);
+
+            await this.prisma.paymentMethod.create({
+                data: {
+                    paymentMethod: res.id, // stripe payment_method id
+                    userId: userReq.userId,
+                    cardBrand: res.card?.brand,
+                    last4: res.card?.last4,
+                    expMonth: res.card?.exp_month,
+                    expYear: res.card?.exp_year,
+                },
+            });
+        } catch (error) {
+            throw new HttpException(error.message, 404);
+        }
+
+        return "successfully attached payment methode";
+    }
+
     async delete_payment_methode(paymentMethodId: string, reqUser: any) {
         const deleted = await this.prisma.paymentMethod.delete({
             where: { id: paymentMethodId },
         });
+
+        return { message: "Payment method deleted successfully", deleted };
     }
 
     //withdrawal history
@@ -117,9 +163,26 @@ export class PaymentService {
         return withdrawal_history;
     }
 
+    // show all payment methods
+    async getMyPaymentMethods(ReqUser: any) {
+        if (!ReqUser) {
+            throw new BadRequestException("User is required");
+        }
+
+        const paymentMethods = await this.prisma.paymentMethod.findFirst({
+            where: { userId: ReqUser.userId },
+        });
+
+        if (!paymentMethods) {
+            throw new HttpException("No payment methods found for this user", 404);
+        }
+
+        return paymentMethods;
+    }
+
     // All transaction history
     async allTransactionHistory(paginationDto: PaginationDto) {
-        const { page = 1, limit = 10, status, month, sortOrder = "desc" } = paginationDto;
+        const { page = 1, limit = 10, status, month, sortOrder = "desc", search } = paginationDto;
 
         const skip = (page - 1) * limit;
         const validStatuses = [
@@ -174,6 +237,10 @@ export class PaymentService {
             };
         }
 
+        if (search) {
+            where.orderCode = { contains: search, mode: "insensitive" };
+        }
+
         const orderBy: any = { createdAt: sortOrder };
 
         const [transactions, total] = await this.prisma.$transaction([
@@ -209,6 +276,36 @@ export class PaymentService {
                 hasNext: page < lastPage,
                 hasPrev: page > 1,
             },
+        };
+    }
+
+    // Get single transaction history
+    async getSingleTransactionHistory(id: string) {
+        const transaction = await this.prisma.order.findUnique({
+            where: { id },
+            include: {
+                seller: {
+                    select: {
+                        id: true,
+                        full_name: true,
+                        email: true,
+                        profilePhoto: true,
+                        phone: true,
+                        is_terms_agreed: true,
+                        withdrawn_amount: true,
+                    },
+                },
+            },
+        });
+
+        if (!transaction) {
+            throw new NotFoundException("Transaction not found");
+        }
+
+        return {
+            success: true,
+            message: "Successfully fetched transaction",
+            data: transaction,
         };
     }
 
@@ -553,7 +650,7 @@ export class PaymentService {
         const feeAmount = service.price * (setting?.platformFee_percents / 100);
         const finalPrice = service.price + feeAmount;
         const paymentIntent = await this.stripe.paymentIntents.create({
-            amount: finalPrice,
+            amount: Math.round(finalPrice),
             currency: service.currency?.toLowerCase() || "usd",
             customer: user?.customerIdStripe,
             payment_method: user.paymentMethod?.[0]?.paymentMethod,
@@ -743,12 +840,43 @@ export class PaymentService {
             throw new HttpException("You cannot request a refund for this order.", 403);
         }
 
-        if (!order.paymentIntentId)
+        if (!order.paymentIntentId) {
             throw new BadRequestException(
                 "buyer not paid yet/PaymentIntent ID not found for this order",
             );
+        }
 
         const sellerId = order.seller.id;
+
+        const intent = await this.stripe.paymentIntents.retrieve(order.paymentIntentId);
+
+        if (intent.status === "requires_capture") {
+            await this.stripe.paymentIntents.cancel(order.paymentIntentId);
+
+            await this.prisma.order.update({
+                where: { id: order.id },
+                data: {
+                    status: OrderStatus.CANCELLED,
+                    seller_amount: 0,
+                    buyerPay: 0,
+                    stripeFee: 0,
+                    PlatfromRevinue: 0,
+                    platformFee: 0,
+                },
+            });
+
+            await this.mail.sendEmail(
+                order.buyer.email,
+                "Payment Cancelled",
+                `
+                    <h1>Your payment was cancelled.</h1>
+                    <p>Order Code: ${order.orderCode}</p>
+                    <p>Status: Cancelled</p>
+                `,
+            );
+
+            return { message: "Payment authorization cancelled. No refund needed." };
+        }
 
         const totalReleased = await this.prisma.order.aggregate({
             where: { sellerId, status: OrderStatus.RELEASED },
@@ -764,36 +892,6 @@ export class PaymentService {
             throw new BadRequestException(
                 "No available balance to refund because seller account is empty",
             );
-        }
-
-        const intent = await this.stripe.paymentIntents.retrieve(order.paymentIntentId);
-
-        if (intent.status === "requires_capture") {
-            await this.stripe.paymentIntents.cancel(order.paymentIntentId);
-
-            await this.prisma.order.update({
-                where: { id: order.id },
-                data: {
-                    status: OrderStatus.CANCELLED,
-                    seller_amount: 0,
-                    buyerPay: 0,
-                    stripeFee: 0,
-                    PlatfromRevinue: order.buyerPay - order.amount,
-                    platformFee: 0,
-                },
-            });
-
-            await this.mail.sendEmail(
-                order.buyer.email,
-                "Payment Cancelled",
-                `
-            <h1>Your payment was cancelled.</h1>
-            <p>Order Code: ${order.orderCode}</p>
-            <p>Status: Cancelled</p>
-        `,
-            );
-
-            return { message: "Payment authorization cancelled. No refund needed." };
         }
 
         // 3) Payment was captured → refund the payment

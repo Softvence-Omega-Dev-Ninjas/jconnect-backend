@@ -143,15 +143,15 @@ export class UsersController {
         return this.usersService.updateMe(user.userId, updateMeDto);
     }
 
-    @ApiBearerAuth()
-    @ValidateUser()
-    @Patch("me/json")
-    @ApiOperation({ summary: "Update my account and profile (JSON only, no file upload)" })
-    @ApiBody({ type: UpdateMeDto })
-    async updateMeJson(@GetUser() user: any, @Body() updateMeDto: UpdateMeDto) {
-        console.log("JSON body received:", updateMeDto);
-        return this.usersService.updateMe(user.userId, updateMeDto);
-    }
+    // @ApiBearerAuth()
+    // @ValidateUser()
+    // @Patch("me/json")
+    // @ApiOperation({ summary: "Update my account and profile (JSON only, no file upload)" })
+    // @ApiBody({ type: UpdateMeDto })
+    // async updateMeJson(@GetUser() user: any, @Body() updateMeDto: UpdateMeDto) {
+    //     console.log("JSON body received:", updateMeDto);
+    //     return this.usersService.updateMe(user.userId, updateMeDto);
+    // }
 
     @ApiBearerAuth()
     @ValidateUser()
@@ -221,15 +221,23 @@ export class UsersController {
     @ApiQuery({ name: "page", required: false, type: Number, example: 1 })
     @ApiQuery({ name: "limit", required: false, type: Number, example: 10 })
     @ApiQuery({ name: "isActive", required: false, type: Boolean, example: true })
+    @ApiQuery({
+        name: "search",
+        required: false,
+        type: String,
+        description: "Search by username/email",
+    })
     async findAll(
         @Query("page") page = 1,
         @Query("limit") limit = 10,
         @Query("isActive") isActive?: boolean,
+        @Query("search") search?: string,
     ) {
         return this.usersService.findAll({
             page: Number(page),
             limit: Number(limit),
             isActive: isActive !== undefined ? isActive : undefined,
+            search,
         });
     }
 

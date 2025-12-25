@@ -1,7 +1,17 @@
 // /src/service/dto/create-service.dto.ts
 import { PartialType } from "@nestjs/mapped-types";
 import { ApiProperty } from "@nestjs/swagger";
-import { IsBoolean, IsNotEmpty, IsNumber, IsOptional, IsString, Min } from "class-validator";
+import { Transform, Type } from "class-transformer";
+import {
+    IsBoolean,
+    IsEnum,
+    IsNotEmpty,
+    IsNumber,
+    IsOptional,
+    IsString,
+    Min,
+} from "class-validator";
+import { ServiceType } from "@prisma/client";
 
 export class CreateServiceDto {
     @ApiProperty({
@@ -14,12 +24,13 @@ export class CreateServiceDto {
     serviceName: string;
 
     @ApiProperty({
-        example: "Service Type",
-        description: "The type/category of the service (e.g., Social Post, Service).",
+        enum: ServiceType,
+        example: ServiceType.SERVICE,
+        description: "The type/category of the service: SOCIAL_POST or SERVICE.",
     })
-    @IsString()
+    @IsEnum(ServiceType)
     @IsNotEmpty()
-    serviceType: string;
+    serviceType: ServiceType;
 
     @ApiProperty({
         example: "I'll review your song and share actionable feedback.",
@@ -34,6 +45,7 @@ export class CreateServiceDto {
         example: 50.0,
         description: "The price for the service.",
     })
+    @Type(() => Number)
     @IsNumber()
     @Min(0)
     price: number;
@@ -52,6 +64,11 @@ export class CreateServiceDto {
         description: "Indicates if the service is a custom offering.",
         required: false,
     })
+    @Transform(({ value }) => {
+        if (value === "true" || value === true) return true;
+        if (value === "false" || value === false) return false;
+        return value;
+    })
     @IsOptional()
     @IsBoolean()
     isCustom?: boolean = false;
@@ -60,6 +77,11 @@ export class CreateServiceDto {
         example: false,
         description: "if post related",
         required: false,
+    })
+    @Transform(({ value }) => {
+        if (value === "true" || value === true) return true;
+        if (value === "false" || value === false) return false;
+        return value;
     })
     @IsOptional()
     @IsBoolean()
@@ -76,12 +98,14 @@ export class UpdateServiceDto extends PartialType(CreateServiceDto) {
     serviceName?: string;
 
     @ApiProperty({
-        example: "Service Type",
-        description: "The type/category of the service (e.g., Social Post, Service).",
+        enum: ServiceType,
+        example: ServiceType.SERVICE,
+        description: "The type/category of the service: SOCIAL_POST or SERVICE.",
+        required: false,
     })
-    @IsString()
-    @IsNotEmpty()
-    serviceType: string;
+    @IsOptional()
+    @IsEnum(ServiceType)
+    serviceType?: ServiceType;
 
     @ApiProperty({
         example: "Updated service description",
@@ -95,6 +119,7 @@ export class UpdateServiceDto extends PartialType(CreateServiceDto) {
         example: 60.0,
         required: false,
     })
+    @Type(() => Number)
     @IsOptional()
     @IsNumber()
     @Min(0)
@@ -112,6 +137,11 @@ export class UpdateServiceDto extends PartialType(CreateServiceDto) {
         example: true,
         required: false,
     })
+    @Transform(({ value }) => {
+        if (value === "true" || value === true) return true;
+        if (value === "false" || value === false) return false;
+        return value;
+    })
     @IsOptional()
     @IsBoolean()
     isCustom?: boolean;
@@ -119,6 +149,11 @@ export class UpdateServiceDto extends PartialType(CreateServiceDto) {
     @ApiProperty({
         example: true,
         required: false,
+    })
+    @Transform(({ value }) => {
+        if (value === "true" || value === true) return true;
+        if (value === "false" || value === false) return false;
+        return value;
     })
     @IsOptional()
     @IsBoolean()

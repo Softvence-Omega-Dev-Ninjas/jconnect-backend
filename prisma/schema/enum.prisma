@@ -22,3 +22,8 @@ enum ValidationType {
   PHONE
 }
 
+enum ServiceType {
+  SOCIAL_POST
+  SERVICE
+}
+

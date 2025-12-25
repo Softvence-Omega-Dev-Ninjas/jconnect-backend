@@ -30,6 +30,7 @@ export class ReviewService {
 
     // ** 2. READ (Fetch all reviews for an Artist) - GET **
     async findAllByArtist(artistId: string) {
+        console.log(artistId);
         // 1. Fetch all reviews for the artist
         const reviews = await this.prisma.review.findMany({
             where: { artistId },
@@ -44,6 +45,7 @@ export class ReviewService {
             },
         });
 
+        console.log(reviews);
         // 2. Calculate the aggregate rating (average and count)
         const avgRating = await this.prisma.review.aggregate({
             _avg: { rating: true },

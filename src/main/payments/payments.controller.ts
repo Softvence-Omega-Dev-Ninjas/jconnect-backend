@@ -61,6 +61,33 @@ export class PaymentController {
         return this.paymentService.confirmSetupIntent(body, user);
     }
 
+    @ApiBearerAuth()
+    @ValidateUser()
+    @ApiQuery({
+        name: "payment_method_id",
+        type: String,
+        required: true,
+    })
+    @Post("payment_method_attached")
+    async payment_method_attached(@GetUser() user: any, @Query() payment_method_id: any) {
+        console.log("ami methode id ========", payment_method_id);
+
+        const res = await this.paymentService.payment_method_attached(
+            payment_method_id.payment_method_id,
+            user,
+        );
+        return { message: "success", res };
+    }
+
+    // show all payment methods
+    @ApiBearerAuth()
+    @ValidateUser()
+    @Get("my-paymentsss-methods")
+    @ApiOperation({ summary: "Get all payment methods of the user" })
+    async getMyPaymentMethods(@GetUser() user: any) {
+        return this.paymentService.getMyPaymentMethods(user);
+    }
+
     // ----------------------------
     // Delete Payment Method
     // ----------------------------
@@ -142,8 +169,24 @@ export class PaymentController {
         description: "Sort order (ascending or descending)",
         example: "desc",
     })
+    @ApiQuery({
+        name: "search",
+        required: false,
+        type: String,
+        description: "Search by order ID",
+    })
     async allTransactionHistory(@Query() paginationDto: PaginationDto) {
         return this.paymentService.allTransactionHistory(paginationDto);
+    }
+
+    // Get single transaction history
+    @ApiBearerAuth()
+    @ValidateSuperAdmin()
+    @Get("transaction-history/:id")
+    @ApiOperation({ summary: "get single transaction history for admin" })
+    @ApiParam({ name: "id" })
+    async getSingleTransactionHistory(@Param("id") id: string) {
+        return this.paymentService.getSingleTransactionHistory(id);
     }
 
     // ----------------------------
@@ -181,7 +224,7 @@ export class PaymentController {
     @ValidateUser()
     @Post("approve-payment")
     @ApiOperation({
-        summary: "Admin approves escrow payment & transfers money to seller",
+        summary: "is Admin/Buyer approve payment release to seller",
         description: `
 This endpoint is used by Admin/Buyer only.
 ✔ Finds the order using paymentIntentId  
