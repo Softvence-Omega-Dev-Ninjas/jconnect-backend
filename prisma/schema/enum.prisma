@@ -26,4 +26,3 @@ enum ServiceType {
   SOCIAL_POST
   SERVICE
 }
-
