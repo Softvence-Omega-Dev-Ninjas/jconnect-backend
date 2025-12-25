@@ -63,6 +63,13 @@ export class OrdersController {
 
     @ApiBearerAuth()
     @ValidateUser()
+    @Get("my_service_orders")
+    async myServiceOrders(@GetUser() user: any) {
+        return this.ordersService.myServiceOrder(user.userId);
+    }
+
+    @ApiBearerAuth()
+    @ValidateUser()
     @Get("my-earnings")
     @ApiOperation({ summary: "Get seller earnings summary" })
     async myEarnings(@GetUser() user: any) {

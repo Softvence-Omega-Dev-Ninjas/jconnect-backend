@@ -148,6 +148,8 @@ export class PaymentService {
         const deleted = await this.prisma.paymentMethod.delete({
             where: { id: paymentMethodId },
         });
+
+        return { message: "Payment method deleted successfully", deleted };
     }
 
     //withdrawal history

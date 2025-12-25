@@ -218,19 +218,38 @@ export class OrdersService {
         buyerId: string,
         filter?: "active" | "paymentConfirm" | "complete" | "cancelled" | "pending",
     ) {
-        console.log("ami call hoychi buyer order ", buyerId);
+        // console.log("ami call hoychi buyer order ", buyerId);
 
         const where: any = { buyerId };
 
         if (filter && orderStatusFilter[filter]) {
             where.status = { in: orderStatusFilter[filter] };
         }
-
+        const seller = buyerId;
         return this.prisma.order.findMany({
             where,
             include: {
                 service: true,
                 seller: { select: { full_name: true, email: true } },
+            },
+            orderBy: { createdAt: "desc" },
+        });
+    }
+    async myServiceOrder(sellerId: string) {
+        // console.log("ami call hoychi buyer order ", buyerId);
+
+        const where: any = { sellerId };
+
+        // if (filter && orderStatusFilter[filter]) {
+        //     where.status = { in: orderStatusFilter[filter] };
+        // }
+        // const seller = buyerId
+        return this.prisma.order.findMany({
+            where,
+            include: {
+                service: true,
+                // seller: { select: { full_name: true, email: true } },
+                buyer: { select: { full_name: true, email: true } },
             },
             orderBy: { createdAt: "desc" },
         });
