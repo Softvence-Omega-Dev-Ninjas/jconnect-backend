@@ -10,7 +10,7 @@ export class seedSettingSrvice implements OnModuleInit {
         private readonly prisma: PrismaService,
         private readonly utils: UtilsService,
         private readonly configService: ConfigService,
-    ) {}
+    ) { }
 
     onModuleInit(): Promise<void> {
         return this.seedSettings();
@@ -27,8 +27,8 @@ export class seedSettingSrvice implements OnModuleInit {
         if (!settingExitst) {
             await this.prisma.setting.create({
                 data: {
-                    platformFee_percents: 0,
-                    minimum_payout: 0,
+                    platformFee_percents: 10,
+                    minimum_payout: 10,
                 },
             });
             return;
