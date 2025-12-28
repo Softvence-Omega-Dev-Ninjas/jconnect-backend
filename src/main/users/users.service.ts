@@ -350,13 +350,15 @@ export class UsersService {
         return this.findMe(userId);
     }
 
-    async findAllArtist({ page = 1, limit = 10, filter, search }: FindArtistDto) {
+    async findAllArtist({ page = 1, limit = 10, filter, search }: FindArtistDto,user:any) {
         const skip = (page - 1) * limit;
 
         const baseWhere: any = {
             isDeleted: false,
             isActive: true,
+            isVerified: true,
             role: Role.ARTIST,
+            id: { not: user.userId },
         };
 
         // 🔹 Add search system (artist_name OR service_name)
