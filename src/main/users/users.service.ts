@@ -409,12 +409,12 @@ export class UsersService {
                 const avgA =
                     a.ReviewsReceived.length > 0
                         ? a.ReviewsReceived.reduce((sum, r) => sum + r.rating, 0) /
-                          a.ReviewsReceived.length
+                        a.ReviewsReceived.length
                         : 0;
                 const avgB =
                     b.ReviewsReceived.length > 0
                         ? b.ReviewsReceived.reduce((sum, r) => sum + r.rating, 0) /
-                          b.ReviewsReceived.length
+                        b.ReviewsReceived.length
                         : 0;
                 return avgB - avgA;
             });
