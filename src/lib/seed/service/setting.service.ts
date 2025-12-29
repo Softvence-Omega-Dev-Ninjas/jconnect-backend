@@ -27,8 +27,8 @@ export class seedSettingSrvice implements OnModuleInit {
         if (!settingExitst) {
             await this.prisma.setting.create({
                 data: {
-                    platformFee_percents: 0,
-                    minimum_payout: 0,
+                    platformFee_percents: 10,
+                    minimum_payout: 10,
                 },
             });
             return;
