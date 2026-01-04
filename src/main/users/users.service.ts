@@ -358,7 +358,7 @@ export class UsersService {
             isActive: true,
             isVerified: true,
             role: Role.ARTIST,
-            id: { not: user.userId },
+            // id: { not: user.userId },
         };
 
         // 🔹 Add search system (artist_name OR service_name)
