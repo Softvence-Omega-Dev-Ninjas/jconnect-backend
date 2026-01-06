@@ -74,6 +74,8 @@ model User {
   paymentMethod PaymentMethod[]
   Disputes      Dispute[]
 
+  follwers Follow[] @relation("followers")
+  following Follow[] @relation("following")
   @@map("users")
 }
 
