@@ -1,4 +1,5 @@
 import { GetUser, ValidateArtist, ValidateUser } from "@common/jwt/jwt.decorator";
+import { AwsService } from "@main/aws/aws.service";
 import {
     Body,
     Controller,
@@ -10,6 +11,7 @@ import {
     UploadedFiles,
     UseInterceptors,
 } from "@nestjs/common";
+import { FileFieldsInterceptor } from "@nestjs/platform-express";
 import {
     ApiBearerAuth,
     ApiBody,
@@ -18,7 +20,6 @@ import {
     ApiResponse,
     ApiTags,
 } from "@nestjs/swagger";
-import { FileFieldsInterceptor } from "@nestjs/platform-express";
 import { Service, ServiceType } from "@prisma/client";
 import { CreateServiceDto, UpdateServiceDto } from "./dto/create-service.dto";
 
@@ -27,7 +28,10 @@ import { ServiceService } from "./service.service";
 @ApiTags("Services-all -details")
 @Controller("services")
 export class ServiceController {
-    constructor(private readonly serviceService: ServiceService) {}
+    constructor(
+        private readonly serviceService: ServiceService,
+        private readonly awsService: AwsService,
+    ) {}
 
     @ApiBearerAuth()
     @ValidateArtist()
@@ -55,17 +59,37 @@ export class ServiceController {
                     type: "array",
                     items: { type: "string", format: "binary" },
                 },
+                socialLogoForSocialService: {
+                    nullable: true,
+                    type: "string",
+                    format: "binary",
+                    description: "Social media logo for social service posts",
+                },
             },
             required: ["serviceName", "serviceType", "price"],
         },
     })
-    @UseInterceptors(FileFieldsInterceptor([{ name: "files", maxCount: 5 }]))
+    @UseInterceptors(
+        FileFieldsInterceptor([
+            { name: "files", maxCount: 5 },
+            { name: "socialLogoForSocialService", maxCount: 1 },
+        ]),
+    )
     @ApiResponse({ status: 201, description: "Service created successfully" })
     async create(
         @Body() createServiceDto: CreateServiceDto,
         @GetUser() user: any,
-        @UploadedFiles() files?: { files?: Express.Multer.File[] },
+        @UploadedFiles()
+        files?: {
+            files?: Express.Multer.File[];
+            socialLogoForSocialService?: Express.Multer.File[];
+        },
     ): Promise<Service> {
+        // Upload social logo to S3 if provided
+        if (files?.socialLogoForSocialService?.[0]) {
+            const uploadResult = await this.awsService.upload(files.socialLogoForSocialService[0]);
+            createServiceDto.socialLogoForSocialService = uploadResult.url;
+        }
         return this.serviceService.create(createServiceDto, user);
     }
 
@@ -123,17 +147,37 @@ export class ServiceController {
                     type: "array",
                     items: { type: "string", format: "binary" },
                 },
+                socialLogoForSocialService: {
+                    nullable: true,
+                    type: "string",
+                    format: "binary",
+                    description: "Social media logo for social service posts",
+                },
             },
         },
     })
-    @UseInterceptors(FileFieldsInterceptor([{ name: "files", maxCount: 5 }]))
+    @UseInterceptors(
+        FileFieldsInterceptor([
+            { name: "files", maxCount: 5 },
+            { name: "socialLogoForSocialService", maxCount: 1 },
+        ]),
+    )
     @ApiResponse({ status: 200, description: "Service updated successfully" })
     async update(
         @Param("id") id: string,
         @Body() updateServiceDto: UpdateServiceDto,
         @GetUser() user: any,
-        @UploadedFiles() files?: { files?: Express.Multer.File[] },
+        @UploadedFiles()
+        files?: {
+            files?: Express.Multer.File[];
+            socialLogoForSocialService?: Express.Multer.File[];
+        },
     ) {
+        // Upload social logo to S3 if provided
+        if (files?.socialLogoForSocialService?.[0]) {
+            const uploadResult = await this.awsService.upload(files.socialLogoForSocialService[0]);
+            updateServiceDto.socialLogoForSocialService = uploadResult.url;
+        }
         return this.serviceService.update(id, updateServiceDto, user);
     }
 

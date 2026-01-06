@@ -1,6 +1,7 @@
 // /src/service/dto/create-service.dto.ts
 import { PartialType } from "@nestjs/mapped-types";
 import { ApiProperty } from "@nestjs/swagger";
+import { ServiceType } from "@prisma/client";
 import { Transform, Type } from "class-transformer";
 import {
     IsBoolean,
@@ -11,7 +12,6 @@ import {
     IsString,
     Min,
 } from "class-validator";
-import { ServiceType } from "@prisma/client";
 
 export class CreateServiceDto {
     @ApiProperty({
@@ -86,6 +86,15 @@ export class CreateServiceDto {
     @IsOptional()
     @IsBoolean()
     isPost?: boolean = false;
+
+    @ApiProperty({
+        example: "https://example.com/logo.png",
+        description: "Social media logo URL for social service posts",
+        required: false,
+    })
+    @IsOptional()
+    @IsString()
+    socialLogoForSocialService?: string;
 }
 
 export class UpdateServiceDto extends PartialType(CreateServiceDto) {

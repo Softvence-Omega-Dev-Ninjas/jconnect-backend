@@ -31,6 +31,8 @@ model User {
   stripeAccountId        String?
   sellerIDStripe         String?
   customerIdStripe       String?
+  location               String?                @default("")
+  hashTags              String[]               @default([])
   // Relation to Service Model 
   profile                Profile?
   serviceRequests        ServiceRequest[]
@@ -74,8 +76,9 @@ model User {
   paymentMethod PaymentMethod[]
   Disputes      Dispute[]
 
-  follwers Follow[] @relation("followers")
+  follwers  Follow[] @relation("followers")
   following Follow[] @relation("following")
+
   @@map("users")
 }
 
