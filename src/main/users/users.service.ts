@@ -156,6 +156,28 @@ export class UsersService {
                 },
                 // devices: true,
                 services: true,
+                following: {
+                    include: {
+                        following: {
+                            select: {
+                                id: true,
+                                full_name: true,
+                                profilePhoto: true,
+                            },
+                        },
+                    },
+                },
+                follwers: {
+                    include: {
+                        follower: {
+                            select: {
+                                id: true,
+                                full_name: true,
+                                profilePhoto: true,
+                            },
+                        },
+                    },
+                },
                 // serviceRequests: {
                 //     include: {
                 //         buyer: true,
@@ -221,8 +243,13 @@ export class UsersService {
         });
         const avgRating = avgRatingResult._avg.rating ?? 0;
 
+        const followingCount = user.following ? user.following.length : 0;
+        const followerCount = user.follwers ? user.follwers.length : 0;
+
         return {
             ...user,
+            followingCount,
+            followerCount,
             stats: {
                 totalDeals,
                 totalEarnings,
@@ -493,6 +520,28 @@ export class UsersService {
                         createdAt: "desc",
                     },
                 },
+                following: {
+                    include: {
+                        following: {
+                            select: {
+                                id: true,
+                                full_name: true,
+                                profilePhoto: true,
+                            },
+                        },
+                    },
+                },
+                follwers: {
+                    include: {
+                        follower: {
+                            select: {
+                                id: true,
+                                full_name: true,
+                                profilePhoto: true,
+                            },
+                        },
+                    },
+                },
             },
         });
 
@@ -504,10 +553,15 @@ export class UsersService {
             where: { artistId: id },
         });
 
+        const followingCount = user.following ? user.following.length : 0;
+        const followerCount = user.follwers ? user.follwers.length : 0;
+
         return {
             ...user,
             averageRating: avgRating._avg.rating ? parseFloat(avgRating._avg.rating.toFixed(2)) : 0,
             totalReviews: avgRating._count.rating,
+            followingCount,
+            followerCount,
         };
     }
 
