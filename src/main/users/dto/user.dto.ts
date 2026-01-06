@@ -1,6 +1,6 @@
 import { ApiHideProperty, ApiProperty, ApiPropertyOptional } from "@nestjs/swagger";
 import { AuthProvider, Role, ValidationType } from "@prisma/client";
-import { Expose, Transform, Type } from "class-transformer";
+import { Type } from "class-transformer";
 import {
     IsArray,
     IsBoolean,
@@ -52,6 +52,17 @@ export class CreateUserDto {
     @IsOptional()
     @IsString()
     googleId?: string;
+
+    @ApiProperty({ example: "new-yourk usa", required: false })
+    @IsOptional()
+    @IsString()
+    location?: string;
+
+    @ApiProperty({ example: ["music", "art"], required: false })
+    @IsOptional()
+    @IsArray()
+    @IsString({ each: true })
+    hashTags?: string[];
 
     @ApiProperty({ example: 123456, required: false })
     @IsOptional()
@@ -206,6 +217,17 @@ export class UpdateUserDto {
     @IsDateString()
     last_login_at?: Date;
 
+    @ApiProperty({ example: "new-yourk usa", required: false })
+    @IsOptional()
+    @IsString()
+    location?: string;
+
+    @ApiProperty({ example: ["music", "art"], required: false })
+    @IsOptional()
+    @IsArray()
+    @IsString({ each: true })
+    hashTags?: string[];
+
     @ApiProperty({ example: "2025-11-12T12:00:00Z", required: false })
     @IsOptional()
     @IsDateString()
@@ -227,6 +249,17 @@ export class UpdateMeDto {
     @IsOptional()
     @IsString()
     profilePhoto?: string;
+
+    @ApiProperty({ example: "new-yourk usa", required: false })
+    @IsOptional()
+    @IsString()
+    location?: string;
+
+    @ApiProperty({ example: ["music", "art"], required: false })
+    @IsOptional()
+    @IsArray()
+    @IsString({ each: true })
+    hashTags?: string[];
 
     @ApiHideProperty()
     @IsOptional()

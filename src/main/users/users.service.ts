@@ -169,7 +169,7 @@ export class UsersService {
                 },
                 follwers: {
                     include: {
-                        follower: {
+                        followers: {
                             select: {
                                 id: true,
                                 full_name: true,
@@ -273,6 +273,8 @@ export class UsersService {
         if (dto.full_name !== undefined) userPayload.full_name = dto.full_name;
         if (dto.phone !== undefined) userPayload.phone = dto.phone;
         if (dto.profilePhoto !== undefined) userPayload.profilePhoto = dto.profilePhoto;
+        if (dto.location !== undefined) userPayload.location = dto.location;
+        if (dto.hashTags !== undefined) userPayload.hashTags = dto.hashTags;
 
         // Profile table updates
         const profilePayload = {
@@ -384,11 +386,11 @@ export class UsersService {
             isDeleted: false,
             isActive: true,
             isVerified: true,
-            role: Role.ARTIST,
+            // role: Role.ARTIST,
             // id: { not: user.userId },
         };
 
-        // 🔹 Add search system (artist_name OR service_name)
+        // 🔹 Add search system (artist_name OR service_name OR hashtags OR location)
         if (search) {
             baseWhere.OR = [
                 {
@@ -405,6 +407,17 @@ export class UsersService {
                                 mode: "insensitive",
                             },
                         },
+                    },
+                },
+                {
+                    hashTags: {
+                        hasSome: [search],
+                    },
+                },
+                {
+                    location: {
+                        contains: search,
+                        mode: "insensitive",
                     },
                 },
             ];
@@ -533,7 +546,7 @@ export class UsersService {
                 },
                 follwers: {
                     include: {
-                        follower: {
+                        followers: {
                             select: {
                                 id: true,
                                 full_name: true,
