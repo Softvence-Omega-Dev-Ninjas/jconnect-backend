@@ -1,6 +1,6 @@
 import { ApiPropertyOptional } from "@nestjs/swagger";
-import { IsOptional, IsString, IsNumber } from "class-validator";
 import { Type } from "class-transformer";
+import { IsNumber, IsOptional, IsString } from "class-validator";
 
 export class FindArtistDto {
     @ApiPropertyOptional({ example: 1 })
@@ -23,7 +23,10 @@ export class FindArtistDto {
     @IsString()
     filter?: string;
 
-    @ApiPropertyOptional({ example: "john", description: "Search by artist or service name" })
+    @ApiPropertyOptional({
+        example: "john",
+        description: "Search by artist name, service name, hashtags, or location",
+    })
     @IsOptional()
     @IsString()
     search?: string;

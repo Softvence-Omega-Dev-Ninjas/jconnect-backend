@@ -156,6 +156,28 @@ export class UsersService {
                 },
                 // devices: true,
                 services: true,
+                following: {
+                    include: {
+                        following: {
+                            select: {
+                                id: true,
+                                full_name: true,
+                                profilePhoto: true,
+                            },
+                        },
+                    },
+                },
+                follwers: {
+                    include: {
+                        followers: {
+                            select: {
+                                id: true,
+                                full_name: true,
+                                profilePhoto: true,
+                            },
+                        },
+                    },
+                },
                 // serviceRequests: {
                 //     include: {
                 //         buyer: true,
@@ -221,8 +243,13 @@ export class UsersService {
         });
         const avgRating = avgRatingResult._avg.rating ?? 0;
 
+        const followingCount = user.following ? user.following.length : 0;
+        const followerCount = user.follwers ? user.follwers.length : 0;
+
         return {
             ...user,
+            followingCount,
+            followerCount,
             stats: {
                 totalDeals,
                 totalEarnings,
@@ -246,6 +273,8 @@ export class UsersService {
         if (dto.full_name !== undefined) userPayload.full_name = dto.full_name;
         if (dto.phone !== undefined) userPayload.phone = dto.phone;
         if (dto.profilePhoto !== undefined) userPayload.profilePhoto = dto.profilePhoto;
+        if (dto.location !== undefined) userPayload.location = dto.location;
+        if (dto.hashTags !== undefined) userPayload.hashTags = dto.hashTags;
 
         // Profile table updates
         const profilePayload = {
@@ -357,11 +386,11 @@ export class UsersService {
             isDeleted: false,
             isActive: true,
             isVerified: true,
-            role: Role.ARTIST,
+            // role: Role.ARTIST,
             // id: { not: user.userId },
         };
 
-        // 🔹 Add search system (artist_name OR service_name)
+        // 🔹 Add search system (artist_name OR service_name OR hashtags OR location)
         if (search) {
             baseWhere.OR = [
                 {
@@ -378,6 +407,17 @@ export class UsersService {
                                 mode: "insensitive",
                             },
                         },
+                    },
+                },
+                {
+                    hashTags: {
+                        hasSome: [search],
+                    },
+                },
+                {
+                    location: {
+                        contains: search,
+                        mode: "insensitive",
                     },
                 },
             ];
@@ -493,6 +533,28 @@ export class UsersService {
                         createdAt: "desc",
                     },
                 },
+                following: {
+                    include: {
+                        following: {
+                            select: {
+                                id: true,
+                                full_name: true,
+                                profilePhoto: true,
+                            },
+                        },
+                    },
+                },
+                follwers: {
+                    include: {
+                        followers: {
+                            select: {
+                                id: true,
+                                full_name: true,
+                                profilePhoto: true,
+                            },
+                        },
+                    },
+                },
             },
         });
 
@@ -504,10 +566,15 @@ export class UsersService {
             where: { artistId: id },
         });
 
+        const followingCount = user.following ? user.following.length : 0;
+        const followerCount = user.follwers ? user.follwers.length : 0;
+
         return {
             ...user,
             averageRating: avgRating._avg.rating ? parseFloat(avgRating._avg.rating.toFixed(2)) : 0,
             totalReviews: avgRating._count.rating,
+            followingCount,
+            followerCount,
         };
     }
 

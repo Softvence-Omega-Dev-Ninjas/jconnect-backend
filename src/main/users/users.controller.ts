@@ -72,6 +72,12 @@ export class UsersController {
                     example:
                         '[{"orderId":1,"platformName":"Instagram","platformLink":"https://instagram.com/example"}]',
                 },
+                location: { type: "string", example: "new-yourk usa" },
+                hashTags: {
+                    type: "string",
+                    description: "JSON string of hash tags array",
+                    example: '["facebook", "art"]',
+                },
             },
         },
     })
@@ -93,12 +99,31 @@ export class UsersController {
     ) {
         console.log("Raw body received:", body);
 
+        // Parse hashTags properly
+        let parsedHashTags: string[] | undefined;
+        if (body.hashTags) {
+            if (Array.isArray(body.hashTags)) {
+                parsedHashTags = body.hashTags;
+            } else if (typeof body.hashTags === "string") {
+                try {
+                    parsedHashTags = JSON.parse(body.hashTags);
+                } catch {
+                    parsedHashTags = body.hashTags
+                        .split(",")
+                        .map((tag) => tag.trim())
+                        .filter((tag) => tag.length > 0);
+                }
+            }
+        }
+
         // Create proper DTO
         const updateMeDto: UpdateMeDto = {
             full_name: body.full_name,
             phone: body.phone,
             short_bio: body.short_bio,
             profile_image_url: body.profile_image_url,
+            location: body.location,
+            hashTags: parsedHashTags,
         };
 
         // Handle socialProfiles
@@ -139,6 +164,8 @@ export class UsersController {
             const uploaded = await this.awsservice.upload(file);
             updateMeDto.profilePhoto = uploaded.url;
         }
+
+        // console.log("************************",updateMeDto);
 
         return this.usersService.updateMe(user.userId, updateMeDto);
     }
