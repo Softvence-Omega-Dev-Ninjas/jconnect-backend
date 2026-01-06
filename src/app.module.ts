@@ -11,7 +11,7 @@ import { LoggerMiddleware } from "./common/middleware/logger.middleware";
 import { LibModule } from "./lib/lib.module";
 import { MainModule } from "./main/main.module";
 import { TestModule } from "./test/test.module";
-import { FollowFunctionModule } from './main/follow-function/follow-function.module';
+import { FollowFunctionModule } from "./main/follow-function/follow-function.module";
 
 @Module({
     imports: [
