@@ -52,7 +52,7 @@ export class FollowFunctionService {
                 followingId: user.userId,
             },
             include: {
-                follower: {
+                followers: {
                     select: {
                         id: true,
                         email: true,

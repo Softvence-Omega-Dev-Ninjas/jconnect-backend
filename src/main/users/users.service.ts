@@ -169,7 +169,7 @@ export class UsersService {
                 },
                 follwers: {
                     include: {
-                        follower: {
+                        followers: {
                             select: {
                                 id: true,
                                 full_name: true,
@@ -533,7 +533,7 @@ export class UsersService {
                 },
                 follwers: {
                     include: {
-                        follower: {
+                        followers: {
                             select: {
                                 id: true,
                                 full_name: true,
