@@ -385,7 +385,7 @@ export class UsersService {
             isActive: true,
             isVerified: true,
             role: {
-                notIn: [Role.ADMIN, Role.SUPER_ADMIN],
+                notIn: [Role.SUPER_ADMIN],
             },
             // id: { not: user.userId },
         };
