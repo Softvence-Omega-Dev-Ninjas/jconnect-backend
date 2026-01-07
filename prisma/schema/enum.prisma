@@ -26,3 +26,14 @@ enum ServiceType {
   SOCIAL_POST
   SERVICE
 }
+
+enum SocialLogo {
+  SELECT
+  FACEBOOK
+  INSTAGRAM
+  TWITTER
+  LINKEDIN
+  YOUTUBE
+  SNAPCHAT
+  TWITCH
+}

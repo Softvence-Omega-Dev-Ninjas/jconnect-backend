@@ -1,7 +1,7 @@
 // /src/service/dto/create-service.dto.ts
 import { PartialType } from "@nestjs/mapped-types";
 import { ApiProperty } from "@nestjs/swagger";
-import { ServiceType } from "@prisma/client";
+import { ServiceType, SocialLogo } from "@prisma/client";
 import { Transform, Type } from "class-transformer";
 import {
     IsBoolean,
@@ -95,6 +95,23 @@ export class CreateServiceDto {
     @IsOptional()
     @IsString()
     socialLogoForSocialService?: string;
+
+    @ApiProperty({
+        enum: SocialLogo,
+        example: SocialLogo.FACEBOOK,
+        description: "Select social media platform type",
+        required: false,
+        default: SocialLogo.SELECT,
+    })
+    @Transform(({ value }) => {
+        if (!value || value === "" || value === null || value === undefined) {
+            return SocialLogo.SELECT;
+        }
+        return value;
+    })
+    @IsOptional()
+    @IsEnum(SocialLogo)
+    socialLogo?: SocialLogo = SocialLogo.SELECT;
 }
 
 export class UpdateServiceDto extends PartialType(CreateServiceDto) {
