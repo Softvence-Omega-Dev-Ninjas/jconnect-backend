@@ -11,7 +11,7 @@ export class UsersService {
     constructor(
         private prisma: PrismaService,
         private utils: UtilsService,
-    ) { }
+    ) {}
 
     async create(Userdata: CreateUserDto) {
         const { password, ...users } = Userdata;
@@ -422,7 +422,8 @@ export class UsersService {
         }
 
         // 🔹 Determine if we need to fetch all data (for sorting filters)
-        const needsFullDataset = filter && ["top-rated", "recently-updated", "suggested"].includes(filter);
+        const needsFullDataset =
+            filter && ["top-rated", "recently-updated", "suggested"].includes(filter);
 
         // 🔹 Build query options
         const queryOptions: any = {
@@ -459,12 +460,12 @@ export class UsersService {
                 const avgA =
                     a.ReviewsReceived.length > 0
                         ? a.ReviewsReceived.reduce((sum: number, r: any) => sum + r.rating, 0) /
-                        a.ReviewsReceived.length
+                          a.ReviewsReceived.length
                         : 0;
                 const avgB =
                     b.ReviewsReceived.length > 0
                         ? b.ReviewsReceived.reduce((sum: number, r: any) => sum + r.rating, 0) /
-                        b.ReviewsReceived.length
+                          b.ReviewsReceived.length
                         : 0;
                 return avgB - avgA;
             });
