@@ -20,7 +20,7 @@ import {
     ApiResponse,
     ApiTags,
 } from "@nestjs/swagger";
-import { Service, ServiceType } from "@prisma/client";
+import { Service, ServiceType, SocialLogo } from "@prisma/client";
 import { CreateServiceDto, UpdateServiceDto } from "./dto/create-service.dto";
 
 import { ServiceService } from "./service.service";
@@ -64,6 +64,13 @@ export class ServiceController {
                     type: "string",
                     format: "binary",
                     description: "Social media logo for social service posts",
+                },
+                socialLogo: {
+                    type: "string",
+                    enum: Object.values(SocialLogo),
+                    example: SocialLogo.FACEBOOK,
+                    description: "Select social media platform type",
+                    nullable: true,
                 },
             },
             required: ["serviceName", "serviceType", "price"],
@@ -152,6 +159,13 @@ export class ServiceController {
                     type: "string",
                     format: "binary",
                     description: "Social media logo for social service posts",
+                },
+                socialLogo: {
+                    type: "string",
+                    enum: Object.values(SocialLogo),
+                    example: SocialLogo.FACEBOOK,
+                    description: "Select social media platform type",
+                    nullable: true,
                 },
             },
         },

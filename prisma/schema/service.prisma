@@ -6,6 +6,7 @@ model Service {
   price                      Float
   currency                   String      @default("USD")
   socialLogoForSocialService String?     @default("")
+  socialLogo                 SocialLogo? @default(SELECT)
   creatorId                  String
   creator                    User        @relation(fields: [creatorId], references: [id], onDelete: Cascade)
 
