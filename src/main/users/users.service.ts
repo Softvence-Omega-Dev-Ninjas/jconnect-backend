@@ -384,7 +384,9 @@ export class UsersService {
             isDeleted: false,
             isActive: true,
             isVerified: true,
-            // role: Role.ARTIST,
+            role: {
+                notIn: [Role.SUPER_ADMIN],
+            },
             // id: { not: user.userId },
         };
 
