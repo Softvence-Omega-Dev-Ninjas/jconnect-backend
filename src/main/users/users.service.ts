@@ -379,9 +379,7 @@ export class UsersService {
         return this.findMe(userId);
     }
 
-    async findAllArtist({ page = 1, limit = 10, filter, search }: FindArtistDto, user: any) {
-        const skip = (page - 1) * limit;
-
+    async findAllArtist({ page = 1, limit, filter, search }: FindArtistDto, user: any) {
         const baseWhere: any = {
             isDeleted: false,
             isActive: true,
@@ -423,37 +421,50 @@ export class UsersService {
             ];
         }
 
-        // 🔹 Default pagination (with included services)
-        const [artists, total] = await this.prisma.$transaction([
-            this.prisma.user.findMany({
-                where: baseWhere,
-                include: {
-                    services: {
-                        orderBy: { updatedAt: "desc" },
-                    },
-                    ReviewsGiven: true,
-                    ReviewsReceived: true,
+        // 🔹 Determine if we need to fetch all data (for sorting filters)
+        const needsFullDataset =
+            filter && ["top-rated", "recently-updated", "suggested"].includes(filter);
+
+        // 🔹 Build query options
+        const queryOptions: any = {
+            where: baseWhere,
+            include: {
+                services: {
+                    orderBy: { updatedAt: "desc" },
                 },
-                skip,
-                take: limit,
-                omit: { password: true },
-                orderBy: { created_at: "desc" },
-            }),
+                ReviewsGiven: true,
+                ReviewsReceived: true,
+            },
+            orderBy: { created_at: "desc" },
+        };
+
+        // Only add database pagination if NO filter is applied AND limit is provided
+        if (!needsFullDataset && limit) {
+            queryOptions.skip = (page - 1) * limit;
+            queryOptions.take = limit;
+        }
+
+        // 🔹 Fetch data
+        const [artistsData, total] = await this.prisma.$transaction([
+            this.prisma.user.findMany(queryOptions),
             this.prisma.user.count({ where: baseWhere }),
         ]);
 
-        let sortedArtists = artists;
+        // Remove password from results and cast to any to preserve included relations
+        const artists: any[] = artistsData.map(({ password, ...artist }) => artist);
+
+        let sortedArtists: any[] = artists;
 
         if (filter === "top-rated") {
-            artists.sort((a, b) => {
+            sortedArtists = [...artists].sort((a, b) => {
                 const avgA =
                     a.ReviewsReceived.length > 0
-                        ? a.ReviewsReceived.reduce((sum, r) => sum + r.rating, 0) /
+                        ? a.ReviewsReceived.reduce((sum: number, r: any) => sum + r.rating, 0) /
                           a.ReviewsReceived.length
                         : 0;
                 const avgB =
                     b.ReviewsReceived.length > 0
-                        ? b.ReviewsReceived.reduce((sum, r) => sum + r.rating, 0) /
+                        ? b.ReviewsReceived.reduce((sum: number, r: any) => sum + r.rating, 0) /
                           b.ReviewsReceived.length
                         : 0;
                 return avgB - avgA;
@@ -476,18 +487,29 @@ export class UsersService {
 
         // 🔹 Suggested artists (example: most services)
         if (filter === "suggested") {
-            sortedArtists = artists.sort(
+            sortedArtists = [...artists].sort(
                 (a, b) => (b.services?.length ?? 0) - (a.services?.length ?? 0),
             );
         }
 
-        // 🔹 Apply pagination after sort
-        const paginated = sortedArtists.slice(skip, skip + limit);
+        // 🔹 Apply pagination after sort ONLY if filter was applied or no limit
+        let paginated: any[];
+        if (needsFullDataset && limit) {
+            // Apply pagination after sorting
+            const skip = (page - 1) * limit;
+            paginated = sortedArtists.slice(skip, skip + limit);
+        } else if (!limit) {
+            // No limit - return all
+            paginated = sortedArtists;
+        } else {
+            // Database pagination was already applied
+            paginated = sortedArtists;
+        }
 
         return {
             total,
             currentPage: page,
-            totalPages: Math.ceil(total / limit),
+            totalPages: limit ? Math.ceil(total / limit) : 1,
             data: paginated,
         };
     }
