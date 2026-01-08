@@ -220,23 +220,23 @@ export class UsersService {
         const startDate = new Date(now.getFullYear(), now.getMonth(), 1);
         const endDate = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59, 999);
 
-        const totalDeals = await this.prisma.payment.count({
+        const totalDeals = await this.prisma.order.count({
             where: {
-                userId: id,
-                status: "COMPLETED",
-                createdAt: { gte: startDate, lte: endDate },
+                sellerId: id,
+                status: "RELEASED",
+                updatedAt: { gte: startDate, lte: endDate },
             },
         });
 
-        const totalEarningsResult = await this.prisma.payment.aggregate({
-            _sum: { amount: true },
+        const totalEarningsResult = await this.prisma.order.aggregate({
+            _sum: { seller_amount: true },
             where: {
-                userId: id,
-                status: "COMPLETED",
-                createdAt: { gte: startDate, lte: endDate },
+                sellerId: id,
+                status: "RELEASED",
+                updatedAt: { gte: startDate, lte: endDate },
             },
         });
-        const totalEarnings = totalEarningsResult._sum.amount ?? 0;
+        const totalEarnings = (totalEarningsResult._sum.seller_amount ?? 0) / 100;
 
         const avgRatingResult = await this.prisma.review.aggregate({
             _avg: { rating: true },
