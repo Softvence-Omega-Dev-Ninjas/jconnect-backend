@@ -2,7 +2,7 @@ import { HttpException, Injectable, NotFoundException } from "@nestjs/common";
 
 import { EVENT_TYPES, InquiryMeta } from "@common/interface/events.name";
 import { EventEmitter2 } from "@nestjs/event-emitter";
-import { Role } from "@prisma/client";
+import { OrderStatus, Role } from "@prisma/client";
 import agoron2 from "argon2";
 import { PrismaService } from "src/lib/prisma/prisma.service";
 import { UtilsService } from "src/lib/utils/utils.service";
@@ -223,7 +223,7 @@ export class UsersService {
         const totalDeals = await this.prisma.order.count({
             where: {
                 sellerId: id,
-                status: "RELEASED",
+                status: OrderStatus.RELEASED,
                 updatedAt: { gte: startDate, lte: endDate },
             },
         });
@@ -232,7 +232,7 @@ export class UsersService {
             _sum: { seller_amount: true },
             where: {
                 sellerId: id,
-                status: "RELEASED",
+                status: OrderStatus.RELEASED,
                 updatedAt: { gte: startDate, lte: endDate },
             },
         });
