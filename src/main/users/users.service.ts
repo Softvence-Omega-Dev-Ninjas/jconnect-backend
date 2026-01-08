@@ -1,5 +1,7 @@
 import { HttpException, Injectable, NotFoundException } from "@nestjs/common";
 
+import { EVENT_TYPES, InquiryMeta } from "@common/interface/events.name";
+import { EventEmitter2 } from "@nestjs/event-emitter";
 import { Role } from "@prisma/client";
 import agoron2 from "argon2";
 import { PrismaService } from "src/lib/prisma/prisma.service";
@@ -11,6 +13,7 @@ export class UsersService {
     constructor(
         private prisma: PrismaService,
         private utils: UtilsService,
+        private readonly eventEmitter: EventEmitter2,
     ) {}
 
     async create(Userdata: CreateUserDto) {
@@ -530,7 +533,7 @@ export class UsersService {
     //     return user;
     // }
 
-    async findOne(id: string) {
+    async findOne(id: string, currentUserId: string) {
         const user = await this.prisma.user.findUnique({
             where: { id },
             omit: { password: true },
@@ -592,6 +595,115 @@ export class UsersService {
 
         const followingCount = user.following ? user.following.length : 0;
         const followerCount = user.follwers ? user.follwers.length : 0;
+
+        return {
+            ...user,
+            averageRating: avgRating._avg.rating ? parseFloat(avgRating._avg.rating.toFixed(2)) : 0,
+            totalReviews: avgRating._count.rating,
+            followingCount,
+            followerCount,
+        };
+    }
+
+    // --------find one and inquery user by email---------
+
+    async findOneUserIdInquiry(id: string, currentUserId: string) {
+        const user = await this.prisma.user.findUnique({
+            where: { id },
+            omit: { password: true },
+            include: {
+                services: {
+                    orderBy: { createdAt: "desc" },
+                },
+                profile: {
+                    include: {
+                        socialProfiles: true,
+                    },
+                },
+                ReviewsReceived: {
+                    include: {
+                        reviewer: {
+                            select: {
+                                id: true,
+                                full_name: true,
+                                profilePhoto: true,
+                            },
+                        },
+                    },
+                    orderBy: {
+                        createdAt: "desc",
+                    },
+                },
+                following: {
+                    include: {
+                        following: {
+                            select: {
+                                id: true,
+                                full_name: true,
+                                profilePhoto: true,
+                            },
+                        },
+                    },
+                },
+                follwers: {
+                    include: {
+                        followers: {
+                            select: {
+                                id: true,
+                                full_name: true,
+                                profilePhoto: true,
+                            },
+                        },
+                    },
+                },
+            },
+        });
+
+        if (!user) throw new NotFoundException("User not found");
+
+        const avgRating = await this.prisma.review.aggregate({
+            _avg: { rating: true },
+            _count: { rating: true },
+            where: { artistId: id },
+        });
+
+        const followingCount = user.following ? user.following.length : 0;
+        const followerCount = user.follwers ? user.follwers.length : 0;
+        // -------------------------- notification send logic --------------------------
+
+        // Example location: after user is created in database
+
+        //    --------- this user-------------
+        const currentUser = await this.prisma.user.findUnique({
+            where: { id: currentUserId },
+            select: {
+                id: true,
+                email: true,
+                full_name: true,
+                role: true,
+            },
+        });
+
+        // Only emit if currentUser exists (prevents crash)
+        if (currentUser) {
+            // Emit registration event
+            this.eventEmitter.emit(EVENT_TYPES.INQUIRY_CREATE, {
+                action: "CREATE",
+                info: {
+                    id: currentUser.id,
+                    email: currentUser.email,
+                    name: currentUser.full_name,
+                    role: currentUser.role,
+                    message:
+                        " i like your profile and i wanna buy your service " +
+                        currentUser.full_name,
+                    recipients: [{ id: user.id, email: user.email }],
+                },
+                meta: {
+                    INQUIRER: "email",
+                },
+            } as unknown as InquiryMeta);
+        }
 
         return {
             ...user,

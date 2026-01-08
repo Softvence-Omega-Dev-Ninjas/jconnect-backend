@@ -7,4 +7,5 @@ export type PayloadForSocketClient = {
     message: boolean;
     userRegistration: boolean;
     Service: boolean;
+    Inquiry: boolean;
 };

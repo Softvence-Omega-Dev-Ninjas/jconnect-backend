@@ -6,6 +6,7 @@ model NotificationToggle {
   review           Boolean @default(true)
   post             Boolean @default(true)
   message          Boolean @default(true)
+  Inquiry          Boolean @default(true)
   userRegistration Boolean @default(true)
   Service          Boolean @default(true)
   userId           String
