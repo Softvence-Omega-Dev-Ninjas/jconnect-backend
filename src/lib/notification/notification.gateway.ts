@@ -87,6 +87,7 @@ export class NotificationGateway
                 post: toggle?.post || false,
                 message: toggle?.message || false,
                 userRegistration: toggle?.userRegistration || false,
+                Inquiry: toggle?.Inquiry || false,
             };
 
             client.data.user = payloadForSocketClient;
@@ -270,5 +271,67 @@ export class NotificationGateway
                 this.logger.log(`Notification sent to ${recipient.id} (socket: ${client.id})`);
             }
         }
+    }
+
+    // ------LISTEN TO INQUIRY CREATE EVENT----------------
+    // ------LISTEN TO INQUIRY CREATE EVENT----------------
+    @OnEvent(EVENT_TYPES.INQUIRY_CREATE)
+    async handleInquiryCreated(payload: any) {
+        this.logger.log("INQUIRY_CREATE EVENT RECEIVED");
+        this.logger.debug(JSON.stringify(payload, null, 2));
+
+        if (!payload.info?.recipients?.length) {
+            this.logger.warn("No recipients found for INQUIRY_CREATE");
+            return;
+        }
+
+        // Check which recipients have Inquiry notifications enabled
+        const enabledRecipients = await this.prisma.notificationToggle.findMany({
+            where: {
+                userId: { in: payload.info.recipients.map((r: any) => r.id) },
+                Inquiry: true,
+            },
+            select: { userId: true },
+        });
+
+        const enabledUserIds = new Set(enabledRecipients.map((r) => r.userId));
+
+        for (const recipient of payload.info.recipients) {
+            // Skip if the recipient has disabled Inquiry notifications
+            if (!enabledUserIds.has(recipient.id)) {
+                this.logger.log(`User ${recipient.id} has disabled Inquiry notifications`);
+                continue;
+            }
+
+            const clients = this.getClientsForUser(recipient.id);
+
+            if (!clients.size) {
+                this.logger.warn(`No active socket for user ${recipient.id}`);
+            }
+
+            const socketPayload: Notification = {
+                type: EVENT_TYPES.INQUIRY_CREATE,
+                title: "New Inquiry Received",
+                message: payload.info.message || `New user inquiry created by ${payload.info.name}`,
+                createdAt: new Date(),
+                meta: {
+                    inquirerId: payload.info.id,
+                    inquirerEmail: payload.info.email,
+                    inquirerName: payload.info.name,
+                    inquirerRole: payload.info.role,
+                    ...payload.meta,
+                },
+            };
+
+            // Send real-time notification via socket
+            for (const client of clients) {
+                client.emit(EVENT_TYPES.INQUIRY_CREATE, socketPayload);
+                this.logger.log(
+                    `Inquiry notification sent to ${recipient.id} (socket: ${client.id})`,
+                );
+            }
+        }
+
+        this.logger.log("INQUIRY_CREATE event processing complete");
     }
 }

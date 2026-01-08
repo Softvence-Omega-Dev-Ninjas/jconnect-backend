@@ -47,6 +47,14 @@ export interface ServiceMeta {
     publishedAt: Date;
 }
 
+export interface InquiryMeta {
+    inquiryId: string;
+    subject: string;
+    message: string;
+    fromUserId: string;
+    submittedAt: Date;
+}
+
 // EVENT TYPE CONSTANTS
 export const EVENT_TYPES = {
     USERREGISTRATION_CREATE: "user.create",
@@ -60,6 +68,7 @@ export const EVENT_TYPES = {
     MESSAGE_CREATE: "message.create",
     SERVICE_CREATE: "service.create",
     REVIEW_CREATE: "review.create",
+    INQUIRY_CREATE: "inquiry.create",
 } as const;
 
 // Type-safe keys
@@ -79,4 +88,5 @@ export type EventPayloadMap = {
 
     [EVENT_TYPES.SERVICE_CREATE]: ServiceMeta;
     [EVENT_TYPES.REVIEW_CREATE]: ReviewMeta;
+    [EVENT_TYPES.INQUIRY_CREATE]: InquiryMeta;
 };

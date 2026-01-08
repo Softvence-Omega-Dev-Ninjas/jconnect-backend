@@ -274,11 +274,24 @@ export class UsersController {
     @ApiOperation({ summary: "Get user by ID access all user" })
     @ApiResponse({ status: 200, description: "User found" })
     @ApiResponse({ status: 404, description: "User not found" })
-    findOne(@Param("id") id: string, @GetUser("userId") userId: string) {
-        console.log(userId);
-        return this.usersService.findOne(id);
+    findOne(@Param("id") id: string, @GetUser("userId") currentUserId: string) {
+        return this.usersService.findOne(id, currentUserId);
     }
 
+    // ----------inquery with id----------------
+
+    @ApiBearerAuth()
+    @ValidateUser()
+    @Get(":id/inquiry")
+    @ApiOperation({
+        summary: "Get user by ID access all user and notify the inquiry specific user",
+    })
+    @ApiResponse({ status: 200, description: "User found" })
+    @ApiResponse({ status: 404, description: "User not found" })
+    findOneUserIdInquiry(@Param("id") id: string, @GetUser("userId") currentUserId: string) {
+        return this.usersService.findOneUserIdInquiry(id, currentUserId);
+    }
+    // ---------------------------------------
     @ApiBearerAuth()
     @ValidateUser()
     @Patch(":id")

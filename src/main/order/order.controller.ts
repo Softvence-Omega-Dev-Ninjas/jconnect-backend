@@ -48,17 +48,14 @@ export class OrdersController {
     @ValidateUser()
     @Get("my-orders")
     @ApiQuery({
-        name: "filter",
+        name: "status",
         required: false,
-        enum: ["active", "paymentConfirm", "complete", "cancelled", "pending"],
-        description: "Filter orders by status",
+        enum: OrderStatus,
+        description:
+            "Filter orders by OrderStatus: PENDING, IN_PROGRESS, PROOF_SUBMITTED, CANCELLED, RELEASED",
     })
-    async getMyOrders(
-        @GetUser() user: any,
-        @Query("filter")
-        filter?: "active" | "paymentConfirm" | "complete" | "cancelled" | "pending",
-    ) {
-        return this.ordersService.getOrdersByBuyer(user.userId, filter);
+    async getMyOrders(@GetUser() user: any, @Query("status") status?: OrderStatus) {
+        return this.ordersService.getOrdersByBuyer(user.userId, status);
     }
 
     @ApiBearerAuth()
