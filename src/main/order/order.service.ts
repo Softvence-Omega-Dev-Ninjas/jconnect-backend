@@ -8,14 +8,6 @@ import {
 import { OrderStatus, Role } from "@prisma/client";
 import { PrismaService } from "src/lib/prisma/prisma.service";
 
-const orderStatusFilter = {
-    active: [OrderStatus.IN_PROGRESS],
-    pending: [OrderStatus.PENDING],
-    paymentConfirm: [OrderStatus.PROOF_SUBMITTED],
-    complete: [OrderStatus.RELEASED],
-    cancelled: [OrderStatus.CANCELLED],
-};
-
 @Injectable()
 export class OrdersService {
     constructor(private prisma: PrismaService) {}
@@ -214,18 +206,15 @@ export class OrdersService {
         return updated;
     }
 
-    async getOrdersByBuyer(
-        buyerId: string,
-        filter?: "active" | "paymentConfirm" | "complete" | "cancelled" | "pending",
-    ) {
+    async getOrdersByBuyer(buyerId: string, status?: OrderStatus) {
         // console.log("ami call hoychi buyer order ", buyerId);
 
         const where: any = { buyerId };
 
-        if (filter && orderStatusFilter[filter]) {
-            where.status = { in: orderStatusFilter[filter] };
+        if (status) {
+            where.status = status;
         }
-        const seller = buyerId;
+
         return this.prisma.order.findMany({
             where,
             include: {
