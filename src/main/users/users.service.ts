@@ -236,7 +236,7 @@ export class UsersService {
                 updatedAt: { gte: startDate, lte: endDate },
             },
         });
-        const totalEarnings = (totalEarningsResult._sum.seller_amount ?? 0) / 100;
+        const totalEarnings = (totalEarningsResult._sum.seller_amount || 0) / 100;
 
         const avgRatingResult = await this.prisma.review.aggregate({
             _avg: { rating: true },
