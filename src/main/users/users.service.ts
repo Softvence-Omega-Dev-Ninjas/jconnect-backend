@@ -228,15 +228,36 @@ export class UsersService {
             },
         });
 
-        const totalEarningsResult = await this.prisma.order.aggregate({
+        // const totalEarningsResult = await this.prisma.order.aggregate({
+        //     _sum: { seller_amount: true },
+        //     where: {
+        //         sellerId: id,
+        //         status: OrderStatus.RELEASED,
+        //         updatedAt: { gte: startDate, lte: endDate },
+        //     },
+        // });
+        // const totalEarnings = (totalEarningsResult._sum.seller_amount || 0) / 100;
+
+        // ---------------------------- total earnings calculation ----------------------------
+        const totalReleased = await this.prisma.order.aggregate({
+            where: { sellerId: id, status: OrderStatus.RELEASED },
             _sum: { seller_amount: true },
+        });
+        const totalSuccessfullREleaseAmount = totalReleased._sum.seller_amount || 0;
+        const pendingOrders = await this.prisma.order.aggregate({
             where: {
                 sellerId: id,
-                status: OrderStatus.RELEASED,
-                updatedAt: { gte: startDate, lte: endDate },
+                status: {
+                    in: [OrderStatus.IN_PROGRESS, OrderStatus.PROOF_SUBMITTED],
+                },
             },
+            _sum: { seller_amount: true },
         });
-        const totalEarnings = (totalEarningsResult._sum.seller_amount || 0) / 100;
+
+        const pendingClearance = pendingOrders._sum.seller_amount || 0;
+        let totalEarning = totalSuccessfullREleaseAmount + pendingClearance;
+        totalEarning = totalEarning / 100;
+        // ----------------------------
 
         const avgRatingResult = await this.prisma.review.aggregate({
             _avg: { rating: true },
@@ -255,7 +276,7 @@ export class UsersService {
             followerCount,
             stats: {
                 totalDeals,
-                totalEarnings,
+                totalEarnings: totalEarning,
                 avgRating: parseFloat(avgRating.toFixed(2)),
                 monthRange: {
                     start: startDate.toISOString(),
