@@ -1130,24 +1130,7 @@ export class PaymentService {
             where: { sellerId: userId, status: OrderStatus.RELEASED },
             _sum: { seller_amount: true },
         });
-
-        const totalCancelled = await this.prisma.order.aggregate({
-            where: { sellerId: userId, status: OrderStatus.CANCELLED },
-            _sum: { seller_amount: true },
-        });
-
-        const onlyPending = await this.prisma.order.aggregate({
-            where: {
-                sellerId: userId,
-                status: OrderStatus.PENDING,
-            },
-            _sum: { seller_amount: true },
-        });
-
-        const totalEarnings =
-            (totalReleased._sum.seller_amount || 0) -
-            (totalCancelled._sum.seller_amount || 0) -
-            (onlyPending._sum.seller_amount || 0);
+        const totalSuccessfullReleaseAmount = totalReleased._sum.seller_amount || 0;
 
         const pendingOrders = await this.prisma.order.aggregate({
             where: {
@@ -1161,7 +1144,8 @@ export class PaymentService {
 
         const pendingClearance = pendingOrders._sum.seller_amount || 0;
 
-        const availableToWithdraw = totalEarnings - pendingClearance - (user.withdrawn_amount || 0);
+        const totalEarnings = totalSuccessfullReleaseAmount + pendingClearance;
+        const availableToWithdraw = totalSuccessfullReleaseAmount - (user.withdrawn_amount || 0);
 
         const sixMonthsAgo = new Date();
         sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);

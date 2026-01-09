@@ -224,7 +224,7 @@ export class UsersService {
             where: {
                 sellerId: id,
                 status: OrderStatus.RELEASED,
-                updatedAt: { gte: startDate, lte: endDate },
+                // updatedAt: { gte: startDate, lte: endDate },
             },
         });
 
