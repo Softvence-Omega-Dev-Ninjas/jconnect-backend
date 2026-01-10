@@ -672,7 +672,7 @@ export class PaymentService {
                 sellerIdStripe: service.creator?.sellerIDStripe || "",
                 paymentIntentId: paymentIntent.id,
                 serviceId: service.id,
-                platformFee: 0.0,
+                platformFee: setting?.platformFee_percents,
                 amount: service.price,
                 seller_amount: sellerAmount,
                 status: OrderStatus.PENDING,
@@ -785,6 +785,7 @@ export class PaymentService {
                 buyerPay: balanceTransaction.net,
                 platformFee: (order.amount * setting.platformFee_percents) / 100,
                 stripeFee: Number(balanceTransaction.fee),
+                platformFee_percents: setting.platformFee_percents,
             },
         });
 
@@ -1214,9 +1215,9 @@ export class PaymentService {
 
         return {
             monthlyEarnings,
-            totalEarnings: Math.round(totalEarnings / 100),
-            pendingClearance: Math.round(pendingClearance / 100),
-            availableToWithdraw: Math.round(Math.max(0, availableToWithdraw) / 100),
+            totalEarnings: totalEarnings / 100,
+            pendingClearance: pendingClearance / 100,
+            availableToWithdraw: Math.max(0, availableToWithdraw) / 100,
         };
     }
 }
