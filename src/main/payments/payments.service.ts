@@ -281,10 +281,21 @@ export class PaymentService {
 
     // Get single transaction history
     async getSingleTransactionHistory(id: string) {
-        const transaction: any = await this.prisma.order.findUnique({
+        let transaction: any = await this.prisma.order.findUnique({
             where: { id },
             include: {
                 seller: {
+                    select: {
+                        id: true,
+                        full_name: true,
+                        email: true,
+                        profilePhoto: true,
+                        phone: true,
+                        is_terms_agreed: true,
+                        withdrawn_amount: true,
+                    },
+                },
+                buyer: {
                     select: {
                         id: true,
                         full_name: true,
@@ -672,7 +683,8 @@ export class PaymentService {
                 sellerIdStripe: service.creator?.sellerIDStripe || "",
                 paymentIntentId: paymentIntent.id,
                 serviceId: service.id,
-                platformFee: setting?.platformFee_percents,
+                platformFee: feeAmount,
+                platformFee_percents: setting?.platformFee_percents,
                 amount: service.price,
                 seller_amount: sellerAmount,
                 status: OrderStatus.PENDING,

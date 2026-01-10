@@ -91,6 +91,7 @@ export class OrdersController {
     getOne(@Param("id") id: string) {
         return this.ordersService.getOrder(id);
     }
+
     @ApiBearerAuth()
     @ValidateUser()
     @Post("ProofUpload")
