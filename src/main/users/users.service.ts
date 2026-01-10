@@ -801,11 +801,13 @@ export class UsersService {
         if (!exists) throw new NotFoundException("User not found");
         if (exists?.isDeleted) throw new NotFoundException("User Already deleted");
 
-        await this.prisma.user.update({
-            where: { id },
-            data: { isDeleted: true },
-            omit: { password: true },
-        });
+        // await this.prisma.user.update({
+        //     where: { id },
+        //     data: { isDeleted: true },
+        //     omit: { password: true },
+        // });
+
+        await this.prisma.user.delete({ where: { id } });
 
         return {
             status: 200,

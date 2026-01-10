@@ -783,8 +783,8 @@ export class PaymentService {
             charge.balance_transaction as string,
         );
 
-        this.logger.log("Stripe ফি:", balanceTransaction.fee);
-        this.logger.log("নেট অ্যামাউন্ট:", balanceTransaction.net);
+        // this.logger.log("Stripe ফি:", balanceTransaction.fee);
+        // this.logger.log("নেট অ্যামাউন্ট:", balanceTransaction.net);
         let PlatfromRevinue = balanceTransaction.net - order.seller_amount;
 
         const updated = await this.prisma.order.update({
