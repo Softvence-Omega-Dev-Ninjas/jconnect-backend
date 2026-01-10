@@ -316,13 +316,27 @@ export class UsersController {
     @ApiOperation({ summary: "Delete user by ID" })
     @ApiResponse({ status: 200, description: "User deleted successfully" })
     remove(@Param("id") id: string, @GetUser() user: any) {
-        const isOwner = user.id === id;
+        const isOwner = user.userId === id;
         const isAdmin = ["ADMIN", "SUPER_ADMIN"].includes(user.roles);
         if (!isOwner && !isAdmin) {
             throw new ForbiddenException("You are not authorized to update this user");
         }
         return this.usersService.remove(id);
     }
+
+    // @ApiBearerAuth()
+    // @ValidateUser()
+    // @Delete("deleteMyaccount:id")
+    // @ApiOperation({ summary: "Delete my account by ID" })
+    // @ApiResponse({ status: 200, description: "User deleted successfully" })
+    // DeleteMy(@Param("id") id: string, @GetUser() user: any) {
+    //     const isOwner = user.id === id;
+    //     const isAdmin = ["ADMIN", "SUPER_ADMIN"].includes(user.roles);
+    //     if (!isOwner && !isAdmin) {
+    //         throw new ForbiddenException("You are not authorized to update this user");
+    //     }
+    //     return this.usersService.remove(id);
+    // }
 
     @ApiBearerAuth()
     @ValidateSuperAdmin()
