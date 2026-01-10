@@ -138,7 +138,7 @@ export class ServiceService {
 
     @HandleError("Failed to find service")
     async findOne(id: string) {
-        const service = await this.prisma.service.findUnique({
+        let service: any = await this.prisma.service.findUnique({
             where: { id },
             include: {
                 creator: {
@@ -150,6 +150,13 @@ export class ServiceService {
                 },
             },
         });
+
+        const setting = await this.prisma.setting.findFirst();
+
+        service = {
+            ...service,
+            platformFee_percents: setting?.platformFee_percents || 0,
+        };
 
         if (!service) {
             throw new NotFoundException(`Service with ID ${id} not found`);
