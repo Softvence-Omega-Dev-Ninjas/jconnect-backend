@@ -97,4 +97,22 @@ export class AdminDashboardStatsController {
             throw new InternalServerErrorException(error.message, error.status);
         }
     }
+
+    @ValidateAdmin()
+    @Get("totalPlatformRevenue")
+    @ApiOperation({
+        summary: "Get total platform revenue",
+    })
+    async getTotalPlatformRevenue() {
+        try {
+            const res = await this.adminStatsService.getTotalPlatformRevenue();
+            return {
+                status: HttpStatus.OK,
+                message: "Fetch Total Platform Revenue",
+                data: res,
+            };
+        } catch (error) {
+            throw new InternalServerErrorException(error.message, error.status);
+        }
+    }
 }

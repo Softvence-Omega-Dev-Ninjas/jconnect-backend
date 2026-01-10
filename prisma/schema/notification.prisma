@@ -43,4 +43,5 @@ enum NotificationType {
   Service
   Payment
   UserRegistration
+  Inquiry
 }

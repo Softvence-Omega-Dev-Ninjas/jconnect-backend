@@ -281,10 +281,21 @@ export class PaymentService {
 
     // Get single transaction history
     async getSingleTransactionHistory(id: string) {
-        const transaction = await this.prisma.order.findUnique({
+        let transaction: any = await this.prisma.order.findUnique({
             where: { id },
             include: {
                 seller: {
+                    select: {
+                        id: true,
+                        full_name: true,
+                        email: true,
+                        profilePhoto: true,
+                        phone: true,
+                        is_terms_agreed: true,
+                        withdrawn_amount: true,
+                    },
+                },
+                buyer: {
                     select: {
                         id: true,
                         full_name: true,
@@ -672,7 +683,8 @@ export class PaymentService {
                 sellerIdStripe: service.creator?.sellerIDStripe || "",
                 paymentIntentId: paymentIntent.id,
                 serviceId: service.id,
-                platformFee: 0.0,
+                platformFee: feeAmount,
+                platformFee_percents: setting?.platformFee_percents,
                 amount: service.price,
                 seller_amount: sellerAmount,
                 status: OrderStatus.PENDING,
@@ -785,6 +797,7 @@ export class PaymentService {
                 buyerPay: balanceTransaction.net,
                 platformFee: (order.amount * setting.platformFee_percents) / 100,
                 stripeFee: Number(balanceTransaction.fee),
+                platformFee_percents: setting.platformFee_percents,
             },
         });
 
@@ -1130,24 +1143,7 @@ export class PaymentService {
             where: { sellerId: userId, status: OrderStatus.RELEASED },
             _sum: { seller_amount: true },
         });
-
-        const totalCancelled = await this.prisma.order.aggregate({
-            where: { sellerId: userId, status: OrderStatus.CANCELLED },
-            _sum: { seller_amount: true },
-        });
-
-        const onlyPending = await this.prisma.order.aggregate({
-            where: {
-                sellerId: userId,
-                status: OrderStatus.PENDING,
-            },
-            _sum: { seller_amount: true },
-        });
-
-        const totalEarnings =
-            (totalReleased._sum.seller_amount || 0) -
-            (totalCancelled._sum.seller_amount || 0) -
-            (onlyPending._sum.seller_amount || 0);
+        const totalSuccessfullReleaseAmount = totalReleased._sum.seller_amount || 0;
 
         const pendingOrders = await this.prisma.order.aggregate({
             where: {
@@ -1161,7 +1157,8 @@ export class PaymentService {
 
         const pendingClearance = pendingOrders._sum.seller_amount || 0;
 
-        const availableToWithdraw = totalEarnings - pendingClearance - (user.withdrawn_amount || 0);
+        const totalEarnings = totalSuccessfullReleaseAmount + pendingClearance;
+        const availableToWithdraw = totalSuccessfullReleaseAmount - (user.withdrawn_amount || 0);
 
         const sixMonthsAgo = new Date();
         sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
@@ -1230,9 +1227,9 @@ export class PaymentService {
 
         return {
             monthlyEarnings,
-            totalEarnings: Math.round(totalEarnings / 100),
-            pendingClearance: Math.round(pendingClearance / 100),
-            availableToWithdraw: Math.round(Math.max(0, availableToWithdraw) / 100),
+            totalEarnings: totalEarnings / 100,
+            pendingClearance: pendingClearance / 100,
+            availableToWithdraw: Math.max(0, availableToWithdraw) / 100,
         };
     }
 }

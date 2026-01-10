@@ -1,4 +1,5 @@
 import {
+    InquiryMeta,
     MessageMeta,
     PostMeta,
     ReviewMeta,
@@ -67,6 +68,16 @@ export interface ReviewEvent extends BaseEvent<ReviewMeta> {
         reviewId: string;
         reviewContent: string;
         performedBy: string;
+        recipients: { id: string; email: string }[];
+    };
+}
+// Inquiry Event
+export interface InquiryEvent extends BaseEvent<InquiryMeta> {
+    info: {
+        inquiryId: string;
+        subject: string;
+        message: string;
+        fromUserId: string;
         recipients: { id: string; email: string }[];
     };
 }
