@@ -1,10 +1,12 @@
 import { Injectable } from "@nestjs/common";
+import { PrismaService } from "src/lib/prisma/prisma.service";
 import Stripe from "stripe";
 
 @Injectable()
 export class testService {
     private stripe = new Stripe(process.env.STRIPE_SECRET_KEY_DELETE_SELLER_ID!);
 
+    constructor(private prisma: PrismaService) {}
     async deleteAllStripeTestAccounts() {
         const accounts = await this.stripe.accounts.list({ limit: 100 });
 
@@ -61,5 +63,18 @@ export class testService {
             message: "All test connected accounts processed.",
             totalAccounts: accounts.data.length,
         };
+    }
+
+    async deleteOrder(id: string) {
+        await this.prisma.order.delete({
+            where: {
+                id: id,
+            },
+        });
+        return { message: "Order deleted successfully." };
+    }
+    async deleteallOrders() {
+        await this.prisma.order.deleteMany({});
+        return { message: "all orders deleted successfully." };
     }
 }
