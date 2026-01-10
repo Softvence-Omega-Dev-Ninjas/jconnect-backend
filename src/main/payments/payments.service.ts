@@ -281,7 +281,7 @@ export class PaymentService {
 
     // Get single transaction history
     async getSingleTransactionHistory(id: string) {
-        const transaction = await this.prisma.order.findUnique({
+        const transaction: any = await this.prisma.order.findUnique({
             where: { id },
             include: {
                 seller: {
