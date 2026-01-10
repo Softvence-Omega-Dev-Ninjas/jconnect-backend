@@ -378,4 +378,26 @@ export class AdminDashboardStatsService {
 
         return result;
     }
+
+    async getTotalPlatformRevenue() {
+        const totalPlatformRevenue = await this.prisma.order.aggregate({
+            _sum: {
+                PlatfromRevinue: true,
+            },
+        });
+        const platformRevenueLastMonth = await this.prisma.order.aggregate({
+            where: {
+                updatedAt: {
+                    gte: new Date(new Date().setMonth(new Date().getMonth() - 1)),
+                },
+            },
+            _sum: {
+                PlatfromRevinue: true,
+            },
+        });
+        return {
+            totalPlatformRevenue: totalPlatformRevenue._sum.PlatfromRevinue || 0,
+            platformRevenueLastMonth: platformRevenueLastMonth._sum.PlatfromRevinue || 0,
+        };
+    }
 }
