@@ -5,6 +5,6 @@ model PaymentMethod {
   last4         String?
   expMonth      Int?
   expYear       Int?
-  user          User    @relation(fields: [userId], references: [id])
+  user          User    @relation(fields: [userId], references: [id], onDelete: Cascade)
   userId        String
 }
