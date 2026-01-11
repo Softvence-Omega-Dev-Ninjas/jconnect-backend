@@ -42,7 +42,7 @@ export class UsersService {
         const { page, limit, isActive, search } = params;
 
         const whereCondition: any = {
-            isDeleted: false,
+            // isDeleted: false,
             ...(isActive !== undefined ? { isActive } : {}),
         };
 
