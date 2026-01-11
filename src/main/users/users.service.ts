@@ -799,7 +799,7 @@ export class UsersService {
         console.log(exists);
 
         if (!exists) throw new NotFoundException("User not found");
-        if (exists?.isDeleted) throw new NotFoundException("User Already deleted");
+        // if (exists?.isDeleted) throw new NotFoundException("User Already deleted");
 
         // await this.prisma.user.update({
         //     where: { id },
