@@ -292,6 +292,16 @@ export class UsersService {
         const existingUser = await this.prisma.user.findUnique({ where: { id: userId } });
         if (!existingUser) throw new NotFoundException("User not found");
 
+        const existPhoneNumber = await this.prisma.user.findFirst({
+            where: { phone: dto.phone },
+        });
+
+        if (existPhoneNumber) {
+            if (existPhoneNumber.id !== userId) {
+                throw new HttpException("Phone number already in use by another user", 400);
+            }
+        }
+
         // User table updates
         const userPayload: UpdateUserDto = {};
         if (dto.full_name !== undefined) userPayload.full_name = dto.full_name;
