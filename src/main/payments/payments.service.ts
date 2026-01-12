@@ -313,6 +313,27 @@ export class PaymentService {
             throw new NotFoundException("Transaction not found");
         }
 
+        transaction.buyer.servicePrice = transaction.amount;
+        transaction.buyer.platformFeePlus =
+            (transaction.amount * transaction.platformFee_percents) / 100;
+        transaction.buyer.buyerPays =
+            transaction.amount + (transaction.amount * transaction.platformFee_percents) / 100;
+        transaction.buyer.stripeFee = transaction.stripeFee;
+        // transaction.buyer.sellerAmount = transaction.seller_amount;
+        transaction.buyer.servicePriceMinus = transaction.amount;
+        transaction.buyer.platformRevenue =
+            transaction.amount +
+            (transaction.amount * transaction.platformFee_percents) / 100 -
+            transaction.stripeFee -
+            transaction.amount;
+
+        transaction.seller.servicePrice = transaction.amount;
+        transaction.seller.platformFee =
+            (transaction.amount * transaction.platformFee_percents) / 100;
+        transaction.seller.sellerAmount =
+            transaction.amount - (transaction.amount * transaction.platformFee_percents) / 100;
+        transaction.seller.platformRevenue = transaction.amount - transaction.seller_amount;
+
         return {
             success: true,
             message: "Successfully fetched transaction",
