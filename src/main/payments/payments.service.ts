@@ -322,17 +322,20 @@ export class PaymentService {
         // transaction.buyer.sellerAmount = transaction.seller_amount;
         transaction.buyer.servicePriceMinus = transaction.amount;
         transaction.buyer.platformRevenue =
-            transaction.amount +
-            (transaction.amount * transaction.platformFee_percents) / 100 -
-            transaction.stripeFee -
-            transaction.amount;
+            transaction.status === "RELEASED"
+                ? transaction.amount +
+                  (transaction.amount * transaction.platformFee_percents) / 100 -
+                  transaction.stripeFee -
+                  transaction.amount
+                : 0;
 
         transaction.seller.servicePrice = transaction.amount;
         transaction.seller.platformFee =
             (transaction.amount * transaction.platformFee_percents) / 100;
         transaction.seller.sellerAmount =
             transaction.amount - (transaction.amount * transaction.platformFee_percents) / 100;
-        transaction.seller.platformRevenue = transaction.amount - transaction.seller_amount;
+        transaction.seller.platformRevenue =
+            transaction.status === "RELEASED" ? transaction.amount - transaction.seller_amount : 0;
 
         return {
             success: true,
