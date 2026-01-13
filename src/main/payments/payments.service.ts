@@ -327,7 +327,10 @@ export class PaymentService {
                   (transaction.amount * transaction.platformFee_percents) / 100 -
                   transaction.stripeFee -
                   transaction.amount
-                : 0;
+                : transaction.stripeFee && transaction.status === "CANCELLED"
+                  ? (transaction.amount * transaction.platformFee_percents) / 100 -
+                    transaction.stripeFee
+                  : 0;
 
         transaction.seller.servicePrice = transaction.amount;
         transaction.seller.platformFee =
@@ -335,7 +338,11 @@ export class PaymentService {
         transaction.seller.sellerAmount =
             transaction.amount - (transaction.amount * transaction.platformFee_percents) / 100;
         transaction.seller.platformRevenue =
-            transaction.status === "RELEASED" ? transaction.amount - transaction.seller_amount : 0;
+            transaction.stripeFee && transaction.status === "CANCELLED"
+                ? 0
+                : transaction.status === "RELEASED"
+                  ? transaction.amount - transaction.seller_amount
+                  : 0;
 
         return {
             success: true,
