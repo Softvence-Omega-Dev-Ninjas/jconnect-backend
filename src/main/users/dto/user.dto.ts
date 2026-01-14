@@ -1,6 +1,6 @@
 import { ApiHideProperty, ApiProperty, ApiPropertyOptional } from "@nestjs/swagger";
 import { AuthProvider, Role, ValidationType } from "@prisma/client";
-import { Type } from "class-transformer";
+import { Transform, Type } from "class-transformer";
 import {
     IsArray,
     IsBoolean,
@@ -156,6 +156,12 @@ export class UpdateUserDto {
     @IsEmail()
     email?: string;
 
+    @ApiProperty({ example: "john_doe", required: false })
+    @IsOptional()
+    @IsString()
+    @Transform(({ value }) => value?.trim())
+    username?: string;
+
     @ApiProperty({ example: "https://example.com/new-photo.jpg", required: false })
     @IsOptional()
     @IsString()
@@ -239,6 +245,12 @@ export class UpdateMeDto {
     @IsOptional()
     @IsString()
     full_name?: string;
+
+    @ApiProperty({ example: "john_doe", required: false })
+    @IsOptional()
+    @IsString()
+    @Transform(({ value }) => value?.trim())
+    username?: string;
 
     @ApiProperty({ example: "+8801700000000", required: false })
     @IsOptional()

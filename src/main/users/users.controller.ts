@@ -78,6 +78,7 @@ export class UsersController {
                     description: "JSON string of hash tags array",
                     example: '["facebook", "art"]',
                 },
+                username: { type: "string", example: "john_doe" },
             },
         },
     })
@@ -120,6 +121,7 @@ export class UsersController {
         const updateMeDto: UpdateMeDto = {
             full_name: body.full_name,
             phone: body.phone,
+            username: body.username,
             short_bio: body.short_bio,
             profile_image_url: body.profile_image_url,
             location: body.location,
@@ -237,6 +239,7 @@ export class UsersController {
     @ApiQuery({ name: "limit", required: false, example: 10 })
     @ApiQuery({ name: "filter", required: false, example: "top-rated" })
     @ApiQuery({ name: "search", required: false, example: "" })
+    @ApiQuery({ name: "username", required: false, example: "john_doe" })
     findAllArtist(@Query() query: FindArtistDto, @GetUser() user: any) {
         return this.usersService.findAllArtist(query, user);
     }

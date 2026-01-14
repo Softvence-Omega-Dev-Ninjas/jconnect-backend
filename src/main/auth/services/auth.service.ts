@@ -44,9 +44,28 @@ export class AuthService {
         const { email, password, full_name, phone } = payload;
 
         // ------------------Check if user already exists----------------------
-        const existing = await this.prisma.user.findUnique({ where: { email } });
+        const existing = await this.prisma.user.findFirst({
+            where: { OR: [{ email }, { username: payload.username }] },
+        });
         if (existing) {
             throw new AppError(400, "User already exists with this email");
+        }
+
+        // create a unique username if not provided and if provided check uniqueness
+
+        let username = full_name;
+        let isUnique = false;
+
+        while (!isUnique) {
+            const exists = await this.prisma.user.findUnique({
+                where: { username },
+            });
+
+            if (!exists) {
+                isUnique = true;
+            } else {
+                username = `${full_name}_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`;
+            }
         }
 
         // Hash the password
@@ -60,6 +79,7 @@ export class AuthService {
         const newUser = await this.prisma.user.create({
             data: {
                 email,
+                username,
                 full_name: full_name,
                 phone: phone,
                 password: hashedPassword,

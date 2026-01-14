@@ -21,6 +21,16 @@ export class RegisterDto {
     @IsEmail({}, { message: "Please provide a valid email address" })
     email: string;
 
+    // @ApiProperty({
+    //     example: "demoUser123",
+    //     description: "Username of the user",
+    // })
+    @IsNotEmpty({ message: "Username is required" })
+    @IsString()
+    @MinLength(3, { message: "Username must be at least 3 characters" })
+    @MaxLength(30, { message: "Username must not exceed 30 characters" })
+    username?: string;
+
     @ApiProperty({
         example: "12345678",
         description:

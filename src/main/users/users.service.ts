@@ -302,6 +302,16 @@ export class UsersService {
             }
         }
 
+        const existUsername = await this.prisma.user.findFirst({
+            where: { username: dto.username },
+        });
+
+        if (existUsername) {
+            if (existUsername.id !== userId) {
+                throw new HttpException("Username already in use by another user", 400);
+            }
+        }
+
         // User table updates
         const userPayload: UpdateUserDto = {};
         if (dto.full_name !== undefined) userPayload.full_name = dto.full_name;
@@ -309,6 +319,7 @@ export class UsersService {
         if (dto.profilePhoto !== undefined) userPayload.profilePhoto = dto.profilePhoto;
         if (dto.location !== undefined) userPayload.location = dto.location;
         if (dto.hashTags !== undefined) userPayload.hashTags = dto.hashTags;
+        if (dto.username !== undefined) userPayload.username = dto.username;
 
         // Profile table updates
         const profilePayload = {
@@ -429,6 +440,12 @@ export class UsersService {
             baseWhere.OR = [
                 {
                     full_name: {
+                        contains: search,
+                        mode: "insensitive",
+                    },
+                },
+                {
+                    username: {
                         contains: search,
                         mode: "insensitive",
                     },
@@ -584,6 +601,7 @@ export class UsersService {
                                 id: true,
                                 full_name: true,
                                 profilePhoto: true,
+                                username: true,
                             },
                         },
                     },
@@ -598,6 +616,7 @@ export class UsersService {
                                 id: true,
                                 full_name: true,
                                 profilePhoto: true,
+                                username: true,
                             },
                         },
                     },
@@ -609,6 +628,7 @@ export class UsersService {
                                 id: true,
                                 full_name: true,
                                 profilePhoto: true,
+                                username: true,
                             },
                         },
                     },
@@ -658,6 +678,7 @@ export class UsersService {
                                 id: true,
                                 full_name: true,
                                 profilePhoto: true,
+                                username: true,
                             },
                         },
                     },
@@ -672,6 +693,8 @@ export class UsersService {
                                 id: true,
                                 full_name: true,
                                 profilePhoto: true,
+
+                                username: true,
                             },
                         },
                     },
@@ -683,6 +706,7 @@ export class UsersService {
                                 id: true,
                                 full_name: true,
                                 profilePhoto: true,
+                                username: true,
                             },
                         },
                     },
@@ -712,6 +736,7 @@ export class UsersService {
                 email: true,
                 full_name: true,
                 role: true,
+                username: true,
             },
         });
 
@@ -724,6 +749,7 @@ export class UsersService {
                     id: currentUser.id,
                     email: currentUser.email,
                     name: currentUser.full_name,
+                    username: currentUser.username,
                     role: currentUser.role,
                     message:
                         " i like your profile and i wanna buy your service " +
@@ -801,6 +827,7 @@ export class UsersService {
             role: updatedUser.role,
             isActive: updatedUser.isActive,
             isVerified: updatedUser.isVerified,
+            username: updatedUser.username,
         };
     }
 
