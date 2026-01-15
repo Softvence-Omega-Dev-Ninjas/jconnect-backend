@@ -121,7 +121,7 @@ export class UsersController {
         const updateMeDto: UpdateMeDto = {
             full_name: body.full_name,
             phone: body.phone,
-            username: body.username,
+            username: body.username && body.username.trim() !== "" ? body.username : undefined,
             short_bio: body.short_bio,
             profile_image_url: body.profile_image_url,
             location: body.location,

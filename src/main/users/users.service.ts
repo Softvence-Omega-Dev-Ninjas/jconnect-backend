@@ -292,22 +292,22 @@ export class UsersService {
         const existingUser = await this.prisma.user.findUnique({ where: { id: userId } });
         if (!existingUser) throw new NotFoundException("User not found");
 
-        const existPhoneNumber = await this.prisma.user.findFirst({
-            where: { phone: dto.phone },
-        });
+        if (dto.phone) {
+            const existPhoneNumber = await this.prisma.user.findFirst({
+                where: { phone: dto.phone },
+            });
 
-        if (existPhoneNumber) {
-            if (existPhoneNumber.id !== userId) {
+            if (existPhoneNumber && existPhoneNumber.id !== userId) {
                 throw new HttpException("Phone number already in use by another user", 400);
             }
         }
 
-        const existUsername = await this.prisma.user.findFirst({
-            where: { username: dto.username },
-        });
+        if (dto.username) {
+            const existUsername = await this.prisma.user.findFirst({
+                where: { username: dto.username },
+            });
 
-        if (existUsername) {
-            if (existUsername.id !== userId) {
+            if (existUsername && existUsername.id !== userId) {
                 throw new HttpException("Username already in use by another user", 400);
             }
         }
