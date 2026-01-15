@@ -53,13 +53,14 @@ export class AuthService {
 
         // create a unique username if not provided and if provided check uniqueness
 
-        let username = full_name;
+        let username = full_name.trim().toLowerCase().replace(/\s+/g, "_");
         let isUnique = false;
 
         while (!isUnique) {
             const exists = await this.prisma.user.findUnique({
                 where: { username },
             });
+            console.log(username);
 
             if (!exists) {
                 isUnique = true;
