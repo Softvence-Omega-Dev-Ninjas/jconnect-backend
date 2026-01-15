@@ -1,6 +1,6 @@
 // ==================== register.dto.ts ====================
 import { ApiProperty } from "@nestjs/swagger";
-import { IsEmail, IsNotEmpty, IsString, MaxLength, MinLength } from "class-validator";
+import { IsEmail, IsNotEmpty, IsOptional, IsString, MaxLength, MinLength } from "class-validator";
 
 export class RegisterDto {
     @ApiProperty({
@@ -25,10 +25,8 @@ export class RegisterDto {
     //     example: "demoUser123",
     //     description: "Username of the user",
     // })
-    @IsNotEmpty({ message: "Username is required" })
+    @IsOptional()
     @IsString()
-    @MinLength(3, { message: "Username must be at least 3 characters" })
-    @MaxLength(30, { message: "Username must not exceed 30 characters" })
     username?: string;
 
     @ApiProperty({
