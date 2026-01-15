@@ -2,7 +2,7 @@ model User {
   id                     String                 @id @default(uuid())
   full_name              String
   email                  String                 @unique
-  username               String?                @unique @default("")
+  username               String?                @unique
   profilePhoto           String?
   phone                  String?                @unique
   password               String
