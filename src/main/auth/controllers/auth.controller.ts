@@ -1,21 +1,21 @@
-import { Body, Controller, Delete, Get, HttpStatus, Param, Post, Res } from "@nestjs/common";
-import { ApiBearerAuth, ApiOperation, ApiTags } from "@nestjs/swagger";
-import { GoogleLoginDto } from "../dto/google-login.dto";
-import { LoginDto } from "../dto/login.dto";
-import { RegisterDto } from "../dto/register.dto";
-
-import { ResendEmailDto, ResendverifyOtpDto, VerifyOtpAuthDto } from "../dto/varify-otp.dto";
-
 import IpAddress from "@common/decorators/ip-address.decorator";
 import { UserAgent } from "@common/decorators/user-agent.decorator";
 import { GetUser } from "@common/jwt/jwt.decorator";
+import { Body, Controller, Delete, Get, HttpStatus, Param, Post, Res } from "@nestjs/common";
+import { ApiBearerAuth, ApiOperation, ApiTags } from "@nestjs/swagger";
 import type { Response } from "express";
 import { DeviceService } from "src/lib/device/device.service";
 import { TwilioService } from "src/lib/twilio/twilio.service";
+import { FirebaseLoginDto } from "../dto/firebase-login.dto";
 import { ForgotPasswordDto } from "../dto/forgot-password.dto";
+import { GoogleLoginDto } from "../dto/google-login.dto";
+import { LoginDto } from "../dto/login.dto";
 import { SendPhoneOtpDto, VerifyPhoneOtpDto } from "../dto/phone-login";
+import { RegisterDto } from "../dto/register.dto";
 import { ResetPasswordAuthDto } from "../dto/reset-password";
+import { ResendEmailDto, ResendverifyOtpDto, VerifyOtpAuthDto } from "../dto/varify-otp.dto";
 import { AuthGoogleService } from "../services/auh-google.service";
+import { AuthFirebaseService } from "../services/auth-firebase.service";
 import { AuthService } from "../services/auth.service";
 
 @ApiTags("Authentication apis")
@@ -24,6 +24,7 @@ export class AuthController {
     constructor(
         private readonly authService: AuthService,
         private readonly authGoogleService: AuthGoogleService,
+        private readonly authFirebaseService: AuthFirebaseService,
         private readonly deviceService: DeviceService,
         private readonly twilio: TwilioService,
     ) {}
@@ -75,6 +76,24 @@ export class AuthController {
         const result = (await this.authGoogleService.googleLogin(body)) as any;
 
         // Set HTTP-only cookie for Google login too
+        res.cookie("token", result?.data?.token, {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === "production",
+            sameSite: "lax",
+            path: "/",
+            maxAge: 30 * 24 * 60 * 60 * 1000,
+        });
+
+        return result;
+    }
+
+    // -------------- Firebase Login (Google & Apple via Firebase) --------------
+    @ApiOperation({ summary: "Firebase Login or Sign Up (Google or Apple)" })
+    @Post("firebase-login")
+    async firebaseLogin(@Body() body: FirebaseLoginDto, @Res({ passthrough: true }) res: Response) {
+        const result = (await this.authFirebaseService.firebaseLogin(body)) as any;
+
+        // Set HTTP-only cookie for Firebase login
         res.cookie("token", result?.data?.token, {
             httpOnly: true,
             secure: process.env.NODE_ENV === "production",

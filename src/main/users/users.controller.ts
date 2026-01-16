@@ -44,6 +44,23 @@ export class UsersController {
         private awsservice: AwsService,
     ) {}
 
+    @Get("check-username/:username")
+    @ApiOperation({ summary: "Check if username is available" })
+    @ApiResponse({
+        status: 200,
+        description: "Returns username availability status",
+        schema: {
+            type: "object",
+            properties: {
+                available: { type: "boolean" },
+                message: { type: "string" },
+            },
+        },
+    })
+    checkUsername(@Param("username") username: string) {
+        return this.usersService.checkUsernameAvailability(username);
+    }
+
     @ApiBearerAuth()
     @ValidateUser()
     @Get("me")
