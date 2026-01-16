@@ -102,12 +102,47 @@ export class AuthService {
         // Send OTP email
         await this.mail.sendEmail(
             email,
-            "Verify Your Email",
+            "Welcome to DaConnect - Verify Your Email 🎉",
             `
-      <h3>Hi ${full_name},</h3>
-      <p>Use the OTP below to verify your email:</p>
-      <h2>${otp}</h2>
-      <p>This OTP will expire in 10 minutes.</p>
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <style>
+                    body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.6; color: #333; margin: 0; padding: 0; background-color: #f5f7fa; }
+                    .container { max-width: 600px; margin: 40px auto; background: white; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 20px rgba(0,0,0,0.08); }
+                    .header { background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; padding: 40px 30px; text-align: center; }
+                    .logo { font-size: 32px; font-weight: bold; margin-bottom: 10px; letter-spacing: 1px; }
+                    .content { padding: 40px 30px; }
+                    .otp-code { font-size: 42px; font-weight: bold; color: #059669; letter-spacing: 10px; margin: 15px 0; font-family: 'Courier New', monospace; text-align: center; background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%); border: 2px solid #10b981; padding: 30px; border-radius: 10px; }
+                    .info-box { background: #fef3c7; border-left: 4px solid #f59e0b; padding: 16px; margin: 25px 0; border-radius: 6px; }
+                    .footer { text-align: center; padding: 25px; background: #f8fafc; color: #64748b; font-size: 13px; border-top: 1px solid #e2e8f0; }
+                    .brand-name { color: #10b981; font-weight: 600; }
+                </style>
+            </head>
+            <body>
+                <div class="container">
+                    <div class="header">
+                        <div class="logo">🎵 DaConnect</div>
+                        <div style="font-size: 16px; opacity: 0.95;">Welcome to Our Community!</div>
+                    </div>
+                    <div class="content">
+                        <h2 style="color: #1e293b; margin-bottom: 20px;">Hi ${full_name}! 👋</h2>
+                        <p style="font-size: 16px; color: #475569;">Thank you for joining <span class="brand-name">DaConnect</span>! We're thrilled to have you in our community of artists and music lovers.</p>
+                        <p style="color: #475569;">To complete your registration and unlock all features, please verify your email using the code below:</p>
+                        <div class="otp-code">${otp}</div>
+                        <div class="info-box">
+                            <strong style="color: #92400e;">⏰ Quick Action:</strong> This verification code expires in <strong>10 minutes</strong>.
+                        </div>
+                        <p style="font-size: 14px; color: #64748b; margin-top: 25px;">Once verified, you'll be able to explore services, connect with artists, and much more!</p>
+                    </div>
+                    <div class="footer">
+                        <p style="margin: 5px 0;">This is an automated email from <strong class="brand-name">DaConnect</strong>.</p>
+                        <p style="margin: 5px 0;">&copy; ${new Date().getFullYear()} DaConnect. All rights reserved.</p>
+                        <p style="margin: 10px 0; font-size: 12px;">Empowering artists and connecting communities through music.</p>
+                    </div>
+                </div>
+            </body>
+            </html>
     `,
         );
 
@@ -191,12 +226,50 @@ export class AuthService {
         // Send OTP email
         await this.mail.sendEmail(
             email,
-            "Reset Your Password",
+            "Reset Your DaConnect Password 🔐",
             `
-      <h3>Hi ${user.full_name || "there"},</h3>
-      <p>Use the OTP below to reset your password:</p>
-      <h2>${otp}</h2>
-      <p>This OTP will expire in 10 minutes.</p>
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <style>
+                    body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.6; color: #333; margin: 0; padding: 0; background-color: #f5f7fa; }
+                    .container { max-width: 600px; margin: 40px auto; background: white; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 20px rgba(0,0,0,0.08); }
+                    .header { background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%); color: white; padding: 40px 30px; text-align: center; }
+                    .logo { font-size: 32px; font-weight: bold; margin-bottom: 10px; letter-spacing: 1px; }
+                    .content { padding: 40px 30px; }
+                    .otp-code { font-size: 42px; font-weight: bold; color: #dc2626; letter-spacing: 10px; margin: 15px 0; font-family: 'Courier New', monospace; text-align: center; background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%); border: 2px solid #ef4444; padding: 30px; border-radius: 10px; }
+                    .warning-box { background: #fef3c7; border-left: 4px solid #f59e0b; padding: 16px; margin: 25px 0; border-radius: 6px; }
+                    .security-box { background: #dbeafe; border-left: 4px solid #3b82f6; padding: 16px; margin: 25px 0; border-radius: 6px; }
+                    .footer { text-align: center; padding: 25px; background: #f8fafc; color: #64748b; font-size: 13px; border-top: 1px solid #e2e8f0; }
+                    .brand-name { color: #ef4444; font-weight: 600; }
+                </style>
+            </head>
+            <body>
+                <div class="container">
+                    <div class="header">
+                        <div class="logo">🎵 DaConnect</div>
+                        <div style="font-size: 16px; opacity: 0.95;">Password Reset Request</div>
+                    </div>
+                    <div class="content">
+                        <h2 style="color: #1e293b; margin-bottom: 20px;">Hi ${user.full_name || "there"}! 🔐</h2>
+                        <p style="font-size: 16px; color: #475569;">We received a password reset request for your <span class="brand-name">DaConnect</span> account.</p>
+                        <p style="color: #475569;">Use the verification code below to reset your password:</p>
+                        <div class="otp-code">${otp}</div>
+                        <div class="warning-box">
+                            <strong style="color: #92400e;">⏰ Time Sensitive:</strong> This code expires in <strong>10 minutes</strong>.
+                        </div>
+                        <div class="security-box">
+                            <strong style="color: #1e40af;">🛡️ Security Alert:</strong>
+                            <p style="margin: 10px 0 0 0; color: #475569;">If you didn't request this, please ignore this email or contact support if you're concerned about your account security.</p>
+                        </div>
+                    </div>
+                    <div class="footer">
+                        <p style="margin: 5px 0;">This is an automated email from <strong class="brand-name">DaConnect</strong>.</p>
+                        <p style="margin: 5px 0;">&copy; ${new Date().getFullYear()} DaConnect. All rights reserved.</p>
+                    </div>
+                </div>
+            </body>
+            </html>
     `,
         );
 
@@ -395,12 +468,47 @@ export class AuthService {
         // Send OTP email
         await this.mail.sendEmail(
             email,
-            "Verify Your Account",
+            "DaConnect Account Verification - New Code 🔄",
             `
-      <h3>Hi ${user.full_name || "there"},</h3>
-      <p>Your verification OTP is:</p>
-      <h2>${otp}</h2>
-      <p>This OTP will expire in 10 minutes.</p>
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <style>
+                    body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.6; color: #333; margin: 0; padding: 0; background-color: #f5f7fa; }
+                    .container { max-width: 600px; margin: 40px auto; background: white; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 20px rgba(0,0,0,0.08); }
+                    .header { background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%); color: white; padding: 40px 30px; text-align: center; }
+                    .logo { font-size: 32px; font-weight: bold; margin-bottom: 10px; letter-spacing: 1px; }
+                    .content { padding: 40px 30px; }
+                    .otp-code { font-size: 42px; font-weight: bold; color: #7c3aed; letter-spacing: 10px; margin: 15px 0; font-family: 'Courier New', monospace; text-align: center; background: linear-gradient(135deg, #faf5ff 0%, #f3e8ff 100%); border: 2px solid #8b5cf6; padding: 30px; border-radius: 10px; }
+                    .info-box { background: #fef3c7; border-left: 4px solid #f59e0b; padding: 16px; margin: 25px 0; border-radius: 6px; }
+                    .footer { text-align: center; padding: 25px; background: #f8fafc; color: #64748b; font-size: 13px; border-top: 1px solid #e2e8f0; }
+                    .brand-name { color: #8b5cf6; font-weight: 600; }
+                </style>
+            </head>
+            <body>
+                <div class="container">
+                    <div class="header">
+                        <div class="logo">🎵 DaConnect</div>
+                        <div style="font-size: 16px; opacity: 0.95;">New Verification Code</div>
+                    </div>
+                    <div class="content">
+                        <h2 style="color: #1e293b; margin-bottom: 20px;">Hi ${user.full_name || "there"}! 👋</h2>
+                        <p style="font-size: 16px; color: #475569;">You requested a new verification code for your <span class="brand-name">DaConnect</span> account.</p>
+                        <p style="color: #475569;">Here's your fresh verification code:</p>
+                        <div class="otp-code">${otp}</div>
+                        <div class="info-box">
+                            <strong style="color: #92400e;">⏰ Fresh Code:</strong> This new verification code will expire in <strong>10 minutes</strong>.
+                        </div>
+                        <p style="font-size: 14px; color: #64748b; margin-top: 25px;">Almost there! Complete your verification to join the DaConnect community.</p>
+                    </div>
+                    <div class="footer">
+                        <p style="margin: 5px 0;">This is an automated email from <strong class="brand-name">DaConnect</strong>.</p>
+                        <p style="margin: 5px 0;">&copy; ${new Date().getFullYear()} DaConnect. All rights reserved.</p>
+                        <p style="margin: 10px 0; font-size: 12px;">Empowering artists and connecting communities through music.</p>
+                    </div>
+                </div>
+            </body>
+            </html>
     `,
         );
 
