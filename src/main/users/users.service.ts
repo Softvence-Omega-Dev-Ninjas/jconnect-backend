@@ -38,11 +38,42 @@ export class UsersService {
         }
     }
 
+    async checkUsernameAvailability(username: string) {
+        if (!username || username.trim() === "") {
+            throw new HttpException("Username is required", 400);
+        }
+
+        const trimmedUsername = username.trim().toLowerCase();
+
+        const existingUser = await this.prisma.user.findFirst({
+            where: {
+                username: {
+                    equals: trimmedUsername,
+                    mode: "insensitive",
+                },
+            },
+        });
+
+        if (existingUser) {
+            return {
+                success: false,
+                available: false,
+                message: "Username is already taken",
+            };
+        }
+
+        return {
+            success: true,
+            available: true,
+            message: "Username is available",
+        };
+    }
+
     async findAll(params: { page: number; limit: number; isActive?: boolean; search?: string }) {
         const { page, limit, isActive, search } = params;
 
         const whereCondition: any = {
-            isDeleted: false,
+            // isDeleted: false,
             ...(isActive !== undefined ? { isActive } : {}),
         };
 
@@ -292,13 +323,36 @@ export class UsersService {
         const existingUser = await this.prisma.user.findUnique({ where: { id: userId } });
         if (!existingUser) throw new NotFoundException("User not found");
 
+        if (dto.phone) {
+            const existPhoneNumber = await this.prisma.user.findFirst({
+                where: { phone: dto.phone },
+            });
+
+            if (existPhoneNumber && existPhoneNumber.id !== userId) {
+                throw new HttpException("Phone number already in use by another user", 400);
+            }
+        }
+
+        if (dto.username) {
+            const existUsername = await this.prisma.user.findFirst({
+                where: { username: dto.username },
+            });
+
+            if (existUsername && existUsername.id !== userId) {
+                throw new HttpException("Username already in use by another user", 400);
+            }
+        }
+
         // User table updates
         const userPayload: UpdateUserDto = {};
         if (dto.full_name !== undefined) userPayload.full_name = dto.full_name;
-        if (dto.phone !== undefined) userPayload.phone = dto.phone;
+        if (dto.phone !== undefined && dto.phone !== null && dto.phone.trim() !== "") {
+            userPayload.phone = dto.phone;
+        }
         if (dto.profilePhoto !== undefined) userPayload.profilePhoto = dto.profilePhoto;
         if (dto.location !== undefined) userPayload.location = dto.location;
         if (dto.hashTags !== undefined) userPayload.hashTags = dto.hashTags;
+        if (dto.username !== undefined) userPayload.username = dto.username;
 
         // Profile table updates
         const profilePayload = {
@@ -419,6 +473,12 @@ export class UsersService {
             baseWhere.OR = [
                 {
                     full_name: {
+                        contains: search,
+                        mode: "insensitive",
+                    },
+                },
+                {
+                    username: {
                         contains: search,
                         mode: "insensitive",
                     },
@@ -574,6 +634,7 @@ export class UsersService {
                                 id: true,
                                 full_name: true,
                                 profilePhoto: true,
+                                username: true,
                             },
                         },
                     },
@@ -588,6 +649,7 @@ export class UsersService {
                                 id: true,
                                 full_name: true,
                                 profilePhoto: true,
+                                username: true,
                             },
                         },
                     },
@@ -599,6 +661,7 @@ export class UsersService {
                                 id: true,
                                 full_name: true,
                                 profilePhoto: true,
+                                username: true,
                             },
                         },
                     },
@@ -648,6 +711,7 @@ export class UsersService {
                                 id: true,
                                 full_name: true,
                                 profilePhoto: true,
+                                username: true,
                             },
                         },
                     },
@@ -662,6 +726,8 @@ export class UsersService {
                                 id: true,
                                 full_name: true,
                                 profilePhoto: true,
+
+                                username: true,
                             },
                         },
                     },
@@ -673,6 +739,7 @@ export class UsersService {
                                 id: true,
                                 full_name: true,
                                 profilePhoto: true,
+                                username: true,
                             },
                         },
                     },
@@ -702,6 +769,7 @@ export class UsersService {
                 email: true,
                 full_name: true,
                 role: true,
+                username: true,
             },
         });
 
@@ -714,6 +782,7 @@ export class UsersService {
                     id: currentUser.id,
                     email: currentUser.email,
                     name: currentUser.full_name,
+                    username: currentUser.username,
                     role: currentUser.role,
                     message:
                         " i like your profile and i wanna buy your service " +
@@ -791,6 +860,7 @@ export class UsersService {
             role: updatedUser.role,
             isActive: updatedUser.isActive,
             isVerified: updatedUser.isVerified,
+            username: updatedUser.username,
         };
     }
 
@@ -799,13 +869,15 @@ export class UsersService {
         console.log(exists);
 
         if (!exists) throw new NotFoundException("User not found");
-        if (exists?.isDeleted) throw new NotFoundException("User Already deleted");
+        // if (exists?.isDeleted) throw new NotFoundException("User Already deleted");
 
-        await this.prisma.user.update({
-            where: { id },
-            data: { isDeleted: true },
-            omit: { password: true },
-        });
+        // await this.prisma.user.update({
+        //     where: { id },
+        //     data: { isDeleted: true },
+        //     omit: { password: true },
+        // });
+
+        await this.prisma.user.delete({ where: { id } });
 
         return {
             status: 200,

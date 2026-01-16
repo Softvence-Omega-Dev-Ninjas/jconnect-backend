@@ -7,6 +7,7 @@ import { JwtModule } from "@nestjs/jwt";
 import { LibModule } from "src/lib/lib.module";
 import { AuthController } from "./controllers/auth.controller";
 import { AuthGoogleService } from "./services/auh-google.service";
+import { AuthFirebaseService } from "./services/auth-firebase.service";
 import { AuthService } from "./services/auth.service";
 
 @Module({
@@ -27,7 +28,7 @@ import { AuthService } from "./services/auth.service";
         }),
     ],
     controllers: [AuthController],
-    providers: [AuthService, AuthGoogleService, StripeService],
+    providers: [AuthService, AuthGoogleService, AuthFirebaseService, StripeService],
     exports: [AuthService, JwtModule],
 })
 export class AuthModule {}

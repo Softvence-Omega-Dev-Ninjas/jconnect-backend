@@ -2,6 +2,7 @@ model User {
   id                     String                 @id @default(uuid())
   full_name              String
   email                  String                 @unique
+  username               String?                @unique
   profilePhoto           String?
   phone                  String?                @unique
   password               String
@@ -32,7 +33,7 @@ model User {
   sellerIDStripe         String?
   customerIdStripe       String?
   location               String?                @default("")
-  hashTags              String[]               @default([])
+  hashTags               String[]               @default([])
   // Relation to Service Model 
   profile                Profile?
   serviceRequests        ServiceRequest[]

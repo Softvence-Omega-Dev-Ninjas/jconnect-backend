@@ -28,7 +28,7 @@
         "db:fetch-prod": "tsx src/scripts/fetch-production-data.ts",
         "db:sync-prod": "tsx src/scripts/sync-production-db.ts",
         "prepare": "husky",
-        "git": "pnpm ci:fix && pnpm build && git add . && git commit -m\"update some feature immediately push\""
+        "git": "pnpm ci:fix && pnpm build && git add . && git commit -m\"email template added\""
     },
     "dependencies": {
         "@aws-sdk/client-s3": "^3.929.0",
@@ -56,6 +56,7 @@
         "class-validator": "^0.14.2",
         "date-fns": "^4.1.0",
         "express": "^5.1.0",
+        "firebase-admin": "^13.6.0",
         "google-auth-library": "^10.5.0",
         "ioredis": "^5.8.2",
         "jsonwebtoken": "^9.0.2",

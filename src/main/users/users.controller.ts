@@ -44,6 +44,23 @@ export class UsersController {
         private awsservice: AwsService,
     ) {}
 
+    @Get("check-username/:username")
+    @ApiOperation({ summary: "Check if username is available" })
+    @ApiResponse({
+        status: 200,
+        description: "Returns username availability status",
+        schema: {
+            type: "object",
+            properties: {
+                available: { type: "boolean" },
+                message: { type: "string" },
+            },
+        },
+    })
+    checkUsername(@Param("username") username: string) {
+        return this.usersService.checkUsernameAvailability(username);
+    }
+
     @ApiBearerAuth()
     @ValidateUser()
     @Get("me")
@@ -78,6 +95,7 @@ export class UsersController {
                     description: "JSON string of hash tags array",
                     example: '["facebook", "art"]',
                 },
+                username: { type: "string", example: "john_doe" },
             },
         },
     })
@@ -120,6 +138,7 @@ export class UsersController {
         const updateMeDto: UpdateMeDto = {
             full_name: body.full_name,
             phone: body.phone,
+            username: body.username && body.username.trim() !== "" ? body.username : undefined,
             short_bio: body.short_bio,
             profile_image_url: body.profile_image_url,
             location: body.location,
@@ -237,6 +256,7 @@ export class UsersController {
     @ApiQuery({ name: "limit", required: false, example: 10 })
     @ApiQuery({ name: "filter", required: false, example: "top-rated" })
     @ApiQuery({ name: "search", required: false, example: "" })
+    @ApiQuery({ name: "username", required: false, example: "john_doe" })
     findAllArtist(@Query() query: FindArtistDto, @GetUser() user: any) {
         return this.usersService.findAllArtist(query, user);
     }
@@ -316,13 +336,27 @@ export class UsersController {
     @ApiOperation({ summary: "Delete user by ID" })
     @ApiResponse({ status: 200, description: "User deleted successfully" })
     remove(@Param("id") id: string, @GetUser() user: any) {
-        const isOwner = user.id === id;
+        const isOwner = user.userId === id;
         const isAdmin = ["ADMIN", "SUPER_ADMIN"].includes(user.roles);
         if (!isOwner && !isAdmin) {
             throw new ForbiddenException("You are not authorized to update this user");
         }
         return this.usersService.remove(id);
     }
+
+    // @ApiBearerAuth()
+    // @ValidateUser()
+    // @Delete("deleteMyaccount:id")
+    // @ApiOperation({ summary: "Delete my account by ID" })
+    // @ApiResponse({ status: 200, description: "User deleted successfully" })
+    // DeleteMy(@Param("id") id: string, @GetUser() user: any) {
+    //     const isOwner = user.id === id;
+    //     const isAdmin = ["ADMIN", "SUPER_ADMIN"].includes(user.roles);
+    //     if (!isOwner && !isAdmin) {
+    //         throw new ForbiddenException("You are not authorized to update this user");
+    //     }
+    //     return this.usersService.remove(id);
+    // }
 
     @ApiBearerAuth()
     @ValidateSuperAdmin()
