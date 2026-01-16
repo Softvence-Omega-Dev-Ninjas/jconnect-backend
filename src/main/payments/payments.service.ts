@@ -125,7 +125,7 @@ export class PaymentService {
             const res = await this.stripe.paymentMethods.attach(payment_method_id, {
                 customer: user.customerIdStripe,
             });
-            console.log("ss44444444444444444444444444444444444sssssss", res);
+            // console.log("ss44444444444444444444444444444444444sssssss", res);
 
             await this.prisma.paymentMethod.create({
                 data: {

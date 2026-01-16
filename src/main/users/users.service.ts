@@ -38,6 +38,37 @@ export class UsersService {
         }
     }
 
+    async checkUsernameAvailability(username: string) {
+        if (!username || username.trim() === "") {
+            throw new HttpException("Username is required", 400);
+        }
+
+        const trimmedUsername = username.trim().toLowerCase();
+
+        const existingUser = await this.prisma.user.findFirst({
+            where: {
+                username: {
+                    equals: trimmedUsername,
+                    mode: "insensitive",
+                },
+            },
+        });
+
+        if (existingUser) {
+            return {
+                success: false,
+                available: false,
+                message: "Username is already taken",
+            };
+        }
+
+        return {
+            success: true,
+            available: true,
+            message: "Username is available",
+        };
+    }
+
     async findAll(params: { page: number; limit: number; isActive?: boolean; search?: string }) {
         const { page, limit, isActive, search } = params;
 
@@ -315,7 +346,9 @@ export class UsersService {
         // User table updates
         const userPayload: UpdateUserDto = {};
         if (dto.full_name !== undefined) userPayload.full_name = dto.full_name;
-        if (dto.phone !== undefined) userPayload.phone = dto.phone;
+        if (dto.phone !== undefined && dto.phone !== null && dto.phone.trim() !== "") {
+            userPayload.phone = dto.phone;
+        }
         if (dto.profilePhoto !== undefined) userPayload.profilePhoto = dto.profilePhoto;
         if (dto.location !== undefined) userPayload.location = dto.location;
         if (dto.hashTags !== undefined) userPayload.hashTags = dto.hashTags;
