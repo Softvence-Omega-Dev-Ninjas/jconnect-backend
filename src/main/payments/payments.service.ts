@@ -651,11 +651,66 @@ export class PaymentService {
         });
         await this.mail.sendEmail(
             user.email,
-            "Withdrawal Successfully",
+            "DaConnect - Withdrawal Successful 💸",
             `
-    <h1>Your withdrawal successfully added in your stripe account</h1>
-    <p>Amount: $${amountInCents / 100}</p>
-    <p>Status: It will be payout in your external account within 48 hour</p>
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <style>
+                    body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.6; color: #333; margin: 0; padding: 0; background-color: #f5f7fa; }
+                    .container { max-width: 600px; margin: 40px auto; background: white; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 20px rgba(0,0,0,0.08); }
+                    .header { background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; padding: 40px 30px; text-align: center; }
+                    .logo { font-size: 32px; font-weight: bold; margin-bottom: 10px; letter-spacing: 1px; }
+                    .content { padding: 40px 30px; }
+                    .amount-box { background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%); border: 2px solid #10b981; padding: 25px; text-align: center; margin: 25px 0; border-radius: 10px; }
+                    .amount { font-size: 36px; font-weight: bold; color: #059669; margin: 10px 0; }
+                    .info-box { background: #dbeafe; border-left: 4px solid #3b82f6; padding: 16px; margin: 25px 0; border-radius: 6px; }
+                    .detail-row { display: flex; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid #e5e7eb; }
+                    .footer { text-align: center; padding: 25px; background: #f8fafc; color: #64748b; font-size: 13px; border-top: 1px solid #e2e8f0; }
+                    .brand-name { color: #10b981; font-weight: 600; }
+                </style>
+            </head>
+            <body>
+                <div class="container">
+                    <div class="header">
+                        <div class="logo">🎵 DaConnect</div>
+                        <div style="font-size: 16px; opacity: 0.95;">Withdrawal Confirmation</div>
+                    </div>
+                    <div class="content">
+                        <h2 style="color: #1e293b; margin-bottom: 20px;">✅ Withdrawal Successful!</h2>
+                        <p style="font-size: 16px; color: #475569;">Great news! Your withdrawal request has been processed successfully.</p>
+                        
+                        <div class="amount-box">
+                            <p style="margin: 0; font-size: 14px; color: #64748b; text-transform: uppercase;">Withdrawn Amount</p>
+                            <div class="amount">$${(amountInCents / 100).toFixed(2)}</div>
+                        </div>
+                        
+                        <div style="background: #f8fafc; padding: 20px; border-radius: 8px; margin: 25px 0;">
+                            <h3 style="margin-top: 0; color: #1e293b; font-size: 16px;">Transaction Details</h3>
+                            <div class="detail-row">
+                                <span style="color: #64748b;">Status:</span>
+                                <strong style="color: #10b981;">Processing</strong>
+                            </div>
+                            <div class="detail-row" style="border: none;">
+                                <span style="color: #64748b;">Expected in Account:</span>
+                                <strong style="color: #1e293b;">Within 48 hours</strong>
+                            </div>
+                        </div>
+                        
+                        <div class="info-box">
+                            <strong style="color: #1e40af;">📌 Important:</strong>
+                            <p style="margin: 10px 0 0 0; color: #475569;">Your funds will be deposited to your connected Stripe account within <strong>48 hours</strong>. From there, they'll be transferred to your external bank account based on your Stripe payout schedule.</p>
+                        </div>
+                        
+                        <p style="font-size: 14px; color: #64748b; margin-top: 25px;">You can track your payout status in your Stripe dashboard. If you have any questions, our support team is here to help!</p>
+                    </div>
+                    <div class="footer">
+                        <p style="margin: 5px 0;"><strong class="brand-name">DaConnect</strong> - Empowering Artists</p>
+                        <p style="margin: 5px 0;">&copy; ${new Date().getFullYear()} DaConnect. All rights reserved.</p>
+                    </div>
+                </div>
+            </body>
+            </html>
     `,
         );
 
@@ -724,25 +779,141 @@ export class PaymentService {
 
         await this.mail.sendEmail(
             userFromReq.email,
-            "Order Placed Successfully",
+            "DaConnect - Order Placed Successfully 🎉",
             `
-    <h1>Your order is successfully placed!</h1>
-    <p>Order Code: ${order.orderCode}</p>
-    <p>Amount: $${order.amount / 100}</p>
-    <p>seller: ${service.creator?.email}</p>
-    <p>Status: ${order.status}</p>
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <style>
+                    body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.6; color: #333; margin: 0; padding: 0; background-color: #f5f7fa; }
+                    .container { max-width: 600px; margin: 40px auto; background: white; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 20px rgba(0,0,0,0.08); }
+                    .header { background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%); color: white; padding: 40px 30px; text-align: center; }
+                    .logo { font-size: 32px; font-weight: bold; margin-bottom: 10px; letter-spacing: 1px; }
+                    .content { padding: 40px 30px; }
+                    .order-box { background: #f8fafc; border: 2px solid #3b82f6; padding: 25px; margin: 25px 0; border-radius: 10px; }
+                    .detail-row { display: flex; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid #e5e7eb; }
+                    .amount { font-size: 28px; font-weight: bold; color: #2563eb; }
+                    .status-badge { display: inline-block; padding: 8px 16px; background: #fef3c7; color: #92400e; border-radius: 20px; font-size: 14px; font-weight: 600; }
+                    .info-box { background: #dbeafe; border-left: 4px solid #3b82f6; padding: 16px; margin: 25px 0; border-radius: 6px; }
+                    .footer { text-align: center; padding: 25px; background: #f8fafc; color: #64748b; font-size: 13px; border-top: 1px solid #e2e8f0; }
+                    .brand-name { color: #3b82f6; font-weight: 600; }
+                </style>
+            </head>
+            <body>
+                <div class="container">
+                    <div class="header">
+                        <div class="logo">🎵 DaConnect</div>
+                        <div style="font-size: 16px; opacity: 0.95;">Order Confirmation</div>
+                    </div>
+                    <div class="content">
+                        <h2 style="color: #1e293b; margin-bottom: 20px;">✅ Order Placed Successfully!</h2>
+                        <p style="font-size: 16px; color: #475569;">Thank you for your order! We've received your payment and the seller has been notified.</p>
+                        
+                        <div class="order-box">
+                            <h3 style="margin-top: 0; color: #1e293b; font-size: 16px;">Order Details</h3>
+                            <div class="detail-row">
+                                <span style="color: #64748b;">Order Code:</span>
+                                <strong style="color: #1e293b;">${order.orderCode}</strong>
+                            </div>
+                            <div class="detail-row">
+                                <span style="color: #64748b;">Amount:</span>
+                                <span class="amount">$${(order.amount / 100).toFixed(2)}</span>
+                            </div>
+                            <div class="detail-row">
+                                <span style="color: #64748b;">Seller:</span>
+                                <strong style="color: #1e293b;">${service.creator?.email}</strong>
+                            </div>
+                            <div class="detail-row" style="border: none;">
+                                <span style="color: #64748b;">Status:</span>
+                                <span class="status-badge">${order.status}</span>
+                            </div>
+                        </div>
+                        
+                        <div class="info-box">
+                            <strong style="color: #1e40af;">👉 What's Next?</strong>
+                            <p style="margin: 10px 0 0 0; color: #475569;">The seller will start working on your order. You'll receive updates via email. Your payment is held securely until you confirm delivery.</p>
+                        </div>
+                        
+                        <p style="font-size: 14px; color: #64748b; margin-top: 25px;">Need help? Our support team is available 24/7 to assist you with your order.</p>
+                    </div>
+                    <div class="footer">
+                        <p style="margin: 5px 0;"><strong class="brand-name">DaConnect</strong> - Connecting Artists & Music Lovers</p>
+                        <p style="margin: 5px 0;">&copy; ${new Date().getFullYear()} DaConnect. All rights reserved.</p>
+                    </div>
+                </div>
+            </body>
+            </html>
     `,
         );
 
         await this.mail.sendEmail(
             service.creator?.email,
-            "You Got a New Order",
+            "DaConnect - New Order Received! 🔔",
             `
-    <h1>New Order Received!</h1>
-    <p>Order Code: ${order.orderCode}</p>
-    <p>Service: ${service.serviceName}</p>
-    <p>Buyer: ${userFromReq.email}</p>
-    <p>Amount: $${order.amount / 100}</p>
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <style>
+                    body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.6; color: #333; margin: 0; padding: 0; background-color: #f5f7fa; }
+                    .container { max-width: 600px; margin: 40px auto; background: white; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 20px rgba(0,0,0,0.08); }
+                    .header { background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%); color: white; padding: 40px 30px; text-align: center; }
+                    .logo { font-size: 32px; font-weight: bold; margin-bottom: 10px; letter-spacing: 1px; }
+                    .content { padding: 40px 30px; }
+                    .order-box { background: linear-gradient(135deg, #faf5ff 0%, #f3e8ff 100%); border: 2px solid #8b5cf6; padding: 25px; margin: 25px 0; border-radius: 10px; }
+                    .detail-row { display: flex; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid #e5e7eb; }
+                    .amount { font-size: 28px; font-weight: bold; color: #7c3aed; }
+                    .cta-button { display: inline-block; padding: 14px 32px; background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%); color: white; text-decoration: none; border-radius: 8px; font-weight: 600; margin: 20px 0; }
+                    .info-box { background: #fef3c7; border-left: 4px solid #f59e0b; padding: 16px; margin: 25px 0; border-radius: 6px; }
+                    .footer { text-align: center; padding: 25px; background: #f8fafc; color: #64748b; font-size: 13px; border-top: 1px solid #e2e8f0; }
+                    .brand-name { color: #8b5cf6; font-weight: 600; }
+                </style>
+            </head>
+            <body>
+                <div class="container">
+                    <div class="header">
+                        <div class="logo">🎵 DaConnect</div>
+                        <div style="font-size: 16px; opacity: 0.95;">New Order Alert</div>
+                    </div>
+                    <div class="content">
+                        <h2 style="color: #1e293b; margin-bottom: 20px;">🎉 Congratulations! New Order Received</h2>
+                        <p style="font-size: 16px; color: #475569;">You've received a new order on <span class="brand-name">DaConnect</span>. Time to showcase your talent!</p>
+                        
+                        <div class="order-box">
+                            <h3 style="margin-top: 0; color: #1e293b; font-size: 16px;">Order Information</h3>
+                            <div class="detail-row">
+                                <span style="color: #64748b;">Order Code:</span>
+                                <strong style="color: #1e293b;">${order.orderCode}</strong>
+                            </div>
+                            <div class="detail-row">
+                                <span style="color: #64748b;">Service:</span>
+                                <strong style="color: #1e293b;">${service.serviceName}</strong>
+                            </div>
+                            <div class="detail-row">
+                                <span style="color: #64748b;">Buyer:</span>
+                                <strong style="color: #1e293b;">${userFromReq.email}</strong>
+                            </div>
+                            <div class="detail-row" style="border: none;">
+                                <span style="color: #64748b;">Order Value:</span>
+                                <span class="amount">$${(order.amount / 100).toFixed(2)}</span>
+                            </div>
+                        </div>
+                        
+                        <div class="info-box">
+                            <strong style="color: #92400e;">💼 Action Required:</strong>
+                            <p style="margin: 10px 0 0 0; color: #475569;">Please review the order details and start working on it. The buyer's payment is secured and will be released to you upon successful delivery.</p>
+                        </div>
+                        
+                        <div style="text-align: center; margin: 30px 0;">
+                            <p style="color: #64748b; margin-bottom: 15px;">Log in to your dashboard to view full order details</p>
+                        </div>
+                    </div>
+                    <div class="footer">
+                        <p style="margin: 5px 0;"><strong class="brand-name">DaConnect</strong> - Empowering Artists</p>
+                        <p style="margin: 5px 0;">&copy; ${new Date().getFullYear()} DaConnect. All rights reserved.</p>
+                    </div>
+                </div>
+            </body>
+            </html>
     `,
         );
 
@@ -834,23 +1005,130 @@ export class PaymentService {
 
         await this.mail.sendEmail(
             order.buyer.email,
-            "Order Payment Successfully",
+            "DaConnect - Order Payment Confirmed ✅",
             `
-        <h1>Your ${order.service.serviceName} order is successfully Paid!</h1>
-        <p>Order Code: ${order.orderCode}</p>
-        <p>Amount: $${order.amount / 100}</p>
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <style>
+                    body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.6; color: #333; margin: 0; padding: 0; background-color: #f5f7fa; }
+                    .container { max-width: 600px; margin: 40px auto; background: white; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 20px rgba(0,0,0,0.08); }
+                    .header { background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; padding: 40px 30px; text-align: center; }
+                    .logo { font-size: 32px; font-weight: bold; margin-bottom: 10px; letter-spacing: 1px; }
+                    .content { padding: 40px 30px; }
+                    .success-icon { font-size: 64px; text-align: center; margin: 20px 0; }
+                    .order-box { background: #f8fafc; border: 2px solid #10b981; padding: 25px; margin: 25px 0; border-radius: 10px; }
+                    .detail-row { display: flex; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid #e5e7eb; }
+                    .amount { font-size: 28px; font-weight: bold; color: #059669; }
+                    .footer { text-align: center; padding: 25px; background: #f8fafc; color: #64748b; font-size: 13px; border-top: 1px solid #e2e8f0; }
+                    .brand-name { color: #10b981; font-weight: 600; }
+                </style>
+            </head>
+            <body>
+                <div class="container">
+                    <div class="header">
+                        <div class="logo">🎵 DaConnect</div>
+                        <div style="font-size: 16px; opacity: 0.95;">Payment Confirmation</div>
+                    </div>
+                    <div class="content">
+                        <div class="success-icon">✅</div>
+                        <h2 style="color: #1e293b; margin-bottom: 20px; text-align: center;">Payment Successfully Processed!</h2>
+                        <p style="font-size: 16px; color: #475569; text-align: center;">Your payment for <strong>${order.service.serviceName}</strong> has been confirmed.</p>
+                        
+                        <div class="order-box">
+                            <h3 style="margin-top: 0; color: #1e293b; font-size: 16px;">Transaction Details</h3>
+                            <div class="detail-row">
+                                <span style="color: #64748b;">Order Code:</span>
+                                <strong style="color: #1e293b;">${order.orderCode}</strong>
+                            </div>
+                            <div class="detail-row" style="border: none;">
+                                <span style="color: #64748b;">Amount Paid:</span>
+                                <span class="amount">$${(order.amount / 100).toFixed(2)}</span>
+                            </div>
+                        </div>
+                        
+                        <p style="font-size: 14px; color: #64748b; margin-top: 25px; text-align: center;">Thank you for using DaConnect! Your order is now being processed.</p>
+                    </div>
+                    <div class="footer">
+                        <p style="margin: 5px 0;"><strong class="brand-name">DaConnect</strong> - Connecting Artists & Music Lovers</p>
+                        <p style="margin: 5px 0;">&copy; ${new Date().getFullYear()} DaConnect. All rights reserved.</p>
+                    </div>
+                </div>
+            </body>
+            </html>
         `,
         );
 
         await this.mail.sendEmail(
             order?.seller.email,
-            "Order Payment Released",
+            "DaConnect - Payment Released! 💰",
             `
-        <h1>Your ${order.service.serviceName}  Order Released!</h1>
-        <p>Order Code: ${order.orderCode}</p>
-        <p>Service: ${order.service.serviceName}</p>
-        <p>buyer: ${order.buyer.email}</p>
-        <p>Amount: $${order.amount / 100}</p>
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <style>
+                    body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.6; color: #333; margin: 0; padding: 0; background-color: #f5f7fa; }
+                    .container { max-width: 600px; margin: 40px auto; background: white; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 20px rgba(0,0,0,0.08); }
+                    .header { background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; padding: 40px 30px; text-align: center; }
+                    .logo { font-size: 32px; font-weight: bold; margin-bottom: 10px; letter-spacing: 1px; }
+                    .content { padding: 40px 30px; }
+                    .success-icon { font-size: 64px; text-align: center; margin: 20px 0; }
+                    .earnings-box { background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%); border: 2px solid #10b981; padding: 30px; text-align: center; margin: 25px 0; border-radius: 10px; }
+                    .earnings { font-size: 36px; font-weight: bold; color: #059669; margin: 10px 0; }
+                    .order-box { background: #f8fafc; padding: 20px; margin: 25px 0; border-radius: 8px; }
+                    .detail-row { display: flex; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid #e5e7eb; }
+                    .info-box { background: #dbeafe; border-left: 4px solid #3b82f6; padding: 16px; margin: 25px 0; border-radius: 6px; }
+                    .footer { text-align: center; padding: 25px; background: #f8fafc; color: #64748b; font-size: 13px; border-top: 1px solid #e2e8f0; }
+                    .brand-name { color: #10b981; font-weight: 600; }
+                </style>
+            </head>
+            <body>
+                <div class="container">
+                    <div class="header">
+                        <div class="logo">🎵 DaConnect</div>
+                        <div style="font-size: 16px; opacity: 0.95;">Payment Released</div>
+                    </div>
+                    <div class="content">
+                        <div class="success-icon">🎉</div>
+                        <h2 style="color: #1e293b; margin-bottom: 20px; text-align: center;">Congratulations! Payment Released</h2>
+                        <p style="font-size: 16px; color: #475569; text-align: center;">Great news! The payment for your order has been released to your account.</p>
+                        
+                        <div class="earnings-box">
+                            <p style="margin: 0; font-size: 14px; color: #64748b; text-transform: uppercase;">Your Earnings</p>
+                            <div class="earnings">$${(order.amount / 100).toFixed(2)}</div>
+                            <p style="margin: 0; font-size: 13px; color: #94a3b8;">Successfully transferred</p>
+                        </div>
+                        
+                        <div class="order-box">
+                            <h3 style="margin-top: 0; color: #1e293b; font-size: 16px;">Order Details</h3>
+                            <div class="detail-row">
+                                <span style="color: #64748b;">Order Code:</span>
+                                <strong style="color: #1e293b;">${order.orderCode}</strong>
+                            </div>
+                            <div class="detail-row">
+                                <span style="color: #64748b;">Service:</span>
+                                <strong style="color: #1e293b;">${order.service.serviceName}</strong>
+                            </div>
+                            <div class="detail-row" style="border: none;">
+                                <span style="color: #64748b;">Buyer:</span>
+                                <strong style="color: #1e293b;">${order.buyer.email}</strong>
+                            </div>
+                        </div>
+                        
+                        <div class="info-box">
+                            <strong style="color: #1e40af;">💳 Available Balance:</strong>
+                            <p style="margin: 10px 0 0 0; color: #475569;">Your earnings are now available in your DaConnect balance. You can request a withdrawal to your bank account at any time.</p>
+                        </div>
+                        
+                        <p style="font-size: 14px; color: #64748b; margin-top: 25px; text-align: center;">Thank you for delivering excellent service on DaConnect!</p>
+                    </div>
+                    <div class="footer">
+                        <p style="margin: 5px 0;"><strong class="brand-name">DaConnect</strong> - Empowering Artists</p>
+                        <p style="margin: 5px 0;">&copy; ${new Date().getFullYear()} DaConnect. All rights reserved.</p>
+                    </div>
+                </div>
+            </body>
+            </html>
         `,
         );
 
@@ -911,11 +1189,54 @@ export class PaymentService {
 
             await this.mail.sendEmail(
                 order.buyer.email,
-                "Payment Cancelled",
+                "DaConnect - Payment Cancelled ❌",
                 `
-                    <h1>Your payment was cancelled.</h1>
-                    <p>Order Code: ${order.orderCode}</p>
-                    <p>Status: Cancelled</p>
+                <!DOCTYPE html>
+                <html>
+                <head>
+                    <style>
+                        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.6; color: #333; margin: 0; padding: 0; background-color: #f5f7fa; }
+                        .container { max-width: 600px; margin: 40px auto; background: white; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 20px rgba(0,0,0,0.08); }
+                        .header { background: linear-gradient(135deg, #64748b 0%, #475569 100%); color: white; padding: 40px 30px; text-align: center; }
+                        .logo { font-size: 32px; font-weight: bold; margin-bottom: 10px; letter-spacing: 1px; }
+                        .content { padding: 40px 30px; }
+                        .status-box { background: #f8fafc; border: 2px solid #64748b; padding: 25px; text-align: center; margin: 25px 0; border-radius: 10px; }
+                        .info-box { background: #fef3c7; border-left: 4px solid #f59e0b; padding: 16px; margin: 25px 0; border-radius: 6px; }
+                        .detail-row { display: flex; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid #e5e7eb; }
+                        .footer { text-align: center; padding: 25px; background: #f8fafc; color: #64748b; font-size: 13px; border-top: 1px solid #e2e8f0; }
+                        .brand-name { color: #3b82f6; font-weight: 600; }
+                    </style>
+                </head>
+                <body>
+                    <div class="container">
+                        <div class="header">
+                            <div class="logo">🎵 DaConnect</div>
+                            <div style="font-size: 16px; opacity: 0.95;">Payment Status Update</div>
+                        </div>
+                        <div class="content">
+                            <h2 style="color: #1e293b; margin-bottom: 20px;">Payment Cancelled</h2>
+                            <p style="font-size: 16px; color: #475569;">Your payment authorization for this order has been cancelled. No charges were made to your payment method.</p>
+                            
+                            <div class="status-box">
+                                <div style="font-size: 48px; margin-bottom: 15px;">❌</div>
+                                <h3 style="margin: 0; color: #64748b;">Order Cancelled</h3>
+                                <p style="margin: 10px 0 0 0; font-size: 14px; color: #94a3b8;">Order Code: ${order.orderCode}</p>
+                            </div>
+                            
+                            <div class="info-box">
+                                <strong style="color: #92400e;">📌 Important:</strong>
+                                <p style="margin: 10px 0 0 0; color: #475569;">Since the payment was cancelled before capture, no refund is necessary. Your payment method was not charged.</p>
+                            </div>
+                            
+                            <p style="font-size: 14px; color: #64748b; margin-top: 25px;">If you have any questions about this cancellation, please contact our support team.</p>
+                        </div>
+                        <div class="footer">
+                            <p style="margin: 5px 0;"><strong class="brand-name">DaConnect</strong> - Connecting Artists & Music Lovers</p>
+                            <p style="margin: 5px 0;">&copy; ${new Date().getFullYear()} DaConnect. All rights reserved.</p>
+                        </div>
+                    </div>
+                </body>
+                </html>
                 `,
             );
 
@@ -959,23 +1280,131 @@ export class PaymentService {
         // 5) Send Email to Buyer
         await this.mail.sendEmail(
             order.buyer.email,
-            "Refund Issued Successfully",
+            "DaConnect - Refund Processed Successfully 🔄",
             `
-        <h1>Your refund has been processed!</h1>
-        <p>Order Code: ${order.orderCode}</p>
-        <p>Amount Refunded: $${order.amount / 100}</p>
-        <p>Status: CANCELLED</p>
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <style>
+                    body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.6; color: #333; margin: 0; padding: 0; background-color: #f5f7fa; }
+                    .container { max-width: 600px; margin: 40px auto; background: white; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 20px rgba(0,0,0,0.08); }
+                    .header { background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%); color: white; padding: 40px 30px; text-align: center; }
+                    .logo { font-size: 32px; font-weight: bold; margin-bottom: 10px; letter-spacing: 1px; }
+                    .content { padding: 40px 30px; }
+                    .refund-box { background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%); border: 2px solid #3b82f6; padding: 30px; text-align: center; margin: 25px 0; border-radius: 10px; }
+                    .refund-amount { font-size: 36px; font-weight: bold; color: #2563eb; margin: 10px 0; }
+                    .order-box { background: #f8fafc; padding: 20px; margin: 25px 0; border-radius: 8px; }
+                    .detail-row { display: flex; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid #e5e7eb; }
+                    .info-box { background: #dbeafe; border-left: 4px solid #3b82f6; padding: 16px; margin: 25px 0; border-radius: 6px; }
+                    .status-badge { display: inline-block; padding: 8px 16px; background: #fee2e2; color: #991b1b; border-radius: 20px; font-size: 14px; font-weight: 600; }
+                    .footer { text-align: center; padding: 25px; background: #f8fafc; color: #64748b; font-size: 13px; border-top: 1px solid #e2e8f0; }
+                    .brand-name { color: #3b82f6; font-weight: 600; }
+                </style>
+            </head>
+            <body>
+                <div class="container">
+                    <div class="header">
+                        <div class="logo">🎵 DaConnect</div>
+                        <div style="font-size: 16px; opacity: 0.95;">Refund Confirmation</div>
+                    </div>
+                    <div class="content">
+                        <h2 style="color: #1e293b; margin-bottom: 20px;">✅ Refund Successfully Processed</h2>
+                        <p style="font-size: 16px; color: #475569;">Your refund request has been approved and processed. The amount will be credited back to your original payment method.</p>
+                        
+                        <div class="refund-box">
+                            <p style="margin: 0; font-size: 14px; color: #64748b; text-transform: uppercase;">Refunded Amount</p>
+                            <div class="refund-amount">$${(order.amount / 100).toFixed(2)}</div>
+                            <p style="margin: 0; font-size: 13px; color: #94a3b8;">Processing time: 5-10 business days</p>
+                        </div>
+                        
+                        <div class="order-box">
+                            <h3 style="margin-top: 0; color: #1e293b; font-size: 16px;">Order Details</h3>
+                            <div class="detail-row">
+                                <span style="color: #64748b;">Order Code:</span>
+                                <strong style="color: #1e293b;">${order.orderCode}</strong>
+                            </div>
+                            <div class="detail-row" style="border: none;">
+                                <span style="color: #64748b;">Status:</span>
+                                <span class="status-badge">CANCELLED</span>
+                            </div>
+                        </div>
+                        
+                        <div class="info-box">
+                            <strong style="color: #1e40af;">💳 Refund Timeline:</strong>
+                            <p style="margin: 10px 0 0 0; color: #475569;">The refund has been initiated. Depending on your bank or card issuer, it may take <strong>5-10 business days</strong> for the funds to appear in your account.</p>
+                        </div>
+                        
+                        <p style="font-size: 14px; color: #64748b; margin-top: 25px;">If you don't see the refund after 10 business days, please contact your bank or our support team for assistance.</p>
+                    </div>
+                    <div class="footer">
+                        <p style="margin: 5px 0;"><strong class="brand-name">DaConnect</strong> - Connecting Artists & Music Lovers</p>
+                        <p style="margin: 5px 0;">&copy; ${new Date().getFullYear()} DaConnect. All rights reserved.</p>
+                    </div>
+                </div>
+            </body>
+            </html>
     `,
         );
 
         // 6) Notify Seller
         await this.mail.sendEmail(
             order.seller.email,
-            "Order Refunded",
+            "DaConnect - Order Refunded ⚠️",
             `
-        <h1>The order has been refunded!</h1>
-        <p>Order Code: ${order.orderCode}</p>
-        <p>No payout will be issued for this order.</p>
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <style>
+                    body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.6; color: #333; margin: 0; padding: 0; background-color: #f5f7fa; }
+                    .container { max-width: 600px; margin: 40px auto; background: white; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 20px rgba(0,0,0,0.08); }
+                    .header { background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); color: white; padding: 40px 30px; text-align: center; }
+                    .logo { font-size: 32px; font-weight: bold; margin-bottom: 10px; letter-spacing: 1px; }
+                    .content { padding: 40px 30px; }
+                    .alert-box { background: #fef3c7; border: 2px solid #f59e0b; padding: 25px; margin: 25px 0; border-radius: 10px; text-align: center; }
+                    .order-box { background: #f8fafc; padding: 20px; margin: 25px 0; border-radius: 8px; }
+                    .detail-row { display: flex; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid #e5e7eb; }
+                    .info-box { background: #fee2e2; border-left: 4px solid #ef4444; padding: 16px; margin: 25px 0; border-radius: 6px; }
+                    .footer { text-align: center; padding: 25px; background: #f8fafc; color: #64748b; font-size: 13px; border-top: 1px solid #e2e8f0; }
+                    .brand-name { color: #f59e0b; font-weight: 600; }
+                </style>
+            </head>
+            <body>
+                <div class="container">
+                    <div class="header">
+                        <div class="logo">🎵 DaConnect</div>
+                        <div style="font-size: 16px; opacity: 0.95;">Order Status Update</div>
+                    </div>
+                    <div class="content">
+                        <h2 style="color: #1e293b; margin-bottom: 20px;">Order Refunded</h2>
+                        <p style="font-size: 16px; color: #475569;">An order has been refunded. The buyer will receive their payment back, and no payout will be issued for this order.</p>
+                        
+                        <div class="alert-box">
+                            <div style="font-size: 48px; margin-bottom: 10px;">⚠️</div>
+                            <h3 style="margin: 10px 0; color: #92400e;">Refund Processed</h3>
+                        </div>
+                        
+                        <div class="order-box">
+                            <h3 style="margin-top: 0; color: #1e293b; font-size: 16px;">Order Information</h3>
+                            <div class="detail-row" style="border: none;">
+                                <span style="color: #64748b;">Order Code:</span>
+                                <strong style="color: #1e293b;">${order.orderCode}</strong>
+                            </div>
+                        </div>
+                        
+                        <div class="info-box">
+                            <strong style="color: #991b1b;">💰 Payment Status:</strong>
+                            <p style="margin: 10px 0 0 0; color: #475569;">No payout will be issued for this order as the full amount has been refunded to the buyer.</p>
+                        </div>
+                        
+                        <p style="font-size: 14px; color: #64748b; margin-top: 25px;">If you have questions about this refund, please contact our support team for clarification.</p>
+                    </div>
+                    <div class="footer">
+                        <p style="margin: 5px 0;"><strong class="brand-name">DaConnect</strong> - Empowering Artists</p>
+                        <p style="margin: 5px 0;">&copy; ${new Date().getFullYear()} DaConnect. All rights reserved.</p>
+                    </div>
+                </div>
+            </body>
+            </html>
     `,
         );
 
