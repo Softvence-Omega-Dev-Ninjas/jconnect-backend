@@ -1,5 +1,5 @@
 import { GetUser, ValidateUser } from "@common/jwt/jwt.decorator";
-import { Body, Controller, Get, Post } from "@nestjs/common";
+import { Body, Controller, Get, Param, Post } from "@nestjs/common";
 import { ApiBearerAuth, ApiOperation } from "@nestjs/swagger";
 import { follow_create_dto } from "./dto/follow_create.dto";
 import { FollowFunctionService } from "./follow-function.service";
@@ -22,6 +22,15 @@ export class FollowFunctionController {
     @Get("followers")
     async getFollowers(@GetUser() user: any) {
         return this.followFunctionService.getFollowers(user);
+    }
+
+    // follow status
+    @ApiBearerAuth()
+    @ValidateUser()
+    @ApiOperation({ summary: "Check if a user is following another user" })
+    @Get("status/:id")
+    async followStatus(@GetUser() user: any, @Param("id") userIdToCheck: string) {
+        return this.followFunctionService.followStatus(user, userIdToCheck);
     }
 
     @ApiBearerAuth()

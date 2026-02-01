@@ -138,6 +138,24 @@ export class OrdersController {
         return await this.ordersService.submitProof(orderId, user, [uploaded.url]);
     }
 
+    //prof view from order id
+    // @ApiBearerAuth()
+    // @ValidateUser()
+    // @Get(":id/proof")
+    // @ApiOperation({ summary: "Get proof URLs for an order" })
+    // async getProofs(@Param("id") orderId: string) {
+    //     const order = await this.prisma.order.findUnique({
+    //         where: { id: orderId },
+    //         select: { proofUrls: true },
+    //     });
+
+    //     if (!order) {
+    //         throw new BadRequestException("Order not found");
+    //     }
+
+    //     return { proofUrls: order.proofUrls };
+    // }
+
     @ApiBearerAuth()
     @ValidateUser()
     @Patch(":id/status")
