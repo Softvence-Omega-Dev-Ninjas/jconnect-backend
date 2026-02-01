@@ -46,6 +46,18 @@ export class FollowFunctionService {
         return { message: "followed successfully", data: following };
     }
 
+    //follow status a user check i following another user or not
+    async followStatus(user: any, userIdToCheck: string) {
+        const isFollowing = await this.prisma.follow.findFirst({
+            where: {
+                followerId: user.userId,
+                followingId: userIdToCheck,
+            },
+        });
+
+        return { data: { isFollowing: !!isFollowing } };
+    }
+
     async getFollowers(user: any) {
         const followers = await this.prisma.follow.findMany({
             where: {
