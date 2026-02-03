@@ -6,7 +6,14 @@ import { DocumentBuilder, SwaggerModule } from "@nestjs/swagger";
 import * as express from "express";
 import { AppModule } from "./app.module";
 async function bootstrap() {
-    const app = await NestFactory.create(AppModule, { cors: true });
+    const app = await NestFactory.create(AppModule, {
+        cors: {
+            origin: true,
+            credentials: true,
+            methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+            allowedHeaders: ["Content-Type", "Authorization", "Accept"],
+        },
+    });
     // --------------Swagger config with Bearer Auth------------------
     const config = new DocumentBuilder()
         .setTitle("J-connect Backend API")
