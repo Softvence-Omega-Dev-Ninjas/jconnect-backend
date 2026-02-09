@@ -230,58 +230,12 @@
                 height: 20px;
             }
 
-            .settings-section {
-                background: #f8f9fa;
-                border-radius: 10px;
-                padding: 20px;
-                margin-bottom: 20px;
-            }
-
-            .settings-section h3 {
-                font-size: 16px;
-                color: #333;
-                margin-bottom: 15px;
-            }
-
-            .input-group {
-                margin-bottom: 15px;
-            }
-
-            .input-group label {
-                display: block;
-                margin-bottom: 5px;
-                font-size: 14px;
-                color: #666;
-                font-weight: 500;
-            }
-
-            .input-group input {
-                width: 100%;
-                padding: 10px;
-                border: 2px solid #ddd;
-                border-radius: 8px;
-                font-size: 14px;
-                transition: border-color 0.3s;
-            }
-
-            .input-group input:focus {
-                outline: none;
-                border-color: #667eea;
-            }
-
-            .btn-save {
-                background: #667eea;
-                color: white;
-                padding: 10px 20px;
-                border: none;
-                border-radius: 8px;
-                font-size: 14px;
-                cursor: pointer;
-                font-weight: 600;
-            }
-
-            .btn-save:hover {
-                background: #5568d3;
+            code {
+                background: #f5f5f5;
+                padding: 2px 6px;
+                border-radius: 3px;
+                font-family: "Courier New", monospace;
+                font-size: 13px;
             }
 
             .response-data {
@@ -512,58 +466,77 @@
         <div class="container">
             <div class="header">
                 <h1>🔥 Firebase Auth Test</h1>
-                <p>Test Google & Apple Sign-In with Backend</p>
+                <p>Test Google & Apple Sign-In - Frontend Only</p>
             </div>
 
             <!-- Help Section for Apple Sign-In -->
             <div class="help-section" id="helpSection" style="display: none">
-                <h4>⚠️ Apple Sign-In Configuration Issue</h4>
+                <h4>⚠️ Domain Authorization Required</h4>
                 <p style="font-weight: 600; color: #dc3545; margin-bottom: 10px">
-                    Since Google works but Apple doesn't, try this:
+                    Your domain is NOT in Firebase's authorized domains list!
                 </p>
+                <div
+                    style="
+                        background: #e7f3ff;
+                        padding: 12px;
+                        border-radius: 6px;
+                        margin: 10px 0;
+                        border-left: 4px solid #2196f3;
+                    "
+                >
+                    <strong>Current Domain:</strong> <span id="currentDomain"></span>
+                </div>
                 <ol style="margin-left: 20px; color: #856404; font-size: 13px; line-height: 1.8">
                     <li>
-                        <strong>Go to Firebase Console → Authentication → Sign-in method</strong>
+                        <strong>Open Firebase Console:</strong>
+                        <a href="https://console.firebase.google.com" target="_blank"
+                            >https://console.firebase.google.com</a
+                        >
                     </li>
-                    <li><strong>Click on Apple provider</strong></li>
-                    <li><strong>DISABLE it</strong> (toggle off)</li>
-                    <li><strong>Click Save</strong></li>
-                    <li><strong>Wait 30 seconds</strong></li>
-                    <li><strong>ENABLE it again</strong> (toggle on)</li>
-                    <li><strong>Click Save</strong></li>
-                    <li><strong>Wait 1 minute, then refresh this page</strong></li>
+                    <li><strong>Select your project: "daconnect-f38a6"</strong></li>
+                    <li><strong>Go to: Authentication → Settings</strong></li>
+                    <li><strong>Scroll down to "Authorized domains"</strong></li>
+                    <li>
+                        <strong>Click "Add domain" button</strong>
+                    </li>
+                    <li>
+                        <strong>Add this domain:</strong>
+                        <code
+                            id="domainToAdd"
+                            style="
+                                background: #fff3cd;
+                                padding: 2px 6px;
+                                border-radius: 3px;
+                                color: #856404;
+                                font-weight: bold;
+                            "
+                        ></code>
+                    </li>
+                    <li><strong>Click "Add" to save</strong></li>
+                    <li><strong>Wait 30 seconds, then refresh this page</strong></li>
                 </ol>
                 <div
                     style="
-                        background: #fff3cd;
+                        background: #d4edda;
                         padding: 12px;
                         border-radius: 6px;
                         margin-top: 15px;
-                        border-left: 4px solid #ffc107;
+                        border-left: 4px solid #28a745;
                     "
                 >
-                    <strong>Note:</strong> Sometimes Firebase's Apple Sign-In gets stuck in a bad
-                    state. Disabling and re-enabling it resets the configuration. This is a known
-                    Firebase issue.
+                    <strong>✅ Common domains to add:</strong>
+                    <ul style="margin: 8px 0 0 20px; font-size: 13px">
+                        <li><code>localhost</code></li>
+                        <li><code>127.0.0.1</code></li>
+                        <li>
+                            <code id="domainToAdd2" style="font-weight: bold"></code> (your current
+                            domain)
+                        </li>
+                    </ul>
                 </div>
             </div>
 
             <div id="statusMessage" class="status"></div>
-
-            <!-- Settings Section -->
-            <div class="settings-section">
-                <h3>⚙️ Backend Configuration</h3>
-                <div class="input-group">
-                    <label for="backendUrl">Backend Endpoint URL:</label>
-                    <input
-                        type="text"
-                        id="backendUrl"
-                        placeholder="http://localhost:5050/auth/firebase-login"
-                        value="http://localhost:5050/auth/firebase-login"
-                    />
-                </div>
-                <button class="btn-save" id="saveBtn">💾 Save Configuration</button>
-            </div>
 
             <!-- Login Buttons -->
             <div id="loginSection" class="auth-section">
@@ -624,10 +597,6 @@
                     <span id="userId">-</span>
                 </div>
                 <div class="info-item">
-                    <strong>Username:</strong>
-                    <span id="userUsername">-</span>
-                </div>
-                <div class="info-item">
                     <strong>Provider:</strong>
                     <span id="userProvider">-</span>
                 </div>
@@ -648,7 +617,7 @@
                 </div>
 
                 <div class="response-data">
-                    <strong>Backend Response:</strong>
+                    <strong>Firebase User Data:</strong>
                     <pre id="backendResponse">-</pre>
                 </div>
             </div>
@@ -703,7 +672,7 @@
 
         <!-- Firebase SDK -->
         <script type="module">
-            import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+            import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-app.js";
             import {
                 getAuth,
                 signInWithPopup,
@@ -712,17 +681,27 @@
                 GoogleAuthProvider,
                 OAuthProvider,
                 signOut,
-            } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+            } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-auth.js";
 
             // Firebase configuration
+            // const firebaseConfig = {
+            //     apiKey: "AIzaSyCwlKwAvJJ_e0nLLX84Xqn9h5bQtARsycM",
+            //     authDomain: "jconnect-b6f89.firebaseapp.com",
+            //     projectId: "jconnect-b6f89",
+            //     storageBucket: "jconnect-b6f89.firebasestorage.app",
+            //     messagingSenderId: "117806012294",
+            //     appId: "1:117806012294:web:bb4bcde2c7fd65fed93e07",
+            //     measurementId: "G-81J9NQ13DG",
+            // };
+
             const firebaseConfig = {
-                apiKey: "AIzaSyCwlKwAvJJ_e0nLLX84Xqn9h5bQtARsycM",
-                authDomain: "jconnect-b6f89.firebaseapp.com",
-                projectId: "jconnect-b6f89",
-                storageBucket: "jconnect-b6f89.firebasestorage.app",
-                messagingSenderId: "117806012294",
-                appId: "1:117806012294:web:bb4bcde2c7fd65fed93e07",
-                measurementId: "G-81J9NQ13DG",
+                apiKey: "AIzaSyC3nSXcLMt8QdkyIdPiIh2yGAIffHS7s60",
+                authDomain: "daconnect-f38a6.firebaseapp.com",
+                projectId: "daconnect-f38a6",
+                storageBucket: "daconnect-f38a6.firebasestorage.app",
+                messagingSenderId: "837643959794",
+                appId: "1:837643959794:web:20a940c260a160fa797f6b",
+                measurementId: "G-WB5JGM53Y8",
             };
 
             // Initialize Firebase
@@ -730,16 +709,10 @@
             const auth = getAuth(app);
             console.log("✅ Firebase initialized successfully");
 
-            // Backend API URL
-            let BACKEND_URL =
-                localStorage.getItem("backendUrl") || "http://localhost:5050/auth/firebase-login";
-            document.getElementById("backendUrl").value = BACKEND_URL;
-
             // DOM Elements
             const googleSignInBtn = document.getElementById("googleSignInBtn");
             const appleSignInBtn = document.getElementById("appleSignInBtn");
             const logoutBtn = document.getElementById("logoutBtn");
-            const saveBtn = document.getElementById("saveBtn");
             const statusMessage = document.getElementById("statusMessage");
             const userInfo = document.getElementById("userInfo");
             const loginSection = document.getElementById("loginSection");
@@ -752,15 +725,6 @@
             const backendTokenText = document.getElementById("backendTokenText");
 
             let currentFirebaseToken = "";
-            let currentBackendToken = "";
-
-            // Save backend URL
-            saveBtn.addEventListener("click", function () {
-                const input = document.getElementById("backendUrl");
-                BACKEND_URL = input.value.trim();
-                localStorage.setItem("backendUrl", BACKEND_URL);
-                showStatus("✅ Backend URL saved: " + BACKEND_URL, "success");
-            });
 
             // Show status message
             function showStatus(message, type = "info") {
@@ -777,14 +741,12 @@
 
             // Display user info
             function displayUserInfo(firebaseUser, firebaseToken) {
-                // Store tokens
+                // Store token
                 currentFirebaseToken = firebaseToken;
-                currentBackendToken = "";
 
                 document.getElementById("userEmail").textContent = firebaseUser.email || "-";
                 document.getElementById("userName").textContent = firebaseUser.displayName || "-";
                 document.getElementById("userId").textContent = firebaseUser.uid || "-";
-                document.getElementById("userUsername").textContent = "-";
                 document.getElementById("userProvider").textContent =
                     firebaseUser.providerData[0]?.providerId || "-";
                 document.getElementById("userToken").textContent = firebaseToken
@@ -815,16 +777,10 @@
             }
 
             // Show token modal
-            function showTokenModal(firebaseToken, backendToken) {
+            function showTokenModal(firebaseToken) {
                 tokenText.textContent = firebaseToken;
-                if (backendToken) {
-                    backendTokenText.textContent = backendToken;
-                    backendTokenText.parentElement.previousElementSibling.style.display = "block";
-                    copyBackendTokenBtn.style.display = "flex";
-                } else {
-                    backendTokenText.parentElement.previousElementSibling.style.display = "none";
-                    copyBackendTokenBtn.style.display = "none";
-                }
+                backendTokenText.parentElement.previousElementSibling.style.display = "none";
+                copyBackendTokenBtn.style.display = "none";
                 tokenModal.classList.add("show");
             }
 
@@ -855,42 +811,6 @@
                 }
             }
 
-            // Send token to backend
-            async function sendTokenToBackend(idToken, provider) {
-                try {
-                    showStatus("Sending token to backend...", "info");
-
-                    const response = await fetch(BACKEND_URL, {
-                        method: "POST",
-                        headers: {
-                            "Content-Type": "application/json",
-                        },
-                        credentials: "include",
-                        body: JSON.stringify({
-                            idToken,
-                            provider,
-                            username: "",
-                        }),
-                    });
-
-                    const data = await response.json();
-
-                    if (!response.ok) {
-                        throw new Error(data.message || "Backend authentication failed");
-                    }
-
-                    showStatus("✅ Successfully authenticated with backend!", "success");
-                    displayUserInfo(data, idToken);
-
-                    console.log("Backend Response:", data);
-                    return data;
-                } catch (error) {
-                    console.error("Backend Error:", error);
-                    showStatus(`❌ Backend Error: ${error.message}`, "error");
-                    throw error;
-                }
-            }
-
             // Google Sign-In
             googleSignInBtn.addEventListener("click", async () => {
                 try {
@@ -899,6 +819,8 @@
                     showStatus("Opening Google Sign-In...", "info");
 
                     const provider = new GoogleAuthProvider();
+                    provider.addScope("email");
+                    provider.addScope("profile");
                     const result = await signInWithPopup(auth, provider);
 
                     showStatus("Getting Firebase token...", "info");
@@ -913,7 +835,20 @@
                     console.error("Google Sign-In Error:", error);
 
                     // Check for specific error codes
-                    if (error.code === "auth/popup-closed-by-user") {
+                    if (error.code === "auth/unauthorized-domain") {
+                        const hostname = window.location.hostname;
+                        const port = window.location.port;
+                        const domain = port ? `${hostname}:${port}` : hostname;
+                        showStatus(
+                            `❌ Domain "${domain}" is NOT authorized! See instructions below.`,
+                            "error",
+                        );
+                        document.getElementById("helpSection").style.display = "block";
+                        document.getElementById("currentDomain").textContent =
+                            window.location.origin;
+                        document.getElementById("domainToAdd").textContent = domain;
+                        document.getElementById("domainToAdd2").textContent = domain;
+                    } else if (error.code === "auth/popup-closed-by-user") {
                         showStatus(`⚠️ Sign-in cancelled by user`, "error");
                     } else if (error.code === "auth/popup-blocked") {
                         showStatus(`❌ Popup blocked! Please allow popups for this site.`, "error");
@@ -952,24 +887,25 @@
                     console.error("Apple Sign-In Error:", error);
                     console.error("Error Code:", error.code);
                     console.error("Error Message:", error.message);
-                    console.error("Full Error:", JSON.stringify(error, null, 2));
 
                     // Check for specific error codes
-                    if (error.code === "auth/operation-not-allowed") {
+                    if (error.code === "auth/unauthorized-domain") {
                         const hostname = window.location.hostname;
+                        const port = window.location.port;
+                        const domain = port ? `${hostname}:${port}` : hostname;
                         showStatus(
-                            `❌ Domain "${hostname}" NOT in Authorized Domains! Check help section below.`,
+                            `❌ Domain "${domain}" is NOT authorized! See instructions below.`,
                             "error",
                         );
                         document.getElementById("helpSection").style.display = "block";
-                        // Populate diagnostic info
                         document.getElementById("currentDomain").textContent =
                             window.location.origin;
-                        document.getElementById("domainToAdd").textContent = hostname;
-                        document.getElementById("domainToAdd2").textContent = hostname;
-                    } else if (error.code === "auth/unauthorized-domain") {
+                        document.getElementById("domainToAdd").textContent = domain;
+                        document.getElementById("domainToAdd2").textContent = domain;
+                    } else if (error.code === "auth/operation-not-allowed") {
+                    } else if (error.code === "auth/operation-not-allowed") {
                         showStatus(
-                            `❌ Add "${window.location.hostname}" to Firebase Console → Authentication → Settings → Authorized domains`,
+                            `❌ Apple Sign-In not enabled! Check Firebase Console → Authentication → Sign-in method → Enable Apple`,
                             "error",
                         );
                     } else if (error.code === "auth/popup-closed-by-user") {
@@ -1043,10 +979,6 @@
                 copyToClipboard(currentFirebaseToken, copyTokenBtn);
             });
 
-            copyBackendTokenBtn.addEventListener("click", () => {
-                copyToClipboard(currentBackendToken, copyBackendTokenBtn);
-            });
-
             // Inline copy button in user info section
             document.getElementById("copyTokenBtnInline").addEventListener("click", function () {
                 copyToClipboard(currentFirebaseToken, this);
@@ -1059,63 +991,47 @@
                 }
             });
 
-            // Redirect button handler
-            if (document.getElementById("tryRedirectBtn")) {
-                document.getElementById("tryRedirectBtn").addEventListener("click", async () => {
-                    try {
-                        showStatus("🔄 Redirecting to Apple Sign-In...", "info");
-                        document.getElementById("helpSection").style.display = "none";
-
-                        const provider = new OAuthProvider("apple.com");
-                        provider.addScope("email");
-                        provider.addScope("name");
-
-                        // Use redirect instead of popup
-                        await signInWithRedirect(auth, provider);
-                    } catch (error) {
-                        console.error("Redirect Error:", error);
-                        showStatus(`❌ Redirect failed: ${error.message}`, "error");
-                    }
-                });
-            }
-
             // Handle redirect result on page load
             showStatus("Checking for redirect result...", "info");
             getRedirectResult(auth)
-                .then((result) => {
+                .then(async (result) => {
                     if (result && result.user) {
                         showStatus("✅ Redirect successful! Getting token...", "success");
-                        return result.user.getIdToken().then((token) => {
-                            console.log("✅ Apple Sign-In Success!", result.user);
-                            console.log("Token:", token);
-                            showStatus("✅ Successfully authenticated!", "success");
-                            displayUserInfo(result.user, token);
-                        });
+                        const token = await result.user.getIdToken();
+                        console.log("✅ Apple Sign-In Success!", result.user);
+                        console.log("Token:", token);
+                        showStatus("✅ Successfully authenticated!", "success");
+                        displayUserInfo(result.user, token);
                     } else {
                         showStatus("✅ Firebase ready! Click a button to sign in.", "info");
                     }
                 })
                 .catch((error) => {
                     console.error("Redirect Result Error:", error);
-                    if (error.code === "auth/operation-not-allowed") {
+                    if (error.code === "auth/unauthorized-domain") {
+                        const hostname = window.location.hostname;
+                        const port = window.location.port;
+                        const domain = port ? `${hostname}:${port}` : hostname;
                         showStatus(
-                            `❌ Apple Sign-In error: Check Firebase Console → Sign-in method → Apple → Make sure it's enabled AND saved`,
+                            `❌ Domain "${domain}" is NOT authorized! See instructions below.`,
                             "error",
                         );
                         document.getElementById("helpSection").style.display = "block";
                         document.getElementById("currentDomain").textContent =
                             window.location.origin;
-                        document.getElementById("domainToAdd").textContent =
-                            window.location.hostname;
-                        document.getElementById("domainToAdd2").textContent =
-                            window.location.hostname;
+                        document.getElementById("domainToAdd").textContent = domain;
+                        document.getElementById("domainToAdd2").textContent = domain;
+                    } else if (error.code === "auth/operation-not-allowed") {
+                        showStatus(
+                            `❌ Apple Sign-In error: Check Firebase Console → Sign-in method → Apple → Make sure it's enabled AND saved`,
+                            "error",
+                        );
                     } else if (error.code) {
                         showStatus(`❌ Error: ${error.code} - ${error.message}`, "error");
                     }
                 });
 
             // Initial status
-            console.log("Backend URL:", BACKEND_URL);
             console.log("Current URL:", window.location.origin);
             console.log("Domain:", window.location.hostname);
         </script>
