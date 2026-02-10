@@ -221,7 +221,7 @@ export class UsersController {
                 image: {
                     type: "string",
                     format: "binary",
-                    description: "File to upload give me less than 1MB",
+                    description: "File to upload give me less than 10MB",
                 },
             },
             required: ["image"],
@@ -229,7 +229,7 @@ export class UsersController {
     })
     @UseInterceptors(
         FileInterceptor("image", {
-            limits: { fileSize: 1 * 1024 * 1024 },
+            limits: { fileSize: 10 * 1024 * 1024 },
             fileFilter: (req, file, cb) => {
                 if (!file.mimetype.startsWith("image/")) {
                     return cb(new BadRequestException("Only image files are allowed!"), false);
