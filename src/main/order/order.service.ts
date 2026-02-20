@@ -10,7 +10,7 @@ import { PrismaService } from "src/lib/prisma/prisma.service";
 
 @Injectable()
 export class OrdersService {
-    constructor(private prisma: PrismaService) { }
+    constructor(private prisma: PrismaService) {}
 
     // CREATE ORDER
     async createOrder(buyerId: string, dto: any) {
@@ -55,8 +55,24 @@ export class OrdersService {
             where: { id },
             include: {
                 service: true,
-                buyer: { select: { full_name: true, id: true, email: true, username: true, profilePhoto: true } },
-                seller: { select: { full_name: true, id: true, email: true, username: true, profilePhoto: true } },
+                buyer: {
+                    select: {
+                        full_name: true,
+                        id: true,
+                        email: true,
+                        username: true,
+                        profilePhoto: true,
+                    },
+                },
+                seller: {
+                    select: {
+                        full_name: true,
+                        id: true,
+                        email: true,
+                        username: true,
+                        profilePhoto: true,
+                    },
+                },
             },
         });
 
@@ -219,7 +235,9 @@ export class OrdersService {
             where,
             include: {
                 service: true,
-                seller: { select: { full_name: true, email: true, username: true, profilePhoto: true } },
+                seller: {
+                    select: { full_name: true, email: true, username: true, profilePhoto: true },
+                },
             },
             orderBy: { createdAt: "desc" },
         });
@@ -238,7 +256,9 @@ export class OrdersService {
             include: {
                 service: true,
                 // seller: { select: { full_name: true, email: true } },
-                buyer: { select: { full_name: true, email: true, username: true, profilePhoto: true } },
+                buyer: {
+                    select: { full_name: true, email: true, username: true, profilePhoto: true },
+                },
             },
             orderBy: { createdAt: "desc" },
         });
