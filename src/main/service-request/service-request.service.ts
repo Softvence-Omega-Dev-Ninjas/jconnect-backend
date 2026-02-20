@@ -88,6 +88,10 @@ export class ServiceRequestService {
         });
     }
 
+    async testAWSConnection() {
+        return this.awsService.testConnection();
+    }
+
     async findOne(id: string) {
         return this.prisma.serviceRequest.findUnique({
             where: { id },

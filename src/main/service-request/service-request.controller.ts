@@ -47,6 +47,12 @@ export class ServiceRequestController {
         return this.serviceRequestService.findAll();
     }
 
+    @ApiProperty({ description: "Test AWS S3 connection" })
+    @Get("test/aws-connection")
+    async testAWSConnection() {
+        return this.serviceRequestService.testAWSConnection();
+    }
+
     @ApiProperty({ description: "Get service requests", example: "id" })
     @Get(":id")
     async findOne(@Param("id") id: string) {

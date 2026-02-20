@@ -180,7 +180,7 @@ export class UsersController {
         console.log("Processed DTO:", updateMeDto);
 
         if (file) {
-            const uploaded = await this.awsservice.upload(file);
+            const uploaded = await this.awsservice.upload(file, true);
             updateMeDto.profilePhoto = uploaded.url;
         }
 
@@ -242,7 +242,7 @@ export class UsersController {
         @UploadedFile() file: Express.Multer.File,
         @GetUser("userId") userId: string,
     ) {
-        const ProfileUrl = await this.awsservice.upload(file);
+        const ProfileUrl = await this.awsservice.upload(file, true);
         const reuslt = await this.usersService.update(userId, { profilePhoto: ProfileUrl.url });
 
         return reuslt;
