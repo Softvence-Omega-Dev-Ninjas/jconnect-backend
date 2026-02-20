@@ -14,7 +14,15 @@ export class AwsService {
             throw new Error("File not provided");
         }
 
-        const fileKey = `${file.originalname}-${Date.now()}`;
+        // Extract filename and extension
+        const originalName = file.originalname;
+        const lastDotIndex = originalName.lastIndexOf(".");
+        const filename =
+            lastDotIndex !== -1 ? originalName.substring(0, lastDotIndex) : originalName;
+        const extension = lastDotIndex !== -1 ? originalName.substring(lastDotIndex) : "";
+
+        // Create fileKey with timestamp before extension
+        const fileKey = `${filename}-${Date.now()}${extension}`;
 
         const uploadResult = await this.s3
             .upload({

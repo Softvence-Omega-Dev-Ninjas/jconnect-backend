@@ -42,6 +42,8 @@ export class ServiceRequestService {
             uploadedUrls = ["no file"];
         }
 
+        console.log("amar url ", uploadedUrls);
+
         // -------------------------------
         // 3️⃣ Create serviceRequest
         // -------------------------------
