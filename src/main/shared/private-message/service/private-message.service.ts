@@ -308,7 +308,7 @@ export class PrivateChatService {
                                     },
                                 },
                             }
-                            : true,
+                            : { include: { serviceRequests: true } },
                         // file: true,
                     },
                 },
