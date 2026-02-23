@@ -7,7 +7,7 @@ import { SendPrivateMessageDto } from "../dto/privateChatGateway.dto";
 
 @Injectable()
 export class PrivateChatService {
-    constructor(private readonly prisma: PrismaService) {}
+    constructor(private readonly prisma: PrismaService) { }
 
     /**
      * Send a private message and update lastMessage in conversation
@@ -32,8 +32,8 @@ export class PrivateChatService {
                 ...(serviceId && { serviceId }),
                 ...(dto.files &&
                     dto.files.length > 0 && {
-                        files: dto.files,
-                    }),
+                    files: dto.files,
+                }),
             },
             include: {
                 sender: {
@@ -132,12 +132,12 @@ export class PrivateChatService {
                 participant: otherUser,
                 lastMessage: chat.lastMessage
                     ? {
-                          id: chat.lastMessage.id,
-                          content: chat.lastMessage.content,
-                          createdAt: chat.lastMessage.createdAt,
-                          sender: chat.lastMessage.sender,
-                          file: chat.lastMessage.file,
-                      }
+                        id: chat.lastMessage.id,
+                        content: chat.lastMessage.content,
+                        createdAt: chat.lastMessage.createdAt,
+                        sender: chat.lastMessage.sender,
+                        file: chat.lastMessage.file,
+                    }
                     : null,
                 updatedAt: chat.updatedAt,
             };
@@ -262,7 +262,11 @@ export class PrivateChatService {
      * Get a conversation with messages (validate access)
      */
     @HandleError("Conversation doesn't exist", "PRIVATE_CHAT")
-    async getPrivateConversationWithMessages(conversationId: string, userId: string) {
+    async getPrivateConversationWithMessages(
+        conversationId: string,
+        userId: string,
+        serviceRequestsId?: string,
+    ) {
         const conversation = await this.prisma.privateConversation.findFirst({
             where: {
                 id: conversationId,
@@ -293,7 +297,18 @@ export class PrivateChatService {
                                 full_name: true,
                             },
                         },
-                        service: true,
+                        service: serviceRequestsId
+                            ? {
+                                include: {
+                                    serviceRequests: {
+                                        where: {
+                                            id: serviceRequestsId,
+                                        },
+                                        take: 1,
+                                    },
+                                },
+                            }
+                            : true,
                         // file: true,
                     },
                 },
@@ -419,14 +434,14 @@ export class PrivateChatService {
                 unreadCount,
                 lastMessage: conversation.lastMessage
                     ? {
-                          id: conversation.lastMessage.id,
-                          content: conversation.lastMessage.content,
-                          createdAt: conversation.lastMessage.createdAt,
-                          senderId: conversation.lastMessage.senderId,
-                          sender: conversation.lastMessage.sender,
-                          service: conversation.lastMessage.service,
-                          isRead: isLastMessageRead,
-                      }
+                        id: conversation.lastMessage.id,
+                        content: conversation.lastMessage.content,
+                        createdAt: conversation.lastMessage.createdAt,
+                        senderId: conversation.lastMessage.senderId,
+                        sender: conversation.lastMessage.sender,
+                        service: conversation.lastMessage.service,
+                        isRead: isLastMessageRead,
+                    }
                     : null,
                 updatedAt: conversation.updatedAt,
             };

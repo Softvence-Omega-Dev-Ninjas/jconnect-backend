@@ -8,8 +8,9 @@ import {
     OnModuleInit,
     Param,
     Post,
+    Query,
 } from "@nestjs/common";
-import { ApiBearerAuth, ApiOperation, ApiTags } from "@nestjs/swagger";
+import { ApiBearerAuth, ApiOperation, ApiQuery, ApiTags } from "@nestjs/swagger";
 import { GetUser, ValidateAuth } from "src/common/jwt/jwt.decorator";
 import { SendPrivateMessageDto } from "../dto/privateChatGateway.dto";
 import { PrivateChatGateway } from "../privateChatGateway/privateChatGateway";
@@ -26,7 +27,7 @@ export class PrivateChatController implements OnModuleInit {
         private readonly privateService: PrivateChatService,
         @Inject(forwardRef(() => PrivateChatGateway))
         private readonly injectedGateway: PrivateChatGateway,
-    ) {}
+    ) { }
 
     onModuleInit() {
         this.gateway = this.injectedGateway;
@@ -40,11 +41,21 @@ export class PrivateChatController implements OnModuleInit {
     // ----------------- get conversation message----------------
     @Get(":conversationId")
     @ApiOperation({ summary: "Get messages for a specific private conversation" })
+    @ApiQuery({
+        name: "serviceRequestsId",
+        required: false,
+        description: "Optional service request ID to include serviceRequests data",
+    })
     async getConversationMessages(
         @Param("conversationId") conversationId: string,
         @GetUser("userId") userId: string,
+        @Query("serviceRequestsId") serviceRequestsId?: string,
     ) {
-        return await this.privateService.getPrivateConversationWithMessages(conversationId, userId);
+        return await this.privateService.getPrivateConversationWithMessages(
+            conversationId,
+            userId,
+            serviceRequestsId,
+        );
     }
     // -----------send message for--------------
 
