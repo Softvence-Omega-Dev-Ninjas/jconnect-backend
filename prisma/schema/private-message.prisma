@@ -18,25 +18,17 @@ model PrivateConversation {
 
 model PrivateMessage {
   id String @id @default(uuid())
-
   content  String
   statuses PrivateMessageStatus[]
-
   isRead Boolean @default(false)
-
   files String[]
-
   PrivateLastMessage PrivateConversation[] @relation("PrivateLastMessage")
-
   conversationId String
   conversation   PrivateConversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
-
   senderId String
   sender   User   @relation(fields: [senderId], references: [id], onDelete: Cascade)
-
   serviceId String?
   service   Service? @relation(fields: [serviceId], references: [id], onDelete: SetNull)
-
   createdAt DateTime @default(now())
 
   // back relation for last message

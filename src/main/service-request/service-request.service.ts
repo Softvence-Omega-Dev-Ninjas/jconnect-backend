@@ -9,7 +9,7 @@ export class ServiceRequestService {
     constructor(
         private prisma: PrismaService,
         private awsService: AwsService,
-    ) {}
+    ) { }
 
     async create(dto: CreateServiceRequestDto, files: Express.Multer.File[], user: any) {
         // -------------------------------
@@ -42,7 +42,7 @@ export class ServiceRequestService {
             uploadedUrls = ["no file"];
         }
 
-        console.log("amar url ", uploadedUrls);
+        // console.log("amar url ", uploadedUrls);
 
         // -------------------------------
         // 3️⃣ Create serviceRequest
@@ -50,13 +50,14 @@ export class ServiceRequestService {
         try {
             const serviceRequest = await this.prisma.serviceRequest.create({
                 data: {
-                    serviceId: service.id, // ✅ ensure foreign key exists
+                    serviceId: service.id, 
                     buyerId: user.userId,
                     captionOrInstructions: dto.captionOrInstructions || null,
                     promotionDate: dto.promotionDate || null,
                     specialNotes: dto.specialNotes || null,
                     price: dto.price || null,
                     uploadedFileUrl: uploadedUrls,
+                    messageID: dto.messageID || "",
                 },
             });
 

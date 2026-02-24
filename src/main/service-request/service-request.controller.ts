@@ -30,6 +30,7 @@ export class ServiceRequestController {
                     type: "array",
                     items: { type: "string", format: "binary" }, // important for Swagger file
                 },
+                messageID: { type: "string" },
             },
         },
     })

@@ -297,18 +297,7 @@ export class PrivateChatService {
                                 full_name: true,
                             },
                         },
-                        service: serviceRequestsId
-                            ? {
-                                include: {
-                                    serviceRequests: {
-                                        where: {
-                                            id: serviceRequestsId,
-                                        },
-                                        take: 1,
-                                    },
-                                },
-                            }
-                            : { include: { serviceRequests: true } },
+                        service: { include: { serviceRequests: true } },
                         // file: true,
                     },
                 },
@@ -319,10 +308,28 @@ export class PrivateChatService {
             throw new AppError(404, `Conversation not found or access denied`);
         }
 
+
+        const messagesWithFilteredServiceRequests = conversation.messages.map(msg => {
+            if (msg.service) {
+                const filteredRequests = msg.service.serviceRequests.filter(
+                    sr => sr.messageID === msg.id
+                );
+                return {
+                    ...msg,
+                    service: {
+                        ...msg.service,
+                        serviceRequests: filteredRequests,
+                    },
+                };
+            }
+            return msg;
+        });
+
+
         return {
             conversationId: conversation.id,
             participants: [conversation.user1, conversation.user2],
-            messages: conversation.messages,
+            messages: messagesWithFilteredServiceRequests,
         };
     }
 
