@@ -24,8 +24,7 @@ import { PrismaService } from "src/lib/prisma/prisma.service";
 })
 @Injectable()
 export class NotificationGateway
-    implements OnGatewayInit, OnGatewayConnection, OnGatewayDisconnect
-{
+    implements OnGatewayInit, OnGatewayConnection, OnGatewayDisconnect {
     private readonly logger = new Logger(NotificationGateway.name);
     private readonly clients = new Map<string, Set<Socket>>();
 
@@ -33,7 +32,7 @@ export class NotificationGateway
         private readonly jwtService: JwtService,
         private readonly configService: ConfigService,
         private readonly prisma: PrismaService,
-    ) {}
+    ) { }
 
     @WebSocketServer()
     server: Server;
@@ -206,6 +205,31 @@ export class NotificationGateway
                 },
             };
 
+            // 3️⃣ ✅ SAVE TO DATABASE
+            const notification = await this.prisma.notification.create({
+                data: {
+                    userId: recipient.id,
+                    title: notificationData.title,
+                    message: notificationData.message,
+                    metadata: {
+                        type: notificationData.type,
+                        ...notificationData.meta,
+                    },
+                    read: false,
+                    createdAt: new Date(),
+                },
+            });
+
+            // 3.1️⃣ ✅ SAVE TO USER NOTIFICATION (Mapping)
+            await this.prisma.userNotification.create({
+                data: {
+                    userId: recipient.id,
+                    notificationId: notification.id,
+                    type: "UserRegistration",
+                    read: false,
+                },
+            });
+
             // Send real-time notification via socket
             const clients = this.getClientsForUser(recipient.id);
             this.logger.log(`  → Connected sockets: ${clients.size}`);
@@ -274,7 +298,7 @@ export class NotificationGateway
     }
 
     // ------LISTEN TO INQUIRY CREATE EVENT----------------
-    // ------LISTEN TO INQUIRY CREATE EVENT----------------
+    // ------ LISTEN TO INQUIRY CREATE EVENT ----------------
     @OnEvent(EVENT_TYPES.INQUIRY_CREATE)
     async handleInquiryCreated(payload: any) {
         this.logger.log("INQUIRY_CREATE EVENT RECEIVED");
@@ -285,53 +309,89 @@ export class NotificationGateway
             return;
         }
 
-        // Check which recipients have Inquiry notifications enabled
-        const enabledRecipients = await this.prisma.notificationToggle.findMany({
-            where: {
-                userId: { in: payload.info.recipients.map((r: any) => r.id) },
-                Inquiry: true,
-            },
-            select: { userId: true },
-        });
-
-        const enabledUserIds = new Set(enabledRecipients.map((r) => r.userId));
-
-        for (const recipient of payload.info.recipients) {
-            // Skip if the recipient has disabled Inquiry notifications
-            if (!enabledUserIds.has(recipient.id)) {
-                this.logger.log(`User ${recipient.id} has disabled Inquiry notifications`);
-                continue;
-            }
-
-            const clients = this.getClientsForUser(recipient.id);
-
-            if (!clients.size) {
-                this.logger.warn(`No active socket for user ${recipient.id}`);
-            }
-
-            const socketPayload: Notification = {
-                type: EVENT_TYPES.INQUIRY_CREATE,
-                title: "New Inquiry Received",
-                message: payload.info.message || `New user inquiry created by ${payload.info.name}`,
-                createdAt: new Date(),
-                meta: {
-                    inquirerId: payload.info.id,
-                    inquirerEmail: payload.info.email,
-                    inquirerName: payload.info.name,
-                    inquirerRole: payload.info.role,
-                    ...payload.meta,
+        try {
+            // 1️⃣ Find users who enabled Inquiry notifications
+            const enabledRecipients = await this.prisma.notificationToggle.findMany({
+                where: {
+                    userId: { in: payload.info.recipients.map((r: any) => r.id) },
+                    Inquiry: true,
                 },
-            };
+                select: { userId: true },
+            });
 
-            // Send real-time notification via socket
-            for (const client of clients) {
-                client.emit(EVENT_TYPES.INQUIRY_CREATE, socketPayload);
-                this.logger.log(
-                    `Inquiry notification sent to ${recipient.id} (socket: ${client.id})`,
-                );
+            const enabledUserIds = new Set(enabledRecipients.map((r) => r.userId));
+
+            for (const recipient of payload.info.recipients) {
+
+                // 2️⃣ Skip if notification disabled
+                if (!enabledUserIds.has(recipient.id)) {
+                    this.logger.log(`User ${recipient.id} disabled Inquiry notifications`);
+                    continue;
+                }
+
+                const notificationData = {
+                    type: EVENT_TYPES.INQUIRY_CREATE,
+                    title: "New Inquiry Received",
+                    message:
+                        payload.info.message ||
+                        `New inquiry created by ${payload.info.name}`,
+                    createdAt: new Date(),
+                    meta: {
+                        inquirerId: payload.info.id,
+                        inquirerEmail: payload.info.email,
+                        inquirerName: payload.info.name,
+                        inquirerRole: payload.info.role,
+                        ...payload.meta,
+                    },
+                };
+
+                // 3️⃣ ✅ SAVE TO DATABASE
+                const notification = await this.prisma.notification.create({
+                    data: {
+                        userId: recipient.id,
+                        title: notificationData.title,
+                        message: notificationData.message,
+                        metadata: {
+                            type: notificationData.type,
+                            ...notificationData.meta,
+                        },
+                        read: false,
+                        createdAt: new Date(),
+                    },
+                });
+
+                // 3.1️⃣ ✅ SAVE TO USER NOTIFICATION (Mapping)
+                await this.prisma.userNotification.create({
+                    data: {
+                        userId: recipient.id,
+                        notificationId: notification.id,
+                        type: "Inquiry", // Using the enum type from Inquiry toggle
+                        read: false,
+                    },
+                });
+
+                this.logger.log(`Notification saved for user ${recipient.id}`);
+
+                // 4️⃣ ✅ SEND REALTIME VIA SOCKET
+                const clients = this.getClientsForUser(recipient.id);
+
+                if (!clients.size) {
+                    this.logger.warn(`No active socket for user ${recipient.id}`);
+                }
+
+                for (const client of clients) {
+                    client.emit(EVENT_TYPES.INQUIRY_CREATE, notificationData);
+                    this.logger.log(
+                        `Realtime Inquiry notification sent to ${recipient.id} (socket: ${client.id})`,
+                    );
+                }
             }
-        }
 
-        this.logger.log("INQUIRY_CREATE event processing complete");
+            this.logger.log("INQUIRY_CREATE event processing complete");
+        } catch (error: any) {
+            this.logger.error(
+                `Error processing INQUIRY_CREATE event: ${error.message}`,
+            );
+        }
     }
 }

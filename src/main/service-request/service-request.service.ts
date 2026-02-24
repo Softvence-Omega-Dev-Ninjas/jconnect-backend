@@ -9,7 +9,7 @@ export class ServiceRequestService {
     constructor(
         private prisma: PrismaService,
         private awsService: AwsService,
-    ) { }
+    ) {}
 
     async create(dto: CreateServiceRequestDto, files: Express.Multer.File[], user: any) {
         // -------------------------------
@@ -50,7 +50,7 @@ export class ServiceRequestService {
         try {
             const serviceRequest = await this.prisma.serviceRequest.create({
                 data: {
-                    serviceId: service.id, 
+                    serviceId: service.id,
                     buyerId: user.userId,
                     captionOrInstructions: dto.captionOrInstructions || null,
                     promotionDate: dto.promotionDate || null,

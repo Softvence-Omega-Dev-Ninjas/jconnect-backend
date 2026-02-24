@@ -770,6 +770,7 @@ export class UsersService {
                 full_name: true,
                 role: true,
                 username: true,
+                profilePhoto: true,
             },
         });
 
@@ -791,6 +792,7 @@ export class UsersService {
                 },
                 meta: {
                     INQUIRER: "email",
+                    currentUser
                 },
             } as unknown as InquiryMeta);
         }
