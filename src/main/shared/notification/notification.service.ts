@@ -76,19 +76,45 @@ export class NotificationSettingService {
                 take: 50,
             });
 
-            const formattedNotifications = notifications.map((un) => ({
-                id: un.id,
-                notificationId: un.notificationId,
-                type: un.type,
-                read: un.read,
-                createdAt: un.createdAt,
-                updatedAt: un.updatedAt,
-                title: un.notification.title,
-                message: un.notification.message,
-                entityId: un.notification.entityId,
-                metadata: un.notification.metadata,
-                notificationCreatedAt: un.notification.createdAt,
-            }));
+            const formattedNotifications = notifications.map((un) => {
+                const metadata = (un.notification.metadata as any) || {};
+
+                // Attempt to extract sender information from metadata based on various known keys
+                const senderId =
+                    metadata.senderId ||
+                    metadata.inquirerId ||
+                    metadata.id ||
+                    metadata.currentUser?.id ||
+                    null;
+                const senderName =
+                    metadata.senderName ||
+                    metadata.inquirerName ||
+                    metadata.name ||
+                    metadata.currentUser?.full_name ||
+                    null;
+                const senderProfilePhoto =
+                    metadata.senderProfilePhoto ||
+                    metadata.profilePhoto ||
+                    metadata.currentUser?.profilePhoto ||
+                    null;
+
+                return {
+                    id: un.id,
+                    notificationId: un.notificationId,
+                    type: un.type,
+                    read: un.read,
+                    createdAt: un.createdAt,
+                    updatedAt: un.updatedAt,
+                    title: un.notification.title,
+                    message: un.notification.message,
+                    entityId: un.notification.entityId,
+                    metadata: metadata,
+                    notificationCreatedAt: un.notification.createdAt,
+                    senderId,
+                    senderName,
+                    senderProfilePhoto,
+                };
+            });
 
             const unreadCount = notifications.filter((n) => !n.read).length;
 

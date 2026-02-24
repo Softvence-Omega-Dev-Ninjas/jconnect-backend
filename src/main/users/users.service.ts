@@ -792,7 +792,7 @@ export class UsersService {
                 },
                 meta: {
                     INQUIRER: "email",
-                    currentUser
+                    currentUser,
                 },
             } as unknown as InquiryMeta);
         }

@@ -24,7 +24,8 @@ import { PrismaService } from "src/lib/prisma/prisma.service";
 })
 @Injectable()
 export class NotificationGateway
-    implements OnGatewayInit, OnGatewayConnection, OnGatewayDisconnect {
+    implements OnGatewayInit, OnGatewayConnection, OnGatewayDisconnect
+{
     private readonly logger = new Logger(NotificationGateway.name);
     private readonly clients = new Map<string, Set<Socket>>();
 
@@ -32,7 +33,7 @@ export class NotificationGateway
         private readonly jwtService: JwtService,
         private readonly configService: ConfigService,
         private readonly prisma: PrismaService,
-    ) { }
+    ) {}
 
     @WebSocketServer()
     server: Server;
@@ -322,7 +323,6 @@ export class NotificationGateway
             const enabledUserIds = new Set(enabledRecipients.map((r) => r.userId));
 
             for (const recipient of payload.info.recipients) {
-
                 // 2️⃣ Skip if notification disabled
                 if (!enabledUserIds.has(recipient.id)) {
                     this.logger.log(`User ${recipient.id} disabled Inquiry notifications`);
@@ -332,9 +332,7 @@ export class NotificationGateway
                 const notificationData = {
                     type: EVENT_TYPES.INQUIRY_CREATE,
                     title: "New Inquiry Received",
-                    message:
-                        payload.info.message ||
-                        `New inquiry created by ${payload.info.name}`,
+                    message: payload.info.message || `New inquiry created by ${payload.info.name}`,
                     createdAt: new Date(),
                     meta: {
                         inquirerId: payload.info.id,
@@ -389,9 +387,7 @@ export class NotificationGateway
 
             this.logger.log("INQUIRY_CREATE event processing complete");
         } catch (error: any) {
-            this.logger.error(
-                `Error processing INQUIRY_CREATE event: ${error.message}`,
-            );
+            this.logger.error(`Error processing INQUIRY_CREATE event: ${error.message}`);
         }
     }
 }
