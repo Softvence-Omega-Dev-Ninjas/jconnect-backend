@@ -9,7 +9,7 @@ services:
             context: .
             dockerfile: Dockerfile
         ports:
-            - "${PORT}:${PORT}"
+            - "3000:3000"
         env_file:
             - .env
         depends_on:
@@ -27,6 +27,26 @@ services:
               npm run db:seed;
               npm run start:docker
             "
+
+    prisma-studio:
+        image: softvence/jconnect-backend:latest
+        container_name: jconnect_prisma_studio
+        restart: unless-stopped
+        profiles:
+            - prod
+            - dev
+        env_file:
+            - .env
+        environment:
+            DATABASE_URL: postgresql://jconnect_user:jconnect123Pass@db:5432/jconnect_db
+        ports:
+            - '5555:5555'
+        command: npx prisma studio --port 5555 --browser none
+        depends_on:
+            db:
+                condition: service_healthy
+        networks:
+            - jconnect-backend
 
     db:
         image: postgres:16-alpine
