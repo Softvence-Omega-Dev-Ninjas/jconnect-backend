@@ -16,6 +16,7 @@ model ServiceRequest {
 
   messageID String @default("1")
 
-  service Service? @relation(fields: [serviceId], references: [id])
-  buyer   User     @relation(fields: [buyerId], references: [id], onDelete: Cascade)
+  service         Service?         @relation(fields: [serviceId], references: [id])
+  buyer           User             @relation(fields: [buyerId], references: [id], onDelete: Cascade)
+  privateMessages PrivateMessage[]
 }
