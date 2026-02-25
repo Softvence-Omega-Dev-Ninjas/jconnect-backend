@@ -1,4 +1,4 @@
-import { Logger } from "@nestjs/common";
+import { Logger, UsePipes, ValidationPipe } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
 import {
     ConnectedSocket,
@@ -40,7 +40,7 @@ export class PrivateChatGateway implements OnGatewayInit, OnGatewayConnection, O
         private readonly privateChatService: PrivateChatService,
         private readonly configService: ConfigService,
         private readonly prisma: PrismaService,
-    ) {}
+    ) { }
 
     @WebSocketServer()
     server: Server;
@@ -147,11 +147,13 @@ export class PrivateChatGateway implements OnGatewayInit, OnGatewayConnection, O
     }
 
     /** Send a message (create conversation if new) */
+    @UsePipes(new ValidationPipe({ transform: true, whitelist: true }))
     @SubscribeMessage(PrivateChatEvents.SEND_MESSAGE)
     async handleMessage(
         @MessageBody() payload: SendPrivateMessageDto,
         @ConnectedSocket() client: Socket,
     ) {
+        console.log("🔍 Gateway received payload:", JSON.stringify(payload, null, 2));
         const { recipientId } = payload;
         // ----------validate mission payload----------
         if (payload.serviceId) {
