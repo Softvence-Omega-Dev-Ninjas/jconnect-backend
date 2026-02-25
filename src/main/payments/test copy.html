@@ -64,13 +64,14 @@
 
         <script>
             const stripe = Stripe(
-                "pk_test_51STA6VAXBWlDgHxxxxxxxxxxxxxxxxxznqUvUctIchof13FERdETjlATINexABJmM7zmHq7oAfam4HSikD4zPBXgXrY00pmIwTyNE",
+                "pk_test_WQBTIEi74MXos7xITb9OBdpI00GnoBrHFC",
             ); // Your publishable key
             const elements = stripe.elements();
             const card = elements.create("card");
             card.mount("#card-element");
 
-            const baseURL = "http://16.170.173.35:5050"; 
+            // const baseURL = "http://16.170.173.35:5050"; 
+            const baseURL = "http://api.theconnectapp.net"; 
             // const baseURL = "http://localhost:5050"; 
             // const baseURL = "https://neva-unlamentable-judson.ngrok-free.dev"; // backend API base
             const statusEl = document.getElementById("status");
