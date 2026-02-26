@@ -102,4 +102,23 @@ export class ServiceRequestService {
             },
         });
     }
+
+    async updateIsPaid(id: string, isPaid: boolean) {
+        const serviceRequest = await this.prisma.serviceRequest.findUnique({
+            where: { id },
+        });
+
+        if (!serviceRequest) {
+            throw new HttpException("Service request not found", 404);
+        }
+
+        return this.prisma.serviceRequest.update({
+            where: { id },
+            data: { isPaid },
+            include: {
+                service: { include: { creator: { omit: { password: true } } } },
+                buyer: { omit: { password: true } },
+            },
+        });
+    }
 }
