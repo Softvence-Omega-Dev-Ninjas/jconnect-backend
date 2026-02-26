@@ -14,7 +14,7 @@ export class OrdersService {
     constructor(
         private prisma: PrismaService,
         private mail: MailService,
-    ) { }
+    ) {}
 
     // CREATE ORDER
     async createOrder(buyerId: string, dto: any) {
@@ -87,7 +87,10 @@ export class OrdersService {
 
     // UPDATE ORDER STATUS
     async updateStatus(id: string, status: OrderStatus, user: any) {
-        const order = await this.prisma.order.findUnique({ where: { id }, include: { buyer: true, seller: true } });
+        const order = await this.prisma.order.findUnique({
+            where: { id },
+            include: { buyer: true, seller: true },
+        });
         if (!order) throw new NotFoundException("Order not found");
 
         //if update status to cancelled so first of all check status if in progress or proof submitted or pending
@@ -95,8 +98,7 @@ export class OrdersService {
         if (status === OrderStatus.CANCELLED) {
             if (
                 order.status === OrderStatus.IN_PROGRESS ||
-                order.status === OrderStatus.PROOF_SUBMITTED ||
-                order.status === OrderStatus.PENDING
+                order.status === OrderStatus.PROOF_SUBMITTED 
             ) {
                 // if buyer then they send to seller a email for calcel request
                 const isBuyer = order.buyerId === user.userId;
@@ -134,9 +136,7 @@ export class OrdersService {
             //         );
             //     }
             // }
-
         }
-
 
         // Seller only allowed some statuses
         if (status === OrderStatus.IN_PROGRESS || status === OrderStatus.PROOF_SUBMITTED) {
