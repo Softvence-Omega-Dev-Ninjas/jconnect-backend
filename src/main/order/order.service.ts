@@ -323,4 +323,75 @@ export class OrdersService {
             withdrawn_amount: user?.withdrawn_amount! / 100,
         };
     }
+
+    async updateCancalProofSubmitted(orderId: string, isCancalProofSubmitted: boolean) {
+        const order = await this.prisma.order.findUnique({
+            where: { id: orderId },
+        });
+
+        if (!order) {
+            throw new NotFoundException("Order not found");
+        }
+
+        // যদি true হয় তাহলে proofUrl empty করে দিবে
+        if (isCancalProofSubmitted) {
+            return await this.prisma.order.update({
+                where: { id: orderId },
+                data: {
+                    isCancalProofSubmitted: true,
+                    proofUrl: [],
+                },
+                include: {
+                    service: true,
+                    buyer: {
+                        select: {
+                            full_name: true,
+                            id: true,
+                            email: true,
+                            username: true,
+                            profilePhoto: true,
+                        },
+                    },
+                    seller: {
+                        select: {
+                            full_name: true,
+                            id: true,
+                            email: true,
+                            username: true,
+                            profilePhoto: true,
+                        },
+                    },
+                },
+            });
+        }
+
+        // যদি false হয় তাহলে শুধু isCancalProofSubmitted আপডেট হবে, proofUrl unchanged
+        return await this.prisma.order.update({
+            where: { id: orderId },
+            data: {
+                isCancalProofSubmitted: false,
+            },
+            include: {
+                service: true,
+                buyer: {
+                    select: {
+                        full_name: true,
+                        id: true,
+                        email: true,
+                        username: true,
+                        profilePhoto: true,
+                    },
+                },
+                seller: {
+                    select: {
+                        full_name: true,
+                        id: true,
+                        email: true,
+                        username: true,
+                        profilePhoto: true,
+                    },
+                },
+            },
+        });
+    }
 }

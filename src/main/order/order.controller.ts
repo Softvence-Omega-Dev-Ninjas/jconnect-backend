@@ -207,4 +207,26 @@ export class OrdersController {
     ) {
         return this.ordersService.updateDeliveryDate(orderId, user, dto.deliveryDate);
     }
+
+    @Patch(":id/cancel-proof")
+    @ApiBearerAuth()
+    @ValidateUser()
+    @ApiOperation({
+        summary: "Update isCancalProofSubmitted and clear proofUrl if true",
+        description:
+            "If isCancalProofSubmitted is true, proofUrl will be emptied. If false, proofUrl remains unchanged.",
+    })
+    @ApiQuery({
+        name: "isCancalProofSubmitted",
+        required: true,
+        type: Boolean,
+        description: "Set to true to cancel proof (clears proofUrl), false to restore",
+    })
+    async updateCancelProof(
+        @Param("id") orderId: string,
+        @Query("isCancalProofSubmitted") isCancalProofSubmitted: string,
+    ) {
+        const boolValue = isCancalProofSubmitted === "true";
+        return this.ordersService.updateCancalProofSubmitted(orderId, boolValue);
+    }
 }
