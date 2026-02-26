@@ -6,11 +6,15 @@ import {
 } from "@nestjs/common";
 
 import { OrderStatus, Role } from "@prisma/client";
+import { MailService } from "src/lib/mail/mail.service";
 import { PrismaService } from "src/lib/prisma/prisma.service";
 
 @Injectable()
 export class OrdersService {
-    constructor(private prisma: PrismaService) {}
+    constructor(
+        private prisma: PrismaService,
+        private mail: MailService,
+    ) { }
 
     // CREATE ORDER
     async createOrder(buyerId: string, dto: any) {
@@ -327,6 +331,27 @@ export class OrdersService {
     async updateCancalProofSubmitted(orderId: string, isCancalProofSubmitted: boolean) {
         const order = await this.prisma.order.findUnique({
             where: { id: orderId },
+            include: {
+                service: true,
+                seller: {
+                    select: {
+                        full_name: true,
+                        id: true,
+                        email: true,
+                        username: true,
+                        profilePhoto: true,
+                    },
+                },
+                buyer: {
+                    select: {
+                        full_name: true,
+                        id: true,
+                        email: true,
+                        username: true,
+                        profilePhoto: true,
+                    },
+                },
+            },
         });
 
         if (!order) {
@@ -335,7 +360,7 @@ export class OrdersService {
 
         // যদি true হয় তাহলে proofUrl empty করে দিবে
         if (isCancalProofSubmitted) {
-            return await this.prisma.order.update({
+            const updatedOrder = await this.prisma.order.update({
                 where: { id: orderId },
                 data: {
                     isCancalProofSubmitted: true,
@@ -363,6 +388,88 @@ export class OrdersService {
                     },
                 },
             });
+
+            // Send email notification to seller
+            try {
+                await this.mail.sendEmail(
+                    order.seller.email,
+                    "DaConnect - Proof Submission Cancelled 📋",
+                    `
+                    <!DOCTYPE html>
+                    <html>
+                    <head>
+                        <style>
+                            body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.6; color: #333; margin: 0; padding: 0; background-color: #f5f7fa; }
+                            .container { max-width: 600px; margin: 40px auto; background: white; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 20px rgba(0,0,0,0.08); }
+                            .header { background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); color: white; padding: 40px 30px; text-align: center; }
+                            .logo { font-size: 32px; font-weight: bold; margin-bottom: 10px; letter-spacing: 1px; }
+                            .header-subtitle { font-size: 16px; opacity: 0.95; }
+                            .content { padding: 40px 30px; }
+                            .order-box { background: #fef3c7; border-left: 4px solid #f59e0b; padding: 20px; margin: 25px 0; border-radius: 6px; }
+                            .info-item { margin: 10px 0; }
+                            .label { font-weight: 600; color: #374151; }
+                            .value { color: #6b7280; }
+                            .footer { text-align: center; padding: 25px; background: #f8fafc; color: #64748b; font-size: 13px; border-top: 1px solid #e2e8f0; }
+                            .brand-name { color: #f59e0b; font-weight: 600; }
+                        </style>
+                    </head>
+                    <body>
+                        <div class="container">
+                            <div class="header">
+                                <div class="logo">🎵 DaConnect</div>
+                                <div class="header-subtitle">Order Proof Status Update</div>
+                            </div>
+                            <div class="content">
+                                <h2 style="color: #1e293b; margin-bottom: 20px;">Hello ${order.seller.full_name || "Seller"}! 👋</h2>
+                                <p style="font-size: 16px; color: #475569;">We wanted to inform you about an important update regarding one of your orders.</p>
+                                
+                                <div class="order-box">
+                                    <h3 style="margin-top: 0; color: #92400e;">📋 Proof Submission Cancelled</h3>
+                                    <div class="info-item">
+                                        <span class="label">Order Code:</span>
+                                        <span class="value">${order.orderCode}</span>
+                                    </div>
+                                    <div class="info-item">
+                                        <span class="label">Service:</span>
+                                        <span class="value">${order.service?.serviceName || "N/A"}</span>
+                                    </div>
+                                    <div class="info-item">
+                                        <span class="label">Buyer username:</span>
+                                        <span class="value">${order.buyer.username || order.buyer.email}</span>
+                                    </div>
+                                    <div class="info-item">
+                                        <span class="label">Buyer Name:</span>
+                                        <span class="value">${order.buyer.full_name || order.buyer.email}</span>
+                                    </div>
+                                    <div class="info-item">
+                                        <span class="label">Amount:</span>
+                                        <span class="value">$${(order.amount / 100).toFixed(2)}</span>
+                                    </div>
+                                </div>
+
+                                <p style="font-size: 15px; color: #475569; margin: 25px 0;">The proof submission for this order has been cancelled and all previously uploaded proof files have been removed. You may need to re-upload the proof when ready.</p>
+                                
+                                <p style="font-size: 15px; color: #475569;">If you have any questions or concerns about this order, please don't hesitate to reach out to our support team.</p>
+                                
+                                <p style="font-size: 14px; color: #64748b; margin-top: 25px;">Thank you for being a valued member of the <span class="brand-name">DaConnect</span> community!</p>
+                            </div>
+                            
+                            <div class="footer">
+                                <p style="margin: 5px 0;">This is an automated email from <strong class="brand-name">DaConnect</strong>. Please do not reply.</p>
+                                <p style="margin: 5px 0;">&copy; ${new Date().getFullYear()} DaConnect. All rights reserved.</p>
+                                <p style="margin: 10px 0; font-size: 12px;">Empowering artists and connecting communities through music.</p>
+                            </div>
+                        </div>
+                    </body>
+                    </html>
+                    `,
+                );
+            } catch (error) {
+                console.error("Failed to send email notification:", error);
+                // Continue even if email fails
+            }
+
+            return updatedOrder;
         }
 
         // যদি false হয় তাহলে শুধু isCancalProofSubmitted আপডেট হবে, proofUrl unchanged
