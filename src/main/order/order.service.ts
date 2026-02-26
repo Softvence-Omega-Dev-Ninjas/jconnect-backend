@@ -14,7 +14,7 @@ export class OrdersService {
     constructor(
         private prisma: PrismaService,
         private mail: MailService,
-    ) {}
+    ) { }
 
     // CREATE ORDER
     async createOrder(buyerId: string, dto: any) {
@@ -170,6 +170,27 @@ export class OrdersService {
     async submitProof(orderId: string, userFromReq: any, proofUrls: string[]) {
         const order = await this.prisma.order.findUnique({
             where: { id: orderId },
+            include: {
+                service: true,
+                buyer: {
+                    select: {
+                        full_name: true,
+                        id: true,
+                        email: true,
+                        username: true,
+                        profilePhoto: true,
+                    },
+                },
+                seller: {
+                    select: {
+                        full_name: true,
+                        id: true,
+                        email: true,
+                        username: true,
+                        profilePhoto: true,
+                    },
+                },
+            },
         });
 
         const user = await this.prisma.user.findUnique({
@@ -195,7 +216,110 @@ export class OrdersService {
                     push: proofUrls, // <-- NEW URLs will be appended
                 },
             },
+            include: {
+                service: true,
+                buyer: {
+                    select: {
+                        full_name: true,
+                        id: true,
+                        email: true,
+                        username: true,
+                        profilePhoto: true,
+                    },
+                },
+                seller: {
+                    select: {
+                        full_name: true,
+                        id: true,
+                        email: true,
+                        username: true,
+                        profilePhoto: true,
+                    },
+                },
+            },
         });
+
+        // Send email notification to buyer
+        try {
+            await this.mail.sendEmail(
+                order.buyer.email,
+                "DaConnect - Proof Submitted for Your Order! ✅",
+                `
+                <!DOCTYPE html>
+                <html>
+                <head>
+                    <style>
+                        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.6; color: #333; margin: 0; padding: 0; background-color: #f5f7fa; }
+                        .container { max-width: 600px; margin: 40px auto; background: white; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 20px rgba(0,0,0,0.08); }
+                        .header { background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; padding: 40px 30px; text-align: center; }
+                        .logo { font-size: 32px; font-weight: bold; margin-bottom: 10px; letter-spacing: 1px; }
+                        .header-subtitle { font-size: 16px; opacity: 0.95; }
+                        .content { padding: 40px 30px; }
+                        .order-box { background: #d1fae5; border-left: 4px solid #10b981; padding: 20px; margin: 25px 0; border-radius: 6px; }
+                        .info-item { margin: 10px 0; }
+                        .label { font-weight: 600; color: #374151; }
+                        .value { color: #6b7280; }
+                        .cta-button { display: inline-block; background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; padding: 14px 30px; text-decoration: none; border-radius: 8px; font-weight: 600; margin: 20px 0; }
+                        .footer { text-align: center; padding: 25px; background: #f8fafc; color: #64748b; font-size: 13px; border-top: 1px solid #e2e8f0; }
+                        .brand-name { color: #10b981; font-weight: 600; }
+                    </style>
+                </head>
+                <body>
+                    <div class="container">
+                        <div class="header">
+                            <div class="logo">🎵 DaConnect</div>
+                            <div class="header-subtitle">Order Proof Submitted</div>
+                        </div>
+                        <div class="content">
+                            <h2 style="color: #1e293b; margin-bottom: 20px;">Hello ${order.buyer.full_name || "Buyer"}! 👋</h2>
+                            <p style="font-size: 16px; color: #475569;">Great news! The seller has submitted proof of work completion for your order.</p>
+                            
+                            <div class="order-box">
+                                <h3 style="margin-top: 0; color: #065f46;">✅ Proof Submitted Successfully</h3>
+                                <div class="info-item">
+                                    <span class="label">Order Code:</span>
+                                    <span class="value">${order.orderCode}</span>
+                                </div>
+                                <div class="info-item">
+                                    <span class="label">Service:</span>
+                                    <span class="value">${order.service?.serviceName || "N/A"}</span>
+                                </div>
+                                <div class="info-item">
+                                    <span class="label">Seller:</span>
+                                    <span class="value">${order.seller.username || order.seller.full_name || order.seller.email}</span>
+                                </div>
+                                <div class="info-item">
+                                    <span class="label">Amount:</span>
+                                    <span class="value">$${(order.amount / 100).toFixed(2)}</span>
+                                </div>
+                            </div>
+
+                            <p style="font-size: 15px; color: #475569; margin: 25px 0;"><strong>What's Next?</strong></p>
+                            <p style="font-size: 15px; color: #475569; margin: 15px 0;">Please review the submitted proof and confirm if everything meets your expectations. Once you're satisfied with the work, you can release the payment to the seller.</p>
+                            
+                            <p style="font-size: 15px; color: #475569; margin: 15px 0;">If you have any concerns about the submitted proof, please contact the seller or reach out to our support team for assistance.</p>
+                            
+                            <div style="text-align: center; margin: 30px 0;">
+                                <a href="#" class="cta-button">View Order Details</a>
+                            </div>
+                            
+                            <p style="font-size: 14px; color: #64748b; margin-top: 25px;">Thank you for choosing <span class="brand-name">DaConnect</span> for your creative needs!</p>
+                        </div>
+                        
+                        <div class="footer">
+                            <p style="margin: 5px 0;">This is an automated email from <strong class="brand-name">DaConnect</strong>. Please do not reply.</p>
+                            <p style="margin: 5px 0;">&copy; ${new Date().getFullYear()} DaConnect. All rights reserved.</p>
+                            <p style="margin: 10px 0; font-size: 12px;">Empowering artists and connecting communities through music.</p>
+                        </div>
+                    </div>
+                </body>
+                </html>
+                `,
+            );
+        } catch (error) {
+            console.error("Failed to send email notification to buyer:", error);
+            // Continue even if email fails
+        }
 
         return updated;
     }
