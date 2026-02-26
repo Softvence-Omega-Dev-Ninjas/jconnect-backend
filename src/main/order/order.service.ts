@@ -87,8 +87,56 @@ export class OrdersService {
 
     // UPDATE ORDER STATUS
     async updateStatus(id: string, status: OrderStatus, user: any) {
-        const order = await this.prisma.order.findUnique({ where: { id } });
+        const order = await this.prisma.order.findUnique({ where: { id }, include: { buyer: true, seller: true } });
         if (!order) throw new NotFoundException("Order not found");
+
+        //if update status to cancelled so first of all check status if in progress or proof submitted or pending
+        // if in progress or proof submitted then only allow to cancel by seller or admin
+        if (status === OrderStatus.CANCELLED) {
+            if (
+                order.status === OrderStatus.IN_PROGRESS ||
+                order.status === OrderStatus.PROOF_SUBMITTED ||
+                order.status === OrderStatus.PENDING
+            ) {
+                // if buyer then they send to seller a email for calcel request
+                const isBuyer = order.buyerId === user.userId;
+                const isSeller = order.sellerId === user.userId;
+                const isAdmin = user.roles.includes(Role.ADMIN);
+                const isSuperAdmin = user.roles.includes(Role.SUPER_ADMIN);
+
+                if (isBuyer) {
+                    // Send email notification to seller about cancel request
+                    try {
+                        await this.mail.sendEmail(
+                            order?.seller.email,
+                            "DaConnect - Cancellation Request for Order " + order.orderCode,
+                            `
+                            <p>Hello ${order.seller.full_name || "Seller"},</p>
+                            <p>The buyer has requested to cancel the order <strong>${order.orderCode}</strong> for the service <strong>${order.serviceId}</strong>.</p>
+                            <p>Please review the cancellation request and take appropriate action.</p>
+                            <p>Thank you,<br/>DaConnect Team</p>
+                            `,
+                        );
+
+                        return { message: "Cancellation request sent to seller successfully" };
+                    } catch (error) {
+                        console.error("Failed to send cancellation email:", error);
+                        // Continue even if email fails
+                    }
+                }
+            }
+
+            //else {
+            //     // If order is not in progress or proof submitted, allow buyer to cancel
+            //     if (order.buyerId !== user.userId) {
+            //         throw new ForbiddenException(
+            //             "Only buyer can cancel this order",
+            //         );
+            //     }
+            // }
+
+        }
+
 
         // Seller only allowed some statuses
         if (status === OrderStatus.IN_PROGRESS || status === OrderStatus.PROOF_SUBMITTED) {
