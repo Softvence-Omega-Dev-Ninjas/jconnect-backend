@@ -14,7 +14,7 @@ export class OrdersService {
     constructor(
         private prisma: PrismaService,
         private mail: MailService,
-    ) { }
+    ) {}
 
     // CREATE ORDER
     async createOrder(buyerId: string, dto: any) {
