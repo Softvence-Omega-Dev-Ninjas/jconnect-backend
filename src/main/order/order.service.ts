@@ -98,7 +98,7 @@ export class OrdersService {
         if (status === OrderStatus.CANCELLED) {
             if (
                 order.status === OrderStatus.IN_PROGRESS ||
-                order.status === OrderStatus.PROOF_SUBMITTED 
+                order.status === OrderStatus.PROOF_SUBMITTED
             ) {
                 // if buyer then they send to seller a email for calcel request
                 const isBuyer = order.buyerId === user.userId;
