@@ -279,12 +279,14 @@ export class UsersController {
         @Query("limit") limit = 10,
         @Query("isActive") isActive?: boolean,
         @Query("search") search?: string,
+        @GetUser("userId") currentUserId?: string,
     ) {
         return this.usersService.findAll({
             page: Number(page),
             limit: Number(limit),
             isActive: isActive !== undefined ? isActive : undefined,
             search,
+            currentUserId,
         });
     }
 

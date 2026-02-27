@@ -69,12 +69,19 @@ export class UsersService {
         };
     }
 
-    async findAll(params: { page: number; limit: number; isActive?: boolean; search?: string }) {
-        const { page, limit, isActive, search } = params;
+    async findAll(params: {
+        page: number;
+        limit: number;
+        isActive?: boolean;
+        search?: string;
+        currentUserId?: string;
+    }) {
+        const { page, limit, isActive, search, currentUserId } = params;
 
         const whereCondition: any = {
             // isDeleted: false,
             ...(isActive !== undefined ? { isActive } : {}),
+            ...(currentUserId && { id: { not: currentUserId } }),
         };
 
         if (search) {
@@ -465,7 +472,7 @@ export class UsersService {
             role: {
                 notIn: [Role.SUPER_ADMIN],
             },
-            // id: { not: user.userId },
+            ...(user?.userId && { id: { not: user.userId } }),
         };
 
         // 🔹 Add search system (artist_name OR service_name OR hashtags OR location)

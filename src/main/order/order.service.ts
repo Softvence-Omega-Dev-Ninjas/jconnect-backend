@@ -109,6 +109,7 @@ export class OrdersService {
 
             if (order.status === OrderStatus.PENDING) {
                 const isBuyer = order.buyerId === user.userId;
+                const isSeller = order.sellerId === user.userId;
                 if (isBuyer) {
                     await this.stripe.paymentIntents.cancel(order.paymentIntentId);
                     const updated = await this.prisma.order.update({
@@ -146,6 +147,30 @@ export class OrdersService {
                         );
                     } catch (error) {
                         console.error("Failed to send cancellation email to buyer:", error);
+                    }
+                    return { ...updated, message: "Order cancelled successfully" };
+                }
+                if (isSeller) {
+                    await this.stripe.paymentIntents.cancel(order.paymentIntentId);
+                    const updated = await this.prisma.order.update({
+                        where: { id: order.id },
+                        data: {
+                            status: OrderStatus.CANCELLED,
+                        },
+                    });
+                    // Send email notification to seller about successful cancellation
+                    try {
+                        await this.mail.sendEmail(
+                            order?.seller.email,
+                            "DaConnect - Order Cancelled",
+                            `
+                            <p>Hello ${order.seller.full_name || "Seller"},</p>
+                            <p>The order <strong>${order.orderCode}</strong> for the service <strong>${order.service.serviceName}</strong> has been not received from seller side.</p>
+                            <p>Thank you,<br/>DaConnect Team</p>
+                            `,
+                        );
+                    } catch (error) {
+                        console.error("Failed to send cancellation email to seller:", error);
                     }
                     return { ...updated, message: "Order cancelled successfully" };
                 }
@@ -231,6 +256,8 @@ export class OrdersService {
                     }
                 }
             }
+
+
 
             //else {
             //     // If order is not in progress or proof submitted, allow buyer to cancel
