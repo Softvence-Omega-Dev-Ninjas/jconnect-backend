@@ -18,7 +18,7 @@ export class OrdersService {
         private mail: MailService,
         @Inject("STRIPE_CLIENT")
         private readonly stripe: Stripe,
-    ) { }
+    ) {}
 
     // CREATE ORDER
     async createOrder(buyerId: string, dto: any) {
@@ -257,8 +257,6 @@ export class OrdersService {
                 }
             }
 
-
-
             //else {
             //     // If order is not in progress or proof submitted, allow buyer to cancel
             //     if (order.buyerId !== user.userId) {
@@ -473,7 +471,7 @@ export class OrdersService {
                                 </div>
                                 <div class="info-item">
                                     <span class="label">Your Proof URL:</span>
-                                    <span class="value">${order.proofUrl || "N/A"}</span>
+                                    <span class="value">${updated.proofUrl || "N/A"}</span>
                                 </div>
                             </div>
 

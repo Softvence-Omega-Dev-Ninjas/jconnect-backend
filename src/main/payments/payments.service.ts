@@ -821,7 +821,7 @@ export class PaymentService {
                             </div>
                             <div class="detail-row">
                                 <span style="color: #64748b;">Seller:</span>
-                                <strong style="color: #1e293b;">${service.creator?.email}</strong>
+                                <strong style="color: #1e293b;">${service.creator?.username}</strong>
                             </div>
                             <div class="detail-row" style="border: none;">
                                 <span style="color: #64748b;">Status:</span>
@@ -888,10 +888,7 @@ export class PaymentService {
                                 <span style="color: #64748b;">Service:</span>
                                 <strong style="color: #1e293b;">${service.serviceName}</strong>
                             </div>
-                            <div class="detail-row">
-                                <span style="color: #64748b;">Buyer:</span>
-                                <strong style="color: #1e293b;">${userFromReq.email}</strong>
-                            </div>
+                          
                             <div class="detail-row" style="border: none;">
                                 <span style="color: #64748b;">Order Value:</span>
                                 <span class="amount">$${(order.amount / 100).toFixed(2)}</span>
@@ -1111,7 +1108,7 @@ export class PaymentService {
                             </div>
                             <div class="detail-row" style="border: none;">
                                 <span style="color: #64748b;">Buyer:</span>
-                                <strong style="color: #1e293b;">${order.buyer.email}</strong>
+                                <strong style="color: #1e293b;">${order.buyer.username}</strong>
                             </div>
                         </div>
                         

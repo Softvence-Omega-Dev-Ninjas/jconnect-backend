@@ -14,7 +14,7 @@ export class UsersService {
         private prisma: PrismaService,
         private utils: UtilsService,
         private readonly eventEmitter: EventEmitter2,
-    ) {}
+    ) { }
 
     async create(Userdata: CreateUserDto) {
         const { password, ...users } = Userdata;
@@ -553,12 +553,12 @@ export class UsersService {
                 const avgA =
                     a.ReviewsReceived.length > 0
                         ? a.ReviewsReceived.reduce((sum: number, r: any) => sum + r.rating, 0) /
-                          a.ReviewsReceived.length
+                        a.ReviewsReceived.length
                         : 0;
                 const avgB =
                     b.ReviewsReceived.length > 0
                         ? b.ReviewsReceived.reduce((sum: number, r: any) => sum + r.rating, 0) /
-                          b.ReviewsReceived.length
+                        b.ReviewsReceived.length
                         : 0;
                 return avgB - avgA;
             });
