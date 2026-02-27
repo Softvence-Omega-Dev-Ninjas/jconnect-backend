@@ -18,7 +18,7 @@ export class OrdersService {
         private mail: MailService,
         @Inject("STRIPE_CLIENT")
         private readonly stripe: Stripe,
-    ) { }
+    ) {}
 
     // CREATE ORDER
     async createOrder(buyerId: string, dto: any) {
