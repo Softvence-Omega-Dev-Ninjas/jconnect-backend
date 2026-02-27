@@ -14,7 +14,7 @@ export class OrdersService {
     constructor(
         private prisma: PrismaService,
         private mail: MailService,
-    ) { }
+    ) {}
 
     // CREATE ORDER
     async createOrder(buyerId: string, dto: any) {
@@ -155,7 +155,7 @@ export class OrdersService {
             data: { status },
         });
 
-        return { ...updated, message: "Order status updated Cancellation successfully" };
+        return { ...updated, message: "Order status updated successfully" };
     }
 
     // DELETE ORDER
