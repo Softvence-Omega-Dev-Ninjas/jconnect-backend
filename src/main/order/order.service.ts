@@ -16,7 +16,7 @@ export class OrdersService {
         private prisma: PrismaService,
         private mail: MailService,
         private readonly stripe: Stripe,
-    ) { }
+    ) {}
 
     // CREATE ORDER
     async createOrder(buyerId: string, dto: any) {
@@ -92,14 +92,12 @@ export class OrdersService {
         const order: any = await this.prisma.order.findUnique({
             where: { id },
             include: { buyer: true, seller: true, service: true },
-
         });
         if (!order) throw new NotFoundException("Order not found");
 
         //if update status to cancelled so first of all check status if in progress or proof submitted or pending
         // if in progress or proof submitted then only allow to cancel by seller or admin
         if (status === OrderStatus.CANCELLED) {
-
             if (!order.paymentIntentId) {
                 throw new BadRequestException(
                     "buyer not paid yet/PaymentIntent ID not found for this order",
@@ -151,7 +149,6 @@ export class OrdersService {
                 }
             }
 
-
             if (
                 order.status === OrderStatus.IN_PROGRESS ||
                 order.status === OrderStatus.PROOF_SUBMITTED
@@ -162,7 +159,6 @@ export class OrdersService {
 
                 if (isSeller) {
                     ///////////////
-
 
                     if (intent.status === "requires_capture") {
                         await this.stripe.paymentIntents.cancel(order.paymentIntentId);
@@ -445,6 +441,10 @@ export class OrdersService {
                                 <div class="info-item">
                                     <span class="label">Amount:</span>
                                     <span class="value">$${(order.amount / 100).toFixed(2)}</span>
+                                </div>
+                                <div class="info-item">
+                                    <span class="label">Your Proof URL:</span>
+                                    <span class="value">${order.proofUrl || "N/A"}</span>
                                 </div>
                             </div>
 
