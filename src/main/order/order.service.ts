@@ -8,13 +8,15 @@ import {
 import { OrderStatus, Role } from "@prisma/client";
 import { MailService } from "src/lib/mail/mail.service";
 import { PrismaService } from "src/lib/prisma/prisma.service";
+import Stripe from "stripe";
 
 @Injectable()
 export class OrdersService {
     constructor(
         private prisma: PrismaService,
         private mail: MailService,
-    ) {}
+        private readonly stripe: Stripe,
+    ) { }
 
     // CREATE ORDER
     async createOrder(buyerId: string, dto: any) {
@@ -87,15 +89,69 @@ export class OrdersService {
 
     // UPDATE ORDER STATUS
     async updateStatus(id: string, status: OrderStatus, user: any) {
-        const order = await this.prisma.order.findUnique({
+        const order: any = await this.prisma.order.findUnique({
             where: { id },
-            include: { buyer: true, seller: true },
+            include: { buyer: true, seller: true, service: true },
+
         });
         if (!order) throw new NotFoundException("Order not found");
 
         //if update status to cancelled so first of all check status if in progress or proof submitted or pending
         // if in progress or proof submitted then only allow to cancel by seller or admin
         if (status === OrderStatus.CANCELLED) {
+
+            if (!order.paymentIntentId) {
+                throw new BadRequestException(
+                    "buyer not paid yet/PaymentIntent ID not found for this order",
+                );
+            }
+            const intent = await this.stripe.paymentIntents.retrieve(order.paymentIntentId);
+
+            if (order.status === OrderStatus.PENDING) {
+                const isBuyer = order.buyerId === user.userId;
+                if (isBuyer) {
+                    await this.stripe.paymentIntents.cancel(order.paymentIntentId);
+                    const updated = await this.prisma.order.update({
+                        where: { id: order.id },
+                        data: {
+                            status: OrderStatus.CANCELLED,
+                        },
+                    });
+
+                    // Send email notification to seller about cancel request
+                    try {
+                        await this.mail.sendEmail(
+                            order?.seller.email,
+                            "DaConnect - Order Cancelled",
+                            `
+                            <p>Hello ${order.seller.full_name || "Seller"},</p>
+                            <p>The buyer has cancelled the order <strong>${order.orderCode}</strong> for the service <strong>${order.service.serviceName}</strong>.</p>
+                            <p>Thank you,<br/>DaConnect Team</p>
+                            `,
+                        );
+                    } catch (error) {
+                        console.error("Failed to send cancellation email:", error);
+                    }
+
+                    // send email notification to buyer about successful cancellation
+                    try {
+                        await this.mail.sendEmail(
+                            order?.buyer.email,
+                            "DaConnect - Order Cancelled",
+                            `
+                            <p>Hello ${order.buyer.full_name || "Buyer"},</p>
+                            <p>Your order <strong>${order.orderCode}</strong> for the service <strong>${order.service.serviceName}</strong> has been cancelled.</p>
+                            <p>Thank you,<br/>DaConnect Team</p>
+                            `,
+                        );
+                    } catch (error) {
+                        console.error("Failed to send cancellation email to buyer:", error);
+                    }
+                    return { ...updated, message: "Order cancelled successfully" };
+                }
+            }
+
+
             if (
                 order.status === OrderStatus.IN_PROGRESS ||
                 order.status === OrderStatus.PROOF_SUBMITTED
@@ -103,8 +159,58 @@ export class OrdersService {
                 // if buyer then they send to seller a email for calcel request
                 const isBuyer = order.buyerId === user.userId;
                 const isSeller = order.sellerId === user.userId;
-                const isAdmin = user.roles.includes(Role.ADMIN);
-                const isSuperAdmin = user.roles.includes(Role.SUPER_ADMIN);
+
+                if (isSeller) {
+                    ///////////////
+
+
+                    if (intent.status === "requires_capture") {
+                        await this.stripe.paymentIntents.cancel(order.paymentIntentId);
+
+                        const updated = await this.prisma.order.update({
+                            where: { id: order.id },
+                            data: {
+                                status: OrderStatus.CANCELLED,
+                                seller_amount: 0,
+                                buyerPay: 0,
+                                stripeFee: 0,
+                                PlatfromRevinue: 0,
+                                platformFee: 0,
+                            },
+                        });
+                        // Send email notification to buyer about successful cancellation
+                        try {
+                            await this.mail.sendEmail(
+                                order?.buyer.email,
+                                "DaConnect - Order Cancellation Request Approved",
+                                `
+                                <p>Hello ${order.buyer.full_name || "Buyer"},</p>
+                                <p>Your order <strong>${order.orderCode}</strong> for the service <strong>${order.service.serviceName}</strong> has been cancelled.</p>
+                                <p>Thank you,<br/>DaConnect Team</p>
+                                `,
+                            );
+                        } catch (error) {
+                            console.error("Failed to send cancellation email to buyer:", error);
+                        }
+                        // send email notification to seller about successful cancellation
+                        try {
+                            await this.mail.sendEmail(
+                                order?.seller.email,
+                                "DaConnect - Order Cancelled",
+                                `
+                                <p>Hello ${order.seller.full_name || "Seller"},</p>
+                                <p>Your order <strong>${order.orderCode}</strong> for the service <strong>${order.service.serviceName}</strong> has been cancelled.</p>
+                                <p>Thank you,<br/>DaConnect Team</p>
+                                `,
+                            );
+                        } catch (error) {
+                            console.error("Failed to send cancellation email to seller:", error);
+                        }
+                        return { ...updated, message: "Order status updated successfully" };
+                    }
+
+                    ///////////////
+                }
 
                 if (isBuyer) {
                     // Send email notification to seller about cancel request
@@ -114,7 +220,7 @@ export class OrdersService {
                             "DaConnect - Cancellation Request for Order " + order.orderCode,
                             `
                             <p>Hello ${order.seller.full_name || "Seller"},</p>
-                            <p>The buyer has requested to cancel the order <strong>${order.orderCode}</strong> for the service <strong>${order.serviceId}</strong>.</p>
+                            <p>The buyer has requested to cancel the order <strong>${order.orderCode}</strong> for the service <strong>${order.service.serviceName}</strong>.</p>
                             <p>Please review the cancellation request and take appropriate action.</p>
                             <p>Thank you,<br/>DaConnect Team</p>
                             `,
