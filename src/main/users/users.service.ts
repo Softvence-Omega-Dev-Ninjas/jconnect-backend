@@ -1,9 +1,12 @@
 import { HttpException, Injectable, NotFoundException } from "@nestjs/common";
 
+import { HandleError } from "@common/error/handle-error.decorator";
 import { EVENT_TYPES, InquiryMeta } from "@common/interface/events.name";
+import { FirebaseNotificationService } from "@main/shared/notification/firebase-notification.service";
 import { EventEmitter2 } from "@nestjs/event-emitter";
 import { OrderStatus, Role } from "@prisma/client";
 import agoron2 from "argon2";
+import { NotificationType } from "src/lib/firebase/dto/notification.dto";
 import { PrismaService } from "src/lib/prisma/prisma.service";
 import { UtilsService } from "src/lib/utils/utils.service";
 import { FindArtistDto } from "./dto/findArtist.dto";
@@ -14,7 +17,8 @@ export class UsersService {
         private prisma: PrismaService,
         private utils: UtilsService,
         private readonly eventEmitter: EventEmitter2,
-    ) {}
+        private readonly firebaseNotificationService: FirebaseNotificationService,
+    ) { }
 
     async create(Userdata: CreateUserDto) {
         const { password, ...users } = Userdata;
@@ -553,12 +557,12 @@ export class UsersService {
                 const avgA =
                     a.ReviewsReceived.length > 0
                         ? a.ReviewsReceived.reduce((sum: number, r: any) => sum + r.rating, 0) /
-                          a.ReviewsReceived.length
+                        a.ReviewsReceived.length
                         : 0;
                 const avgB =
                     b.ReviewsReceived.length > 0
                         ? b.ReviewsReceived.reduce((sum: number, r: any) => sum + r.rating, 0) /
-                          b.ReviewsReceived.length
+                        b.ReviewsReceived.length
                         : 0;
                 return avgB - avgA;
             });
@@ -698,6 +702,7 @@ export class UsersService {
 
     // --------find one and inquery user by email---------
 
+    @HandleError("Failed to send inquiry", "User")
     async findOneUserIdInquiry(id: string, currentUserId: string) {
         const user = await this.prisma.user.findUnique({
             where: { id },
@@ -802,6 +807,36 @@ export class UsersService {
                     currentUser,
                 },
             } as unknown as InquiryMeta);
+
+            // -------------------------- Firebase Push Notification --------------------------
+        
+            try {
+                const inquiryMessage = `I like your profile and I wanna buy your service - ${currentUser.full_name}`;
+
+                // Build notification using the NEW_MESSAGE template (most appropriate for inquiries)
+                const notification = this.firebaseNotificationService.buildNotificationTemplate(
+                    NotificationType.NEW_MESSAGE,
+                    {
+                        senderName: currentUser.full_name,
+                        senderId: currentUser.id,
+                        messagePreview: inquiryMessage,
+                        conversationId: `inquiry_${currentUser.id}_${user.id}`, 
+                    },
+                );
+
+                // Send notification to the service provider (user being inquired)
+              
+                await this.firebaseNotificationService.sendToUser(
+                    user.id,
+                    notification,
+                    true, 
+                );
+
+                console.log(`✅ Firebase notification sent for inquiry from ${currentUser.full_name} to ${user.full_name || user.email}`);
+            } catch (firebaseError) {
+             
+                console.error('⚠️ Firebase notification failed for inquiry:', firebaseError.message);
+            }
         }
 
         return {

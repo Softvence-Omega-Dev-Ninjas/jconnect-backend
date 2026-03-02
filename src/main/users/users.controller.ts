@@ -134,6 +134,10 @@ export class UsersController {
             }
         }
 
+        // username should not be with space and any capital lettar and should be unique and also should not be empty if provided
+    
+    
+
         // Create proper DTO
         const updateMeDto: UpdateMeDto = {
             full_name: body.full_name,

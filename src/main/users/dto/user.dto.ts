@@ -159,7 +159,7 @@ export class UpdateUserDto {
     @ApiProperty({ example: "john_doe", required: false })
     @IsOptional()
     @IsString()
-    @Transform(({ value }) => value?.trim())
+    @Transform(({ value }) => value?.toLowerCase().replace(/\s+/g, "").trim())
     username?: string;
 
     @ApiProperty({ example: "https://example.com/new-photo.jpg", required: false })
@@ -249,7 +249,7 @@ export class UpdateMeDto {
     @ApiProperty({ example: "john_doe", required: false })
     @IsOptional()
     @IsString()
-    @Transform(({ value }) => value?.trim())
+    @Transform(({ value }) => value?.toLowerCase().replace(/\s+/g, "").trim())
     username?: string;
 
     @ApiProperty({ example: "+8801700000000", required: false })
