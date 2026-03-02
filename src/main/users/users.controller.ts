@@ -42,7 +42,7 @@ export class UsersController {
     constructor(
         private readonly usersService: UsersService,
         private awsservice: AwsService,
-    ) { }
+    ) {}
 
     @Get("check-username/:username")
     @ApiOperation({ summary: "Check if username is available" })
@@ -133,6 +133,10 @@ export class UsersController {
                 }
             }
         }
+
+        // username should not be with space and any capital lettar and should be unique and also should not be empty if provided
+    
+    
 
         // Create proper DTO
         const updateMeDto: UpdateMeDto = {

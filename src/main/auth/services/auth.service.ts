@@ -36,7 +36,7 @@ export class AuthService {
         private readonly twilio: TwilioService,
         private readonly stripe: StripeService,
         private readonly eventEmitter: EventEmitter2,
-    ) {}
+    ) { }
 
     // ---------- REGISTER (send email verification OTP) ----------
     @HandleError("Failed to Register profile", "Register ")
@@ -53,7 +53,7 @@ export class AuthService {
 
         // create a unique username if not provided and if provided check uniqueness
 
-        let username = full_name.trim().toLowerCase().replace(/\s+/g, "_");
+        let username = full_name.toLowerCase().replace(/\s+/g, "").trim();
         let isUnique = false;
 
         while (!isUnique) {
@@ -65,7 +65,7 @@ export class AuthService {
             if (!exists) {
                 isUnique = true;
             } else {
-                username = `${full_name}_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`;
+                username = `${full_name.toLowerCase().replace(/\s+/g, "").trim()}_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`;
             }
         }
 
