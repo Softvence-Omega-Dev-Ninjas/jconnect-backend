@@ -1,8 +1,9 @@
 # JCONNECT BACKEND
 
 এই README-এ Stripe Connect এবং Payment ফ্লো সংক্ষিপ্তভাবে দেওয়া আছে।
+## Firebase notification document
+- **[Support Chat System](./docs/support-message.md)** - Real-time support chat with WebSocket and REST API
 
----
 
 ## STEP 1: Stripe Client Setup
 
