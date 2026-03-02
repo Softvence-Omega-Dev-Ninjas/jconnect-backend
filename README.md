@@ -1,5 +1,8 @@
 # JCONNECT BACKND
 
+
+## firebase notification 
+- **[notification firebase](./docs/firebase-backend-notification-architecture.md)** - firebase  notifications
 ## docker run
 
 ```bash
