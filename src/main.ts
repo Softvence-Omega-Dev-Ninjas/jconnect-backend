@@ -6,7 +6,26 @@ import { DocumentBuilder, SwaggerModule } from "@nestjs/swagger";
 import * as express from "express";
 import { AppModule } from "./app.module";
 async function bootstrap() {
-    const app = await NestFactory.create(AppModule, { cors: true });
+    const app = await NestFactory.create(AppModule);
+
+    // Enable CORS for all origins and credentials
+    app.enableCors({
+        origin: true,
+        credentials: true,
+        methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+        allowedHeaders: [
+            "Content-Type",
+            "Authorization",
+            "Accept",
+            "X-Requested-With",
+            "X-HTTP-Method-Override",
+        ],
+    });
+
+    // Handle proxy trust (important for EC2/ELB/Nginx)
+    const expressApp = app.getHttpAdapter().getInstance();
+    expressApp.set("trust proxy", 1);
+
     // --------------Swagger config with Bearer Auth------------------
     const config = new DocumentBuilder()
         .setTitle("J-connect Backend API")

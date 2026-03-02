@@ -180,7 +180,7 @@ export class UsersController {
         console.log("Processed DTO:", updateMeDto);
 
         if (file) {
-            const uploaded = await this.awsservice.upload(file);
+            const uploaded = await this.awsservice.upload(file, true);
             updateMeDto.profilePhoto = uploaded.url;
         }
 
@@ -221,7 +221,7 @@ export class UsersController {
                 image: {
                     type: "string",
                     format: "binary",
-                    description: "File to upload give me less than 1MB",
+                    description: "File to upload give me less than 10MB",
                 },
             },
             required: ["image"],
@@ -229,7 +229,7 @@ export class UsersController {
     })
     @UseInterceptors(
         FileInterceptor("image", {
-            limits: { fileSize: 1 * 1024 * 1024 },
+            limits: { fileSize: 10 * 1024 * 1024 },
             fileFilter: (req, file, cb) => {
                 if (!file.mimetype.startsWith("image/")) {
                     return cb(new BadRequestException("Only image files are allowed!"), false);
@@ -242,7 +242,7 @@ export class UsersController {
         @UploadedFile() file: Express.Multer.File,
         @GetUser("userId") userId: string,
     ) {
-        const ProfileUrl = await this.awsservice.upload(file);
+        const ProfileUrl = await this.awsservice.upload(file, true);
         const reuslt = await this.usersService.update(userId, { profilePhoto: ProfileUrl.url });
 
         return reuslt;
@@ -279,12 +279,14 @@ export class UsersController {
         @Query("limit") limit = 10,
         @Query("isActive") isActive?: boolean,
         @Query("search") search?: string,
+        @GetUser("userId") currentUserId?: string,
     ) {
         return this.usersService.findAll({
             page: Number(page),
             limit: Number(limit),
             isActive: isActive !== undefined ? isActive : undefined,
             search,
+            currentUserId,
         });
     }
 

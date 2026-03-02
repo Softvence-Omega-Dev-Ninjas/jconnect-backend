@@ -70,7 +70,7 @@
 
         <script>
             const stripe = Stripe(
-                "pk_test_51STA6VAXBWlDgH16B93sDb5ljUdMznqUvUctIchof13FERdETjlATINexABJmM7zmHq7oAfam4HSikD4zPBXgXrY00pmIwTyNE",
+                "pk_test_WQBTIEi74MXos7xITb9OBdpI00GnoBrHFC",
             );
             const elements = stripe.elements();
             const cardElement = elements.create("card");
@@ -88,7 +88,8 @@
                     return;
                 }
                 //  const baseURL = "https://jconnect-server.saikat.com.bd"
-                const baseURL = "http://localhost:5050"
+                // const baseURL = "http://localhost:5050"
+                const baseURL = "https://api.theconnectapp.net"
                 // 1️⃣ Create SetupIntent
                 const res1 = await fetch(`${baseURL}/payments/create-setup-intent`, {
                     method: "POST",

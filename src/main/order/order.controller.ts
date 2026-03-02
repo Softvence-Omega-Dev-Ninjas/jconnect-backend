@@ -138,6 +138,24 @@ export class OrdersController {
         return await this.ordersService.submitProof(orderId, user, [uploaded.url]);
     }
 
+    //prof view from order id
+    // @ApiBearerAuth()
+    // @ValidateUser()
+    // @Get(":id/proof")
+    // @ApiOperation({ summary: "Get proof URLs for an order" })
+    // async getProofs(@Param("id") orderId: string) {
+    //     const order = await this.prisma.order.findUnique({
+    //         where: { id: orderId },
+    //         select: { proofUrls: true },
+    //     });
+
+    //     if (!order) {
+    //         throw new BadRequestException("Order not found");
+    //     }
+
+    //     return { proofUrls: order.proofUrls };
+    // }
+
     @ApiBearerAuth()
     @ValidateUser()
     @Patch(":id/status")
@@ -188,5 +206,27 @@ export class OrdersController {
         @GetUser() user: any,
     ) {
         return this.ordersService.updateDeliveryDate(orderId, user, dto.deliveryDate);
+    }
+
+    @Patch(":id/cancel-proof")
+    @ApiBearerAuth()
+    @ValidateUser()
+    @ApiOperation({
+        summary: "Update isCancalProofSubmitted and clear proofUrl if true",
+        description:
+            "If isCancalProofSubmitted is true, proofUrl will be emptied. If false, proofUrl remains unchanged.",
+    })
+    @ApiQuery({
+        name: "isCancalProofSubmitted",
+        required: true,
+        type: Boolean,
+        description: "Set to true to cancel proof (clears proofUrl), false to restore",
+    })
+    async updateCancelProof(
+        @Param("id") orderId: string,
+        @Query("isCancalProofSubmitted") isCancalProofSubmitted: string,
+    ) {
+        const boolValue = isCancalProofSubmitted === "true";
+        return this.ordersService.updateCancalProofSubmitted(orderId, boolValue);
     }
 }

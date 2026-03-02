@@ -17,4 +17,10 @@ export class LoginDto {
     @IsNotEmpty({ message: "Password is required" })
     @IsString()
     password: string;
+    @ApiProperty({
+        example: "fcmToken",
+        description: "FCM token for push notifications",
+    })
+    @IsString()
+    fcmToken?: string;
 }

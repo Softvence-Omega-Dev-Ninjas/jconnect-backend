@@ -33,4 +33,9 @@ export class CreateServiceRequestDto {
     @IsNumber()
     @Type(() => Number)
     price?: number;
+
+    @ApiPropertyOptional({ description: "Message ID" })
+    @IsOptional()
+    @IsString()
+    messageID?: string;
 }

@@ -230,58 +230,12 @@
                 height: 20px;
             }
 
-            .settings-section {
-                background: #f8f9fa;
-                border-radius: 10px;
-                padding: 20px;
-                margin-bottom: 20px;
-            }
-
-            .settings-section h3 {
-                font-size: 16px;
-                color: #333;
-                margin-bottom: 15px;
-            }
-
-            .input-group {
-                margin-bottom: 15px;
-            }
-
-            .input-group label {
-                display: block;
-                margin-bottom: 5px;
-                font-size: 14px;
-                color: #666;
-                font-weight: 500;
-            }
-
-            .input-group input {
-                width: 100%;
-                padding: 10px;
-                border: 2px solid #ddd;
-                border-radius: 8px;
-                font-size: 14px;
-                transition: border-color 0.3s;
-            }
-
-            .input-group input:focus {
-                outline: none;
-                border-color: #667eea;
-            }
-
-            .btn-save {
-                background: #667eea;
-                color: white;
-                padding: 10px 20px;
-                border: none;
-                border-radius: 8px;
-                font-size: 14px;
-                cursor: pointer;
-                font-weight: 600;
-            }
-
-            .btn-save:hover {
-                background: #5568d3;
+            code {
+                background: #f5f5f5;
+                padding: 2px 6px;
+                border-radius: 3px;
+                font-family: "Courier New", monospace;
+                font-size: 13px;
             }
 
             .response-data {
@@ -299,31 +253,290 @@
                 white-space: pre-wrap;
                 word-wrap: break-word;
             }
+
+            .help-section {
+                background: #fff3cd;
+                border: 2px solid #ffc107;
+                border-radius: 10px;
+                padding: 15px;
+                margin-bottom: 20px;
+                font-size: 13px;
+            }
+
+            .help-section h4 {
+                color: #856404;
+                margin-bottom: 10px;
+                font-size: 14px;
+            }
+
+            .help-section ul {
+                margin-left: 20px;
+                color: #856404;
+            }
+
+            .help-section li {
+                margin-bottom: 5px;
+            }
+
+            .help-section a {
+                color: #667eea;
+                text-decoration: none;
+                font-weight: 600;
+            }
+
+            .help-section a:hover {
+                text-decoration: underline;
+            }
+
+            /* Modal Popup Styles */
+            .modal {
+                display: none;
+                position: fixed;
+                z-index: 1000;
+                left: 0;
+                top: 0;
+                width: 100%;
+                height: 100%;
+                background-color: rgba(0, 0, 0, 0.6);
+                animation: fadeIn 0.3s ease;
+            }
+
+            .modal.show {
+                display: flex;
+                align-items: center;
+                justify-content: center;
+            }
+
+            @keyframes fadeIn {
+                from {
+                    opacity: 0;
+                }
+                to {
+                    opacity: 1;
+                }
+            }
+
+            .modal-content {
+                background: white;
+                padding: 30px;
+                border-radius: 15px;
+                max-width: 600px;
+                width: 90%;
+                max-height: 80vh;
+                overflow-y: auto;
+                box-shadow: 0 10px 50px rgba(0, 0, 0, 0.3);
+                animation: slideUp 0.3s ease;
+                position: relative;
+            }
+
+            @keyframes slideUp {
+                from {
+                    transform: translateY(50px);
+                    opacity: 0;
+                }
+                to {
+                    transform: translateY(0);
+                    opacity: 1;
+                }
+            }
+
+            .modal-header {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                margin-bottom: 20px;
+                padding-bottom: 15px;
+                border-bottom: 2px solid #e0e0e0;
+            }
+
+            .modal-header h2 {
+                color: #333;
+                font-size: 22px;
+                margin: 0;
+            }
+
+            .close-btn {
+                background: none;
+                border: none;
+                font-size: 28px;
+                color: #999;
+                cursor: pointer;
+                padding: 0;
+                width: 30px;
+                height: 30px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                transition: color 0.3s;
+            }
+
+            .close-btn:hover {
+                color: #333;
+            }
+
+            .token-display {
+                background: #f8f9fa;
+                border: 2px solid #dee2e6;
+                border-radius: 8px;
+                padding: 15px;
+                margin: 15px 0;
+                word-wrap: break-word;
+                font-family: "Courier New", monospace;
+                font-size: 12px;
+                max-height: 200px;
+                overflow-y: auto;
+                color: #333;
+            }
+
+            .copy-btn {
+                background: #667eea;
+                color: white;
+                border: none;
+                padding: 12px 24px;
+                border-radius: 8px;
+                font-size: 14px;
+                font-weight: 600;
+                cursor: pointer;
+                display: flex;
+                align-items: center;
+                gap: 8px;
+                transition: all 0.3s;
+                margin-top: 15px;
+            }
+
+            .copy-btn:hover {
+                background: #5568d3;
+                transform: translateY(-2px);
+                box-shadow: 0 5px 15px rgba(102, 126, 234, 0.3);
+            }
+
+            .copy-btn:active {
+                transform: translateY(0);
+            }
+
+            .copy-btn.copied {
+                background: #28a745;
+            }
+
+            .copy-btn svg {
+                width: 16px;
+                height: 16px;
+            }
+
+            .token-info {
+                background: #e7f3ff;
+                border-left: 4px solid #2196f3;
+                padding: 12px;
+                margin: 15px 0;
+                border-radius: 4px;
+                font-size: 13px;
+                color: #0c5460;
+            }
+
+            .copy-token-btn {
+                background: #667eea;
+                color: white;
+                border: none;
+                padding: 8px 16px;
+                border-radius: 6px;
+                font-size: 12px;
+                cursor: pointer;
+                margin-left: 10px;
+                transition: all 0.3s;
+                display: inline-flex;
+                align-items: center;
+                gap: 5px;
+            }
+
+            .copy-token-btn:hover {
+                background: #5568d3;
+            }
+
+            .copy-token-btn.copied {
+                background: #28a745;
+            }
+
+            .copy-token-btn svg {
+                width: 14px;
+                height: 14px;
+            }
         </style>
     </head>
     <body>
         <div class="container">
             <div class="header">
                 <h1>🔥 Firebase Auth Test</h1>
-                <p>Test Google & Apple Sign-In with Backend</p>
+                <p>Test Google & Apple Sign-In - Frontend Only</p>
+            </div>
+
+            <!-- Help Section for Apple Sign-In -->
+            <div class="help-section" id="helpSection" style="display: none">
+                <h4>⚠️ Domain Authorization Required</h4>
+                <p style="font-weight: 600; color: #dc3545; margin-bottom: 10px">
+                    Your domain is NOT in Firebase's authorized domains list!
+                </p>
+                <div
+                    style="
+                        background: #e7f3ff;
+                        padding: 12px;
+                        border-radius: 6px;
+                        margin: 10px 0;
+                        border-left: 4px solid #2196f3;
+                    "
+                >
+                    <strong>Current Domain:</strong> <span id="currentDomain"></span>
+                </div>
+                <ol style="margin-left: 20px; color: #856404; font-size: 13px; line-height: 1.8">
+                    <li>
+                        <strong>Open Firebase Console:</strong>
+                        <a href="https://console.firebase.google.com" target="_blank"
+                            >https://console.firebase.google.com</a
+                        >
+                    </li>
+                    <li><strong>Select your project: "daconnect-f38a6"</strong></li>
+                    <li><strong>Go to: Authentication → Settings</strong></li>
+                    <li><strong>Scroll down to "Authorized domains"</strong></li>
+                    <li>
+                        <strong>Click "Add domain" button</strong>
+                    </li>
+                    <li>
+                        <strong>Add this domain:</strong>
+                        <code
+                            id="domainToAdd"
+                            style="
+                                background: #fff3cd;
+                                padding: 2px 6px;
+                                border-radius: 3px;
+                                color: #856404;
+                                font-weight: bold;
+                            "
+                        ></code>
+                    </li>
+                    <li><strong>Click "Add" to save</strong></li>
+                    <li><strong>Wait 30 seconds, then refresh this page</strong></li>
+                </ol>
+                <div
+                    style="
+                        background: #d4edda;
+                        padding: 12px;
+                        border-radius: 6px;
+                        margin-top: 15px;
+                        border-left: 4px solid #28a745;
+                    "
+                >
+                    <strong>✅ Common domains to add:</strong>
+                    <ul style="margin: 8px 0 0 20px; font-size: 13px">
+                        <li><code>localhost</code></li>
+                        <li><code>127.0.0.1</code></li>
+                        <li>
+                            <code id="domainToAdd2" style="font-weight: bold"></code> (your current
+                            domain)
+                        </li>
+                    </ul>
+                </div>
             </div>
 
             <div id="statusMessage" class="status"></div>
-
-            <!-- Settings Section -->
-            <div class="settings-section">
-                <h3>⚙️ Backend Configuration</h3>
-                <div class="input-group">
-                    <label for="backendUrl">Backend Endpoint URL:</label>
-                    <input
-                        type="text"
-                        id="backendUrl"
-                        placeholder="http://localhost:5050/auth/firebase-login"
-                        value="http://localhost:5050/auth/firebase-login"
-                    />
-                </div>
-                <button class="btn-save" id="saveBtn">💾 Save Configuration</button>
-            </div>
 
             <!-- Login Buttons -->
             <div id="loginSection" class="auth-section">
@@ -384,45 +597,111 @@
                     <span id="userId">-</span>
                 </div>
                 <div class="info-item">
-                    <strong>Username:</strong>
-                    <span id="userUsername">-</span>
-                </div>
-                <div class="info-item">
                     <strong>Provider:</strong>
                     <span id="userProvider">-</span>
                 </div>
                 <div class="info-item">
                     <strong>JWT Token:</strong>
                     <span id="userToken" style="word-break: break-all; font-size: 11px">-</span>
+                    <button class="copy-token-btn" id="copyTokenBtnInline" style="display: none">
+                        <svg fill="currentColor" viewBox="0 0 16 16">
+                            <path
+                                d="M4 1.5H3a2 2 0 0 0-2 2V14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V3.5a2 2 0 0 0-2-2h-1v1h1a1 1 0 0 1 1 1V14a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V3.5a1 1 0 0 1 1-1h1v-1z"
+                            />
+                            <path
+                                d="M9.5 1a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-.5.5h-3a.5.5 0 0 1-.5-.5v-1a.5.5 0 0 1 .5-.5h3zm-3-1A1.5 1.5 0 0 0 5 1.5v1A1.5 1.5 0 0 0 6.5 4h3A1.5 1.5 0 0 0 11 2.5v-1A1.5 1.5 0 0 0 9.5 0h-3z"
+                            />
+                        </svg>
+                        Copy Full Token
+                    </button>
                 </div>
 
                 <div class="response-data">
-                    <strong>Backend Response:</strong>
+                    <strong>Firebase User Data:</strong>
                     <pre id="backendResponse">-</pre>
                 </div>
             </div>
         </div>
 
+        <!-- Token Modal -->
+        <div id="tokenModal" class="modal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2>🎉 Login Successful!</h2>
+                    <button class="close-btn" id="closeModalBtn">&times;</button>
+                </div>
+
+                <div class="token-info">
+                    💡 <strong>Your authentication token is ready!</strong> Use this token to
+                    authenticate API requests.
+                </div>
+
+                <h3 style="color: #333; font-size: 16px; margin-top: 20px">
+                    Firebase ID Token (JWT):
+                </h3>
+                <div class="token-display" id="tokenText"></div>
+
+                <button class="copy-btn" id="copyTokenBtn">
+                    <svg fill="currentColor" viewBox="0 0 16 16">
+                        <path
+                            d="M4 1.5H3a2 2 0 0 0-2 2V14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V3.5a2 2 0 0 0-2-2h-1v1h1a1 1 0 0 1 1 1V14a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V3.5a1 1 0 0 1 1-1h1v-1z"
+                        />
+                        <path
+                            d="M9.5 1a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-.5.5h-3a.5.5 0 0 1-.5-.5v-1a.5.5 0 0 1 .5-.5h3zm-3-1A1.5 1.5 0 0 0 5 1.5v1A1.5 1.5 0 0 0 6.5 4h3A1.5 1.5 0 0 0 11 2.5v-1A1.5 1.5 0 0 0 9.5 0h-3z"
+                        />
+                    </svg>
+                    Copy Token
+                </button>
+
+                <h3 style="color: #333; font-size: 16px; margin-top: 25px">Backend JWT Token:</h3>
+                <div class="token-display" id="backendTokenText"></div>
+
+                <button class="copy-btn" id="copyBackendTokenBtn">
+                    <svg fill="currentColor" viewBox="0 0 16 16">
+                        <path
+                            d="M4 1.5H3a2 2 0 0 0-2 2V14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V3.5a2 2 0 0 0-2-2h-1v1h1a1 1 0 0 1 1 1V14a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V3.5a1 1 0 0 1 1-1h1v-1z"
+                        />
+                        <path
+                            d="M9.5 1a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-.5.5h-3a.5.5 0 0 1-.5-.5v-1a.5.5 0 0 1 .5-.5h3zm-3-1A1.5 1.5 0 0 0 5 1.5v1A1.5 1.5 0 0 0 6.5 4h3A1.5 1.5 0 0 0 11 2.5v-1A1.5 1.5 0 0 0 9.5 0h-3z"
+                        />
+                    </svg>
+                    Copy Backend Token
+                </button>
+            </div>
+        </div>
+
         <!-- Firebase SDK -->
         <script type="module">
-            import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+            import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-app.js";
             import {
                 getAuth,
                 signInWithPopup,
+                signInWithRedirect,
+                getRedirectResult,
                 GoogleAuthProvider,
                 OAuthProvider,
                 signOut,
-            } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+            } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-auth.js";
 
             // Firebase configuration
+            // const firebaseConfig = {
+            //     apiKey: "",
+            //     authDomain: "jconnect-b6f89.firebaseapp.com",
+            //     projectId: "jconnect-b6f89",
+            //     storageBucket: "jconnect-b6f89.firebasestorage.app",
+            //     messagingSenderId: "117806012294",
+            //     appId: "1:117806012294:web:",
+            //     measurementId: "G-ss",
+            // };
+
             const firebaseConfig = {
-                apiKey: "AIzaSyCwlKwAvJJ_e0nLLX84Xqn9h5bQtARsycM",
-                authDomain: "jconnect-b6f89.firebaseapp.com",
-                projectId: "jconnect-b6f89",
-                storageBucket: "jconnect-b6f89.firebasestorage.app",
-                messagingSenderId: "117806012294",
-                appId: "1:117806012294:web:bb4bcde2c7fd65fed93e07",
-                measurementId: "G-81J9NQ13DG",
+                apiKey: "ss",
+                authDomain: "daconnect-f38a6.firebaseapp.com",
+                projectId: "daconnect-f38a6",
+                storageBucket: "daconnect-f38a6.firebasestorage.app",
+                messagingSenderId: "837643959794",
+                appId: "1:837643959794:web:ss",
+                measurementId: "G-ss",
             };
 
             // Initialize Firebase
@@ -430,28 +709,22 @@
             const auth = getAuth(app);
             console.log("✅ Firebase initialized successfully");
 
-            // Backend API URL
-            let BACKEND_URL =
-                localStorage.getItem("backendUrl") || "http://localhost:5050/auth/firebase-login";
-            document.getElementById("backendUrl").value = BACKEND_URL;
-
             // DOM Elements
             const googleSignInBtn = document.getElementById("googleSignInBtn");
             const appleSignInBtn = document.getElementById("appleSignInBtn");
             const logoutBtn = document.getElementById("logoutBtn");
-            const saveBtn = document.getElementById("saveBtn");
             const statusMessage = document.getElementById("statusMessage");
             const userInfo = document.getElementById("userInfo");
             const loginSection = document.getElementById("loginSection");
             const logoutSection = document.getElementById("logoutSection");
+            const tokenModal = document.getElementById("tokenModal");
+            const closeModalBtn = document.getElementById("closeModalBtn");
+            const copyTokenBtn = document.getElementById("copyTokenBtn");
+            const copyBackendTokenBtn = document.getElementById("copyBackendTokenBtn");
+            const tokenText = document.getElementById("tokenText");
+            const backendTokenText = document.getElementById("backendTokenText");
 
-            // Save backend URL
-            saveBtn.addEventListener("click", function () {
-                const input = document.getElementById("backendUrl");
-                BACKEND_URL = input.value.trim();
-                localStorage.setItem("backendUrl", BACKEND_URL);
-                showStatus("✅ Backend URL saved: " + BACKEND_URL, "success");
-            });
+            let currentFirebaseToken = "";
 
             // Show status message
             function showStatus(message, type = "info") {
@@ -467,19 +740,30 @@
             }
 
             // Display user info
-            function displayUserInfo(backendResponse) {
-                const { user, token } = backendResponse.data;
+            function displayUserInfo(firebaseUser, firebaseToken) {
+                // Store token
+                currentFirebaseToken = firebaseToken;
 
-                document.getElementById("userEmail").textContent = user.email || "-";
-                document.getElementById("userName").textContent = user.full_name || "-";
-                document.getElementById("userId").textContent = user.id || "-";
-                document.getElementById("userUsername").textContent = user.username || "-";
-                document.getElementById("userProvider").textContent = user.auth_provider || "-";
-                document.getElementById("userToken").textContent = token
-                    ? token.substring(0, 50) + "..."
+                document.getElementById("userEmail").textContent = firebaseUser.email || "-";
+                document.getElementById("userName").textContent = firebaseUser.displayName || "-";
+                document.getElementById("userId").textContent = firebaseUser.uid || "-";
+                document.getElementById("userProvider").textContent =
+                    firebaseUser.providerData[0]?.providerId || "-";
+                document.getElementById("userToken").textContent = firebaseToken
+                    ? firebaseToken.substring(0, 50) + "..."
                     : "-";
+
+                // Show copy button
+                document.getElementById("copyTokenBtnInline").style.display = "inline-flex";
+
                 document.getElementById("backendResponse").textContent = JSON.stringify(
-                    backendResponse,
+                    {
+                        uid: firebaseUser.uid,
+                        email: firebaseUser.email,
+                        displayName: firebaseUser.displayName,
+                        photoURL: firebaseUser.photoURL,
+                        providerId: firebaseUser.providerData[0]?.providerId,
+                    },
                     null,
                     2,
                 );
@@ -487,41 +771,43 @@
                 userInfo.classList.add("show");
                 loginSection.style.display = "none";
                 logoutSection.style.display = "block";
+
+                // Show token modal
+                showTokenModal(firebaseToken, null);
             }
 
-            // Send token to backend
-            async function sendTokenToBackend(idToken, provider) {
+            // Show token modal
+            function showTokenModal(firebaseToken) {
+                tokenText.textContent = firebaseToken;
+                backendTokenText.parentElement.previousElementSibling.style.display = "none";
+                copyBackendTokenBtn.style.display = "none";
+                tokenModal.classList.add("show");
+            }
+
+            // Close modal
+            function closeModal() {
+                tokenModal.classList.remove("show");
+            }
+
+            // Copy to clipboard function
+            async function copyToClipboard(text, button) {
                 try {
-                    showStatus("Sending token to backend...", "info");
-
-                    const response = await fetch(BACKEND_URL, {
-                        method: "POST",
-                        headers: {
-                            "Content-Type": "application/json",
-                        },
-                        credentials: "include",
-                        body: JSON.stringify({
-                            idToken,
-                            provider,
-                            username: "",
-                        }),
-                    });
-
-                    const data = await response.json();
-
-                    if (!response.ok) {
-                        throw new Error(data.message || "Backend authentication failed");
-                    }
-
-                    showStatus("✅ Successfully authenticated with backend!", "success");
-                    displayUserInfo(data);
-
-                    console.log("Backend Response:", data);
-                    return data;
-                } catch (error) {
-                    console.error("Backend Error:", error);
-                    showStatus(`❌ Backend Error: ${error.message}`, "error");
-                    throw error;
+                    await navigator.clipboard.writeText(text);
+                    const originalHTML = button.innerHTML;
+                    button.classList.add("copied");
+                    button.innerHTML = `
+                        <svg fill="currentColor" viewBox="0 0 16 16">
+                            <path d="M10.97 4.97a.75.75 0 0 1 1.07 1.05l-3.99 4.99a.75.75 0 0 1-1.08.02L4.324 8.384a.75.75 0 1 1 1.06-1.06l2.094 2.093 3.473-4.425a.267.267 0 0 1 .02-.022z"/>
+                        </svg>
+                        Copied!
+                    `;
+                    setTimeout(() => {
+                        button.classList.remove("copied");
+                        button.innerHTML = originalHTML;
+                    }, 2000);
+                } catch (err) {
+                    console.error("Failed to copy:", err);
+                    showStatus("Failed to copy to clipboard", "error");
                 }
             }
 
@@ -533,6 +819,8 @@
                     showStatus("Opening Google Sign-In...", "info");
 
                     const provider = new GoogleAuthProvider();
+                    provider.addScope("email");
+                    provider.addScope("profile");
                     const result = await signInWithPopup(auth, provider);
 
                     showStatus("Getting Firebase token...", "info");
@@ -541,10 +829,33 @@
                     console.log("Firebase User:", result.user);
                     console.log("ID Token:", idToken);
 
-                    await sendTokenToBackend(idToken, "google");
+                    showStatus("✅ Successfully authenticated!", "success");
+                    displayUserInfo(result.user, idToken);
                 } catch (error) {
                     console.error("Google Sign-In Error:", error);
-                    showStatus(`❌ Error: ${error.message}`, "error");
+
+                    // Check for specific error codes
+                    if (error.code === "auth/unauthorized-domain") {
+                        const hostname = window.location.hostname;
+                        const port = window.location.port;
+                        const domain = port ? `${hostname}:${port}` : hostname;
+                        showStatus(
+                            `❌ Domain "${domain}" is NOT authorized! See instructions below.`,
+                            "error",
+                        );
+                        document.getElementById("helpSection").style.display = "block";
+                        document.getElementById("currentDomain").textContent =
+                            window.location.origin;
+                        document.getElementById("domainToAdd").textContent = domain;
+                        document.getElementById("domainToAdd2").textContent = domain;
+                    } else if (error.code === "auth/popup-closed-by-user") {
+                        showStatus(`⚠️ Sign-in cancelled by user`, "error");
+                    } else if (error.code === "auth/popup-blocked") {
+                        showStatus(`❌ Popup blocked! Please allow popups for this site.`, "error");
+                    } else {
+                        showStatus(`❌ Error: ${error.message}`, "error");
+                    }
+
                     googleSignInBtn.disabled = false;
                     googleSignInBtn.innerHTML = `
                     <svg class="icon" viewBox="0 0 24 24">
@@ -558,26 +869,58 @@
                 }
             });
 
-            // Apple Sign-In
+            // Apple Sign-In (Using Redirect - More Reliable)
             appleSignInBtn.addEventListener("click", async () => {
                 try {
                     appleSignInBtn.disabled = true;
-                    appleSignInBtn.innerHTML = '<div class="loading"></div> Signing in...';
-                    showStatus("Opening Apple Sign-In...", "info");
+                    appleSignInBtn.innerHTML = '<div class="loading"></div> Redirecting...';
+                    showStatus("Redirecting to Apple Sign-In...", "info");
 
                     const provider = new OAuthProvider("apple.com");
-                    const result = await signInWithPopup(auth, provider);
+                    provider.addScope("email");
+                    provider.addScope("name");
 
-                    showStatus("Getting Firebase token...", "info");
-                    const idToken = await result.user.getIdToken();
-
-                    console.log("Firebase User:", result.user);
-                    console.log("ID Token:", idToken);
-
-                    await sendTokenToBackend(idToken, "apple");
+                    // Use redirect instead of popup (more reliable for Apple)
+                    console.log("Starting Apple Sign-In with redirect...");
+                    await signInWithRedirect(auth, provider);
                 } catch (error) {
                     console.error("Apple Sign-In Error:", error);
-                    showStatus(`❌ Error: ${error.message}`, "error");
+                    console.error("Error Code:", error.code);
+                    console.error("Error Message:", error.message);
+
+                    // Check for specific error codes
+                    if (error.code === "auth/unauthorized-domain") {
+                        const hostname = window.location.hostname;
+                        const port = window.location.port;
+                        const domain = port ? `${hostname}:${port}` : hostname;
+                        showStatus(
+                            `❌ Domain "${domain}" is NOT authorized! See instructions below.`,
+                            "error",
+                        );
+                        document.getElementById("helpSection").style.display = "block";
+                        document.getElementById("currentDomain").textContent =
+                            window.location.origin;
+                        document.getElementById("domainToAdd").textContent = domain;
+                        document.getElementById("domainToAdd2").textContent = domain;
+                    } else if (error.code === "auth/operation-not-allowed") {
+                    } else if (error.code === "auth/operation-not-allowed") {
+                        showStatus(
+                            `❌ Apple Sign-In not enabled! Check Firebase Console → Authentication → Sign-in method → Enable Apple`,
+                            "error",
+                        );
+                    } else if (error.code === "auth/popup-closed-by-user") {
+                        showStatus(`⚠️ Sign-in cancelled`, "error");
+                    } else if (error.code === "auth/network-request-failed") {
+                        showStatus(`❌ Network error. Check internet connection.`, "error");
+                    } else if (error.code === "auth/internal-error") {
+                        showStatus(
+                            `❌ Internal error. Clear browser cache and try again.`,
+                            "error",
+                        );
+                    } else {
+                        showStatus(`❌ [${error.code}]: ${error.message}`, "error");
+                    }
+
                     appleSignInBtn.disabled = false;
                     appleSignInBtn.innerHTML = `
                     <svg class="icon" fill="white" viewBox="0 0 24 24">
@@ -596,6 +939,7 @@
                     userInfo.classList.remove("show");
                     loginSection.style.display = "block";
                     logoutSection.style.display = "none";
+                    document.getElementById("copyTokenBtnInline").style.display = "none";
 
                     showStatus("Logged out successfully", "success");
 
@@ -622,9 +966,74 @@
                 }
             });
 
+            // Modal event listeners
+            closeModalBtn.addEventListener("click", closeModal);
+
+            tokenModal.addEventListener("click", (e) => {
+                if (e.target === tokenModal) {
+                    closeModal();
+                }
+            });
+
+            copyTokenBtn.addEventListener("click", () => {
+                copyToClipboard(currentFirebaseToken, copyTokenBtn);
+            });
+
+            // Inline copy button in user info section
+            document.getElementById("copyTokenBtnInline").addEventListener("click", function () {
+                copyToClipboard(currentFirebaseToken, this);
+            });
+
+            // Keyboard shortcut to close modal (Escape key)
+            document.addEventListener("keydown", (e) => {
+                if (e.key === "Escape" && tokenModal.classList.contains("show")) {
+                    closeModal();
+                }
+            });
+
+            // Handle redirect result on page load
+            showStatus("Checking for redirect result...", "info");
+            getRedirectResult(auth)
+                .then(async (result) => {
+                    if (result && result.user) {
+                        showStatus("✅ Redirect successful! Getting token...", "success");
+                        const token = await result.user.getIdToken();
+                        console.log("✅ Apple Sign-In Success!", result.user);
+                        console.log("Token:", token);
+                        showStatus("✅ Successfully authenticated!", "success");
+                        displayUserInfo(result.user, token);
+                    } else {
+                        showStatus("✅ Firebase ready! Click a button to sign in.", "info");
+                    }
+                })
+                .catch((error) => {
+                    console.error("Redirect Result Error:", error);
+                    if (error.code === "auth/unauthorized-domain") {
+                        const hostname = window.location.hostname;
+                        const port = window.location.port;
+                        const domain = port ? `${hostname}:${port}` : hostname;
+                        showStatus(
+                            `❌ Domain "${domain}" is NOT authorized! See instructions below.`,
+                            "error",
+                        );
+                        document.getElementById("helpSection").style.display = "block";
+                        document.getElementById("currentDomain").textContent =
+                            window.location.origin;
+                        document.getElementById("domainToAdd").textContent = domain;
+                        document.getElementById("domainToAdd2").textContent = domain;
+                    } else if (error.code === "auth/operation-not-allowed") {
+                        showStatus(
+                            `❌ Apple Sign-In error: Check Firebase Console → Sign-in method → Apple → Make sure it's enabled AND saved`,
+                            "error",
+                        );
+                    } else if (error.code) {
+                        showStatus(`❌ Error: ${error.code} - ${error.message}`, "error");
+                    }
+                });
+
             // Initial status
-            showStatus("✅ Firebase ready! Click a button to sign in.", "info");
-            console.log("Backend URL:", BACKEND_URL);
+            console.log("Current URL:", window.location.origin);
+            console.log("Domain:", window.location.hostname);
         </script>
     </body>
 </html>

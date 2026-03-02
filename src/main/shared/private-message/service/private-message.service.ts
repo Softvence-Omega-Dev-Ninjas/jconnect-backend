@@ -14,7 +14,10 @@ export class PrivateChatService {
      */
     @HandleError("Failed to send private message", "PRIVATE_CHAT")
     async sendPrivateMessage(conversationId: string, senderId: string, dto: SendPrivateMessageDto) {
+        console.log("🔍 Received DTO:", JSON.stringify(dto, null, 2));
         const serviceId = dto.serviceId || null;
+        const serviceRequestId = dto.serviceRequestId || null;
+        console.log("🔍 serviceRequestId value:", serviceRequestId);
 
         if (serviceId) {
             await this.prisma.service.findUniqueOrThrow({
@@ -24,12 +27,25 @@ export class PrivateChatService {
             });
         }
 
+        if (serviceRequestId) {
+            const serviceRequestExists = await this.prisma.serviceRequest.findUnique({
+                where: {
+                    id: serviceRequestId,
+                },
+            });
+            if (!serviceRequestExists) {
+                console.log(`⚠️ ServiceRequest ${serviceRequestId} not found in database`);
+                throw new NotFoundException(`ServiceRequest with ID ${serviceRequestId} not found`);
+            }
+        }
+
         const message = await this.prisma.privateMessage.create({
             data: {
                 content: dto.content,
                 conversationId,
                 senderId,
                 ...(serviceId && { serviceId }),
+                ...(serviceRequestId && { serviceRequestId }),
                 ...(dto.files &&
                     dto.files.length > 0 && {
                         files: dto.files,
@@ -44,8 +60,11 @@ export class PrivateChatService {
                     },
                 },
                 service: true,
+                serviceRequest: true,
             },
         });
+
+        console.log("✅ Message created with serviceRequestId:", message.serviceRequestId);
 
         // Update last message reference in conversation
         await this.prisma.privateConversation.update({
@@ -262,7 +281,11 @@ export class PrivateChatService {
      * Get a conversation with messages (validate access)
      */
     @HandleError("Conversation doesn't exist", "PRIVATE_CHAT")
-    async getPrivateConversationWithMessages(conversationId: string, userId: string) {
+    async getPrivateConversationWithMessages(
+        conversationId: string,
+        userId: string,
+        serviceRequestsId?: string,
+    ) {
         const conversation = await this.prisma.privateConversation.findFirst({
             where: {
                 id: conversationId,
@@ -293,7 +316,8 @@ export class PrivateChatService {
                                 full_name: true,
                             },
                         },
-                        service: true,
+                        service: { include: { serviceRequests: true } },
+                        serviceRequest: true,
                         // file: true,
                     },
                 },
@@ -304,10 +328,26 @@ export class PrivateChatService {
             throw new AppError(404, `Conversation not found or access denied`);
         }
 
+        const messagesWithFilteredServiceRequests = conversation.messages.map((msg) => {
+            if (msg.service) {
+                const filteredRequests = msg.service.serviceRequests.filter(
+                    (sr) => sr.messageID === msg.id,
+                );
+                return {
+                    ...msg,
+                    service: {
+                        ...msg.service,
+                        serviceRequests: filteredRequests,
+                    },
+                };
+            }
+            return msg;
+        });
+
         return {
             conversationId: conversation.id,
             participants: [conversation.user1, conversation.user2],
-            messages: conversation.messages,
+            messages: messagesWithFilteredServiceRequests,
         };
     }
 

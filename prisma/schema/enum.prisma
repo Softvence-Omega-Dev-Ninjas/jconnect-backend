@@ -3,6 +3,7 @@
 enum AuthProvider {
   GOOGLE
   FACEBOOK
+  APPLE
 }
 
 enum Role {

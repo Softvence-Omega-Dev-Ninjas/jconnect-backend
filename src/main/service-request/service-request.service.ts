@@ -42,19 +42,22 @@ export class ServiceRequestService {
             uploadedUrls = ["no file"];
         }
 
+        // console.log("amar url ", uploadedUrls);
+
         // -------------------------------
         // 3️⃣ Create serviceRequest
         // -------------------------------
         try {
             const serviceRequest = await this.prisma.serviceRequest.create({
                 data: {
-                    serviceId: service.id, // ✅ ensure foreign key exists
+                    serviceId: service.id,
                     buyerId: user.userId,
                     captionOrInstructions: dto.captionOrInstructions || null,
                     promotionDate: dto.promotionDate || null,
                     specialNotes: dto.specialNotes || null,
                     price: dto.price || null,
                     uploadedFileUrl: uploadedUrls,
+                    messageID: dto.messageID || "",
                 },
             });
 
@@ -86,9 +89,32 @@ export class ServiceRequestService {
         });
     }
 
+    async testAWSConnection() {
+        return this.awsService.testConnection();
+    }
+
     async findOne(id: string) {
         return this.prisma.serviceRequest.findUnique({
             where: { id },
+            include: {
+                service: { include: { creator: { omit: { password: true } } } },
+                buyer: { omit: { password: true } },
+            },
+        });
+    }
+
+    async updateIsPaid(id: string, isPaid: boolean) {
+        const serviceRequest = await this.prisma.serviceRequest.findUnique({
+            where: { id },
+        });
+
+        if (!serviceRequest) {
+            throw new HttpException("Service request not found", 404);
+        }
+
+        return this.prisma.serviceRequest.update({
+            where: { id },
+            data: { isPaid },
             include: {
                 service: { include: { creator: { omit: { password: true } } } },
                 buyer: { omit: { password: true } },

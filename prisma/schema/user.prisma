@@ -33,6 +33,7 @@ model User {
   sellerIDStripe         String?
   customerIdStripe       String?
   location               String?                @default("")
+  fcmToken               String?                @default("")
   hashTags               String[]               @default([])
   // Relation to Service Model 
   profile                Profile?

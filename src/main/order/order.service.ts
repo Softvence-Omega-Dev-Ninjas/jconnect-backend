@@ -1,16 +1,24 @@
 import {
     BadRequestException,
     ForbiddenException,
+    Inject,
     Injectable,
     NotFoundException,
 } from "@nestjs/common";
 
 import { OrderStatus, Role } from "@prisma/client";
+import { MailService } from "src/lib/mail/mail.service";
 import { PrismaService } from "src/lib/prisma/prisma.service";
+import Stripe from "stripe";
 
 @Injectable()
 export class OrdersService {
-    constructor(private prisma: PrismaService) {}
+    constructor(
+        private prisma: PrismaService,
+        private mail: MailService,
+        @Inject("STRIPE_CLIENT")
+        private readonly stripe: Stripe,
+    ) {}
 
     // CREATE ORDER
     async createOrder(buyerId: string, dto: any) {
@@ -55,8 +63,24 @@ export class OrdersService {
             where: { id },
             include: {
                 service: true,
-                buyer: { select: { full_name: true, id: true, email: true } },
-                seller: { select: { full_name: true, id: true, email: true } },
+                buyer: {
+                    select: {
+                        full_name: true,
+                        id: true,
+                        email: true,
+                        username: true,
+                        profilePhoto: true,
+                    },
+                },
+                seller: {
+                    select: {
+                        full_name: true,
+                        id: true,
+                        email: true,
+                        username: true,
+                        profilePhoto: true,
+                    },
+                },
             },
         });
 
@@ -67,8 +91,181 @@ export class OrdersService {
 
     // UPDATE ORDER STATUS
     async updateStatus(id: string, status: OrderStatus, user: any) {
-        const order = await this.prisma.order.findUnique({ where: { id } });
+        const order: any = await this.prisma.order.findUnique({
+            where: { id },
+            include: { buyer: true, seller: true, service: true },
+        });
         if (!order) throw new NotFoundException("Order not found");
+
+        //if update status to cancelled so first of all check status if in progress or proof submitted or pending
+        // if in progress or proof submitted then only allow to cancel by seller or admin
+        if (status === OrderStatus.CANCELLED) {
+            if (!order.paymentIntentId) {
+                throw new BadRequestException(
+                    "buyer not paid yet/PaymentIntent ID not found for this order",
+                );
+            }
+            const intent = await this.stripe.paymentIntents.retrieve(order.paymentIntentId);
+
+            if (order.status === OrderStatus.PENDING) {
+                const isBuyer = order.buyerId === user.userId;
+                const isSeller = order.sellerId === user.userId;
+                if (isBuyer) {
+                    await this.stripe.paymentIntents.cancel(order.paymentIntentId);
+                    const updated = await this.prisma.order.update({
+                        where: { id: order.id },
+                        data: {
+                            status: OrderStatus.CANCELLED,
+                        },
+                    });
+
+                    // Send email notification to seller about cancel request
+                    try {
+                        await this.mail.sendEmail(
+                            order?.seller.email,
+                            "DaConnect - Order Cancelled",
+                            `
+                            <p>Hello ${order.seller.full_name || "Seller"},</p>
+                            <p>The buyer has cancelled the order <strong>${order.orderCode}</strong> for the service <strong>${order.service.serviceName}</strong>.</p>
+                            <p>Thank you,<br/>DaConnect Team</p>
+                            `,
+                        );
+                    } catch (error) {
+                        console.error("Failed to send cancellation email:", error);
+                    }
+
+                    // send email notification to buyer about successful cancellation
+                    try {
+                        await this.mail.sendEmail(
+                            order?.buyer.email,
+                            "DaConnect - Order Cancelled",
+                            `
+                            <p>Hello ${order.buyer.full_name || "Buyer"},</p>
+                            <p>Your order <strong>${order.orderCode}</strong> for the service <strong>${order.service.serviceName}</strong> has been cancelled.</p>
+                            <p>Thank you,<br/>DaConnect Team</p>
+                            `,
+                        );
+                    } catch (error) {
+                        console.error("Failed to send cancellation email to buyer:", error);
+                    }
+                    return { ...updated, message: "Order cancelled successfully" };
+                }
+                if (isSeller) {
+                    await this.stripe.paymentIntents.cancel(order.paymentIntentId);
+                    const updated = await this.prisma.order.update({
+                        where: { id: order.id },
+                        data: {
+                            status: OrderStatus.CANCELLED,
+                        },
+                    });
+                    // Send email notification to seller about successful cancellation
+                    try {
+                        await this.mail.sendEmail(
+                            order?.seller.email,
+                            "DaConnect - Order Cancelled",
+                            `
+                            <p>Hello ${order.seller.full_name || "Seller"},</p>
+                            <p>The order <strong>${order.orderCode}</strong> for the service <strong>${order.service.serviceName}</strong> has been not received from seller side.</p>
+                            <p>Thank you,<br/>DaConnect Team</p>
+                            `,
+                        );
+                    } catch (error) {
+                        console.error("Failed to send cancellation email to seller:", error);
+                    }
+                    return { ...updated, message: "Order cancelled successfully" };
+                }
+            }
+
+            if (
+                order.status === OrderStatus.IN_PROGRESS ||
+                order.status === OrderStatus.PROOF_SUBMITTED
+            ) {
+                // if buyer then they send to seller a email for calcel request
+                const isBuyer = order.buyerId === user.userId;
+                const isSeller = order.sellerId === user.userId;
+
+                if (isSeller) {
+                    ///////////////
+
+                    if (intent.status === "requires_capture") {
+                        await this.stripe.paymentIntents.cancel(order.paymentIntentId);
+
+                        const updated = await this.prisma.order.update({
+                            where: { id: order.id },
+                            data: {
+                                status: OrderStatus.CANCELLED,
+                                seller_amount: 0,
+                                buyerPay: 0,
+                                stripeFee: 0,
+                                PlatfromRevinue: 0,
+                                platformFee: 0,
+                            },
+                        });
+                        // Send email notification to buyer about successful cancellation
+                        try {
+                            await this.mail.sendEmail(
+                                order?.buyer.email,
+                                "DaConnect - Order Cancellation Request Approved",
+                                `
+                                <p>Hello ${order.buyer.full_name || "Buyer"},</p>
+                                <p>Your order <strong>${order.orderCode}</strong> for the service <strong>${order.service.serviceName}</strong> has been cancelled.</p>
+                                <p>Thank you,<br/>DaConnect Team</p>
+                                `,
+                            );
+                        } catch (error) {
+                            console.error("Failed to send cancellation email to buyer:", error);
+                        }
+                        // send email notification to seller about successful cancellation
+                        try {
+                            await this.mail.sendEmail(
+                                order?.seller.email,
+                                "DaConnect - Order Cancelled",
+                                `
+                                <p>Hello ${order.seller.full_name || "Seller"},</p>
+                                <p>Your order <strong>${order.orderCode}</strong> for the service <strong>${order.service.serviceName}</strong> has been cancelled.</p>
+                                <p>Thank you,<br/>DaConnect Team</p>
+                                `,
+                            );
+                        } catch (error) {
+                            console.error("Failed to send cancellation email to seller:", error);
+                        }
+                        return { ...updated, message: "Order status updated successfully" };
+                    }
+
+                    ///////////////
+                }
+
+                if (isBuyer) {
+                    // Send email notification to seller about cancel request
+                    try {
+                        await this.mail.sendEmail(
+                            order?.seller.email,
+                            "DaConnect - Cancellation Request for Order " + order.orderCode,
+                            `
+                            <p>Hello ${order.seller.full_name || "Seller"},</p>
+                            <p>The buyer has requested to cancel the order <strong>${order.orderCode}</strong> for the service <strong>${order.service.serviceName}</strong>.</p>
+                            <p>Please review the cancellation request and take appropriate action.</p>
+                            <p>Thank you,<br/>DaConnect Team</p>
+                            `,
+                        );
+
+                        return { message: "Cancellation request sent to seller successfully" };
+                    } catch (error) {
+                        console.error("Failed to send cancellation email:", error);
+                        // Continue even if email fails
+                    }
+                }
+            }
+
+            //else {
+            //     // If order is not in progress or proof submitted, allow buyer to cancel
+            //     if (order.buyerId !== user.userId) {
+            //         throw new ForbiddenException(
+            //             "Only buyer can cancel this order",
+            //         );
+            //     }
+            // }
+        }
 
         // Seller only allowed some statuses
         if (status === OrderStatus.IN_PROGRESS || status === OrderStatus.PROOF_SUBMITTED) {
@@ -87,7 +284,7 @@ export class OrdersService {
             data: { status },
         });
 
-        return updated;
+        return { ...updated, message: "Order status updated successfully" };
     }
 
     // DELETE ORDER
@@ -150,6 +347,27 @@ export class OrdersService {
     async submitProof(orderId: string, userFromReq: any, proofUrls: string[]) {
         const order = await this.prisma.order.findUnique({
             where: { id: orderId },
+            include: {
+                service: true,
+                buyer: {
+                    select: {
+                        full_name: true,
+                        id: true,
+                        email: true,
+                        username: true,
+                        profilePhoto: true,
+                    },
+                },
+                seller: {
+                    select: {
+                        full_name: true,
+                        id: true,
+                        email: true,
+                        username: true,
+                        profilePhoto: true,
+                    },
+                },
+            },
         });
 
         const user = await this.prisma.user.findUnique({
@@ -175,7 +393,114 @@ export class OrdersService {
                     push: proofUrls, // <-- NEW URLs will be appended
                 },
             },
+            include: {
+                service: true,
+                buyer: {
+                    select: {
+                        full_name: true,
+                        id: true,
+                        email: true,
+                        username: true,
+                        profilePhoto: true,
+                    },
+                },
+                seller: {
+                    select: {
+                        full_name: true,
+                        id: true,
+                        email: true,
+                        username: true,
+                        profilePhoto: true,
+                    },
+                },
+            },
         });
+
+        // Send email notification to buyer
+        try {
+            await this.mail.sendEmail(
+                order.buyer.email,
+                "DaConnect - Proof Submitted for Your Order! ✅",
+                `
+                <!DOCTYPE html>
+                <html>
+                <head>
+                    <style>
+                        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.6; color: #333; margin: 0; padding: 0; background-color: #f5f7fa; }
+                        .container { max-width: 600px; margin: 40px auto; background: white; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 20px rgba(0,0,0,0.08); }
+                        .header { background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; padding: 40px 30px; text-align: center; }
+                        .logo { font-size: 32px; font-weight: bold; margin-bottom: 10px; letter-spacing: 1px; }
+                        .header-subtitle { font-size: 16px; opacity: 0.95; }
+                        .content { padding: 40px 30px; }
+                        .order-box { background: #d1fae5; border-left: 4px solid #10b981; padding: 20px; margin: 25px 0; border-radius: 6px; }
+                        .info-item { margin: 10px 0; }
+                        .label { font-weight: 600; color: #374151; }
+                        .value { color: #6b7280; }
+                        .cta-button { display: inline-block; background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; padding: 14px 30px; text-decoration: none; border-radius: 8px; font-weight: 600; margin: 20px 0; }
+                        .footer { text-align: center; padding: 25px; background: #f8fafc; color: #64748b; font-size: 13px; border-top: 1px solid #e2e8f0; }
+                        .brand-name { color: #10b981; font-weight: 600; }
+                    </style>
+                </head>
+                <body>
+                    <div class="container">
+                        <div class="header">
+                            <div class="logo">🎵 DaConnect</div>
+                            <div class="header-subtitle">Order Proof Submitted</div>
+                        </div>
+                        <div class="content">
+                            <h2 style="color: #1e293b; margin-bottom: 20px;">Hello ${order.buyer.full_name || "Buyer"}! 👋</h2>
+                            <p style="font-size: 16px; color: #475569;">Great news! The seller has submitted proof of work completion for your order.</p>
+                            
+                            <div class="order-box">
+                                <h3 style="margin-top: 0; color: #065f46;">✅ Proof Submitted Successfully</h3>
+                                <div class="info-item">
+                                    <span class="label">Order Code:</span>
+                                    <span class="value">${order.orderCode}</span>
+                                </div>
+                                <div class="info-item">
+                                    <span class="label">Service:</span>
+                                    <span class="value">${order.service?.serviceName || "N/A"}</span>
+                                </div>
+                                <div class="info-item">
+                                    <span class="label">Seller:</span>
+                                    <span class="value">${order.seller.username || order.seller.full_name || order.seller.email}</span>
+                                </div>
+                                <div class="info-item">
+                                    <span class="label">Amount:</span>
+                                    <span class="value">$${(order.amount / 100).toFixed(2)}</span>
+                                </div>
+                                <div class="info-item">
+                                    <span class="label">Your Proof URL:</span>
+                                    <span class="value">${updated.proofUrl || "N/A"}</span>
+                                </div>
+                            </div>
+
+                            <p style="font-size: 15px; color: #475569; margin: 25px 0;"><strong>What's Next?</strong></p>
+                            <p style="font-size: 15px; color: #475569; margin: 15px 0;">Please review the submitted proof and confirm if everything meets your expectations. Once you're satisfied with the work, you can release the payment to the seller.</p>
+                            
+                            <p style="font-size: 15px; color: #475569; margin: 15px 0;">If you have any concerns about the submitted proof, please contact the seller or reach out to our support team for assistance.</p>
+                            
+                            <div style="text-align: center; margin: 30px 0;">
+                                <a href="#" class="cta-button">View Order Details</a>
+                            </div>
+                            
+                            <p style="font-size: 14px; color: #64748b; margin-top: 25px;">Thank you for choosing <span class="brand-name">DaConnect</span> for your creative needs!</p>
+                        </div>
+                        
+                        <div class="footer">
+                            <p style="margin: 5px 0;">This is an automated email from <strong class="brand-name">DaConnect</strong>. Please do not reply.</p>
+                            <p style="margin: 5px 0;">&copy; ${new Date().getFullYear()} DaConnect. All rights reserved.</p>
+                            <p style="margin: 10px 0; font-size: 12px;">Empowering artists and connecting communities through music.</p>
+                        </div>
+                    </div>
+                </body>
+                </html>
+                `,
+            );
+        } catch (error) {
+            console.error("Failed to send email notification to buyer:", error);
+            // Continue even if email fails
+        }
 
         return updated;
     }
@@ -219,7 +544,9 @@ export class OrdersService {
             where,
             include: {
                 service: true,
-                seller: { select: { full_name: true, email: true } },
+                seller: {
+                    select: { full_name: true, email: true, username: true, profilePhoto: true },
+                },
             },
             orderBy: { createdAt: "desc" },
         });
@@ -238,7 +565,9 @@ export class OrdersService {
             include: {
                 service: true,
                 // seller: { select: { full_name: true, email: true } },
-                buyer: { select: { full_name: true, email: true } },
+                buyer: {
+                    select: { full_name: true, email: true, username: true, profilePhoto: true },
+                },
             },
             orderBy: { createdAt: "desc" },
         });
@@ -302,5 +631,179 @@ export class OrdersService {
             availableBalance: availableBalance / 100,
             withdrawn_amount: user?.withdrawn_amount! / 100,
         };
+    }
+
+    async updateCancalProofSubmitted(orderId: string, isCancalProofSubmitted: boolean) {
+        const order = await this.prisma.order.findUnique({
+            where: { id: orderId },
+            include: {
+                service: true,
+                seller: {
+                    select: {
+                        full_name: true,
+                        id: true,
+                        email: true,
+                        username: true,
+                        profilePhoto: true,
+                    },
+                },
+                buyer: {
+                    select: {
+                        full_name: true,
+                        id: true,
+                        email: true,
+                        username: true,
+                        profilePhoto: true,
+                    },
+                },
+            },
+        });
+
+        if (!order) {
+            throw new NotFoundException("Order not found");
+        }
+
+        // যদি true হয় তাহলে proofUrl empty করে দিবে
+        if (isCancalProofSubmitted) {
+            const updatedOrder = await this.prisma.order.update({
+                where: { id: orderId },
+                data: {
+                    isCancalProofSubmitted: true,
+                    proofUrl: [],
+                },
+                include: {
+                    service: true,
+                    buyer: {
+                        select: {
+                            full_name: true,
+                            id: true,
+                            email: true,
+                            username: true,
+                            profilePhoto: true,
+                        },
+                    },
+                    seller: {
+                        select: {
+                            full_name: true,
+                            id: true,
+                            email: true,
+                            username: true,
+                            profilePhoto: true,
+                        },
+                    },
+                },
+            });
+
+            // Send email notification to seller
+            try {
+                await this.mail.sendEmail(
+                    order.seller.email,
+                    "DaConnect - Proof Submission Cancelled 📋",
+                    `
+                    <!DOCTYPE html>
+                    <html>
+                    <head>
+                        <style>
+                            body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.6; color: #333; margin: 0; padding: 0; background-color: #f5f7fa; }
+                            .container { max-width: 600px; margin: 40px auto; background: white; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 20px rgba(0,0,0,0.08); }
+                            .header { background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); color: white; padding: 40px 30px; text-align: center; }
+                            .logo { font-size: 32px; font-weight: bold; margin-bottom: 10px; letter-spacing: 1px; }
+                            .header-subtitle { font-size: 16px; opacity: 0.95; }
+                            .content { padding: 40px 30px; }
+                            .order-box { background: #fef3c7; border-left: 4px solid #f59e0b; padding: 20px; margin: 25px 0; border-radius: 6px; }
+                            .info-item { margin: 10px 0; }
+                            .label { font-weight: 600; color: #374151; }
+                            .value { color: #6b7280; }
+                            .footer { text-align: center; padding: 25px; background: #f8fafc; color: #64748b; font-size: 13px; border-top: 1px solid #e2e8f0; }
+                            .brand-name { color: #f59e0b; font-weight: 600; }
+                        </style>
+                    </head>
+                    <body>
+                        <div class="container">
+                            <div class="header">
+                                <div class="logo">🎵 DaConnect</div>
+                                <div class="header-subtitle">Order Proof Status Update</div>
+                            </div>
+                            <div class="content">
+                                <h2 style="color: #1e293b; margin-bottom: 20px;">Hello ${order.seller.full_name || "Seller"}! 👋</h2>
+                                <p style="font-size: 16px; color: #475569;">We wanted to inform you about an important update regarding one of your orders.</p>
+                                
+                                <div class="order-box">
+                                    <h3 style="margin-top: 0; color: #92400e;">📋 Proof Submission Cancelled</h3>
+                                    <div class="info-item">
+                                        <span class="label">Order Code:</span>
+                                        <span class="value">${order.orderCode}</span>
+                                    </div>
+                                    <div class="info-item">
+                                        <span class="label">Service:</span>
+                                        <span class="value">${order.service?.serviceName || "N/A"}</span>
+                                    </div>
+                                    <div class="info-item">
+                                        <span class="label">Buyer username:</span>
+                                        <span class="value">${order.buyer.username || order.buyer.email}</span>
+                                    </div>
+                                    <div class="info-item">
+                                        <span class="label">Buyer Name:</span>
+                                        <span class="value">${order.buyer.full_name || order.buyer.email}</span>
+                                    </div>
+                                    <div class="info-item">
+                                        <span class="label">Amount:</span>
+                                        <span class="value">$${(order.amount / 100).toFixed(2)}</span>
+                                    </div>
+                                </div>
+
+                                <p style="font-size: 15px; color: #475569; margin: 25px 0;">The proof submission for this order has been cancelled and all previously uploaded proof files have been removed. You may need to re-upload the proof when ready.</p>
+                                
+                                <p style="font-size: 15px; color: #475569;">If you have any questions or concerns about this order, please don't hesitate to reach out to our support team.</p>
+                                
+                                <p style="font-size: 14px; color: #64748b; margin-top: 25px;">Thank you for being a valued member of the <span class="brand-name">DaConnect</span> community!</p>
+                            </div>
+                            
+                            <div class="footer">
+                                <p style="margin: 5px 0;">This is an automated email from <strong class="brand-name">DaConnect</strong>. Please do not reply.</p>
+                                <p style="margin: 5px 0;">&copy; ${new Date().getFullYear()} DaConnect. All rights reserved.</p>
+                                <p style="margin: 10px 0; font-size: 12px;">Empowering artists and connecting communities through music.</p>
+                            </div>
+                        </div>
+                    </body>
+                    </html>
+                    `,
+                );
+            } catch (error) {
+                console.error("Failed to send email notification:", error);
+                // Continue even if email fails
+            }
+
+            return updatedOrder;
+        }
+
+        // যদি false হয় তাহলে শুধু isCancalProofSubmitted আপডেট হবে, proofUrl unchanged
+        return await this.prisma.order.update({
+            where: { id: orderId },
+            data: {
+                isCancalProofSubmitted: false,
+            },
+            include: {
+                service: true,
+                buyer: {
+                    select: {
+                        full_name: true,
+                        id: true,
+                        email: true,
+                        username: true,
+                        profilePhoto: true,
+                    },
+                },
+                seller: {
+                    select: {
+                        full_name: true,
+                        id: true,
+                        email: true,
+                        username: true,
+                        profilePhoto: true,
+                    },
+                },
+            },
+        });
     }
 }

@@ -1,7 +1,24 @@
 import { GetUser, ValidateUser } from "@common/jwt/jwt.decorator";
-import { Body, Controller, Get, Param, Post, UploadedFiles, UseInterceptors } from "@nestjs/common";
+import {
+    Body,
+    Controller,
+    Get,
+    Param,
+    Patch,
+    Post,
+    Query,
+    UploadedFiles,
+    UseInterceptors,
+} from "@nestjs/common";
 import { FileFieldsInterceptor } from "@nestjs/platform-express";
-import { ApiBearerAuth, ApiBody, ApiConsumes, ApiProperty, ApiTags } from "@nestjs/swagger";
+import {
+    ApiBearerAuth,
+    ApiBody,
+    ApiConsumes,
+    ApiProperty,
+    ApiQuery,
+    ApiTags,
+} from "@nestjs/swagger";
 import { CreateServiceRequestDto } from "./dto/create-service-request.dto";
 import { ServiceRequestService } from "./service-request.service";
 
@@ -30,6 +47,7 @@ export class ServiceRequestController {
                     type: "array",
                     items: { type: "string", format: "binary" }, // important for Swagger file
                 },
+                messageID: { type: "string" },
             },
         },
     })
@@ -47,9 +65,30 @@ export class ServiceRequestController {
         return this.serviceRequestService.findAll();
     }
 
+    @ApiProperty({ description: "Test AWS S3 connection" })
+    @Get("test/aws-connection")
+    async testAWSConnection() {
+        return this.serviceRequestService.testAWSConnection();
+    }
+
     @ApiProperty({ description: "Get service requests", example: "id" })
     @Get(":id")
     async findOne(@Param("id") id: string) {
         return this.serviceRequestService.findOne(id);
+    }
+
+    @ApiBearerAuth()
+    @ValidateUser()
+    @Patch(":id/is-paid")
+    @ApiQuery({
+        name: "isPaid",
+        description: "Payment status of the service request",
+        required: true,
+        type: Boolean,
+        example: true,
+    })
+    async updateIsPaid(@Param("id") id: string, @Query("isPaid") isPaid: string) {
+        const isPaidBoolean = isPaid === "true" || isPaid === "1";
+        return this.serviceRequestService.updateIsPaid(id, isPaidBoolean);
     }
 }

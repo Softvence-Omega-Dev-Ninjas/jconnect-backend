@@ -101,7 +101,7 @@ export class PaymentWebhookController {
             🎉 Payment Successful!
 
             Service: ${service.serviceName}
-            Seller: ${service.creator.full_name}
+            Seller: ${service.creator.username}
             Amount: $${(paymentRecord.amount / 100).toFixed(2)} ${paymentRecord.currency.toUpperCase()}
             Transaction ID: ${paymentRecord.transactionId}
             Status: ${paymentRecord.status}

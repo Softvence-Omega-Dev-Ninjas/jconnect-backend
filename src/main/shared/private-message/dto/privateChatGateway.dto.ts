@@ -54,6 +54,15 @@ export class SendPrivateMessageDto {
 
     @ApiPropertyOptional({
         type: String,
+        example: "a1b2c3d4-5678-90ab-cdef-1234567890ab",
+        description: "Optional: Service Request ID related to this message",
+    })
+    @IsOptional()
+    @IsString()
+    serviceRequestId?: string;
+
+    @ApiPropertyOptional({
+        type: String,
         example: "35fbd767-2160-49b2-90f8-187a19de70ff",
         description: "Optional: ID of the message being replied to",
     })
