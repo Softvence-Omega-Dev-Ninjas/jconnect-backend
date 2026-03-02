@@ -29,10 +29,10 @@ export class FirebaseNotificationService {
     ): Promise<{ success: boolean; error?: string }> {
         try {
             // Get user's FCM token
-            const user = (await this.prisma.user.findUnique({
+            const user = await this.prisma.user.findUnique({
                 where: { id: userId },
-                select: { fcmToken: true },
-            })) as { fcmToken: string | null } | null;
+                select: { fcmToken: true } as any,
+            }) as { fcmToken: string | null } | null;
 
             if (!user || !user.fcmToken) {
                 this.logger.warn(`User ${userId} has no FCM token`);
@@ -93,23 +93,27 @@ export class FirebaseNotificationService {
             const users = (await this.prisma.user.findMany({
                 where: {
                     id: { in: userIds },
-                    fcmToken: { not: null, notIn: ["", "null"] },
-                },
-                select: { id: true, fcmToken: true },
+                } as any,
+                select: { id: true, fcmToken: true } as any,
             })) as unknown as Array<{ id: string; fcmToken: string | null }>;
 
-            if (users.length === 0) {
+            // Filter out users without valid FCM tokens
+            const validUsers = users.filter(
+                (u) => u.fcmToken && u.fcmToken.trim() !== "" && u.fcmToken !== "null"
+            );
+
+            if (validUsers.length === 0) {
                 this.logger.warn("No users with FCM tokens found");
                 return { successCount: 0, failureCount: userIds.length };
             }
 
             // Filter users based on notification settings
             const eligibleUsers = await this.filterUsersByNotificationSettings(
-                users.map((u) => u.id),
+                validUsers.map((u) => u.id),
                 notification.type,
             );
 
-            const eligibleTokens = users
+            const eligibleTokens = validUsers
                 .filter((u) => eligibleUsers.includes(u.id))
                 .map((u) => u.fcmToken as string)
                 .filter((token) => token && token.trim() !== "");
@@ -210,10 +214,10 @@ export class FirebaseNotificationService {
      */
     async subscribeUserToTopic(userId: string, topic: string): Promise<{ success: boolean }> {
         try {
-            const user = (await this.prisma.user.findUnique({
+            const user = await this.prisma.user.findUnique({
                 where: { id: userId },
-                select: { fcmToken: true },
-            })) as { fcmToken: string | null } | null;
+                select: { fcmToken: true } as any,
+            }) as { fcmToken: string | null } | null;
 
             if (!user || !user.fcmToken) {
                 return { success: false };
@@ -234,10 +238,10 @@ export class FirebaseNotificationService {
      */
     async unsubscribeUserFromTopic(userId: string, topic: string): Promise<{ success: boolean }> {
         try {
-            const user = (await this.prisma.user.findUnique({
+            const user = await this.prisma.user.findUnique({
                 where: { id: userId },
-                select: { fcmToken: true },
-            })) as { fcmToken: string | null } | null;
+                select: { fcmToken: true } as any,
+            }) as { fcmToken: string | null } | null;
 
             if (!user || !user.fcmToken) {
                 return { success: false };
