@@ -1,7 +1,7 @@
-import { Injectable, Logger } from '@nestjs/common';
-import { NotificationType } from 'src/lib/firebase/dto/notification.dto';
-import { PrismaService } from 'src/lib/prisma/prisma.service';
-import { FirebaseNotificationService } from './firebase-notification.service';
+import { Injectable, Logger } from "@nestjs/common";
+import { NotificationType } from "src/lib/firebase/dto/notification.dto";
+import { PrismaService } from "src/lib/prisma/prisma.service";
+import { FirebaseNotificationService } from "./firebase-notification.service";
 
 /**
  * Example service showing how to integrate Firebase notifications
@@ -14,12 +14,17 @@ export class NotificationIntegrationExampleService {
     constructor(
         private readonly prisma: PrismaService,
         private readonly firebaseNotificationService: FirebaseNotificationService,
-    ) { }
+    ) {}
 
     /**
      * Example: Send notification when a new message is received
      */
-    async onNewMessage(senderId: string, receiverId: string, conversationId: string, messageContent: string) {
+    async onNewMessage(
+        senderId: string,
+        receiverId: string,
+        conversationId: string,
+        messageContent: string,
+    ) {
         try {
             // Get sender details
             const sender = await this.prisma.user.findUnique({
@@ -83,7 +88,12 @@ export class NotificationIntegrationExampleService {
     /**
      * Example: Send notification for new service request
      */
-    async onServiceRequest(requestId: string, clientId: string, providerId: string, serviceId: string) {
+    async onServiceRequest(
+        requestId: string,
+        clientId: string,
+        providerId: string,
+        serviceId: string,
+    ) {
         try {
             const [client, service] = await Promise.all([
                 this.prisma.user.findUnique({
@@ -142,7 +152,12 @@ export class NotificationIntegrationExampleService {
     /**
      * Example: Send notification for payment received
      */
-    async onPaymentReceived(paymentId: string, payerId: string, receiverId: string, amount: number) {
+    async onPaymentReceived(
+        paymentId: string,
+        payerId: string,
+        receiverId: string,
+        amount: number,
+    ) {
         try {
             const payer = await this.prisma.user.findUnique({
                 where: { id: payerId },
@@ -173,7 +188,12 @@ export class NotificationIntegrationExampleService {
     /**
      * Example: Send notification for new review
      */
-    async onReviewReceived(reviewId: string, reviewerId: string, reviewedUserId: string, rating: number) {
+    async onReviewReceived(
+        reviewId: string,
+        reviewerId: string,
+        reviewedUserId: string,
+        rating: number,
+    ) {
         try {
             const reviewer = await this.prisma.user.findUnique({
                 where: { id: reviewerId },
@@ -226,7 +246,7 @@ export class NotificationIntegrationExampleService {
                     userName: liker.full_name,
                     userId: likerId,
                     contentId: postId,
-                    contentType: 'post',
+                    contentType: "post",
                 },
             );
 
@@ -270,7 +290,7 @@ export class NotificationIntegrationExampleService {
                     userId: commenterId,
                     contentId: postId,
                     commentId: commentId,
-                    contentType: 'post',
+                    contentType: "post",
                     commentPreview: commentText.substring(0, 50),
                 },
             );
@@ -286,7 +306,12 @@ export class NotificationIntegrationExampleService {
     /**
      * Example: Send announcement to multiple users
      */
-    async sendAnnouncementToUsers(userIds: string[], title: string, message: string, announcementId: string) {
+    async sendAnnouncementToUsers(
+        userIds: string[],
+        title: string,
+        message: string,
+        announcementId: string,
+    ) {
         try {
             const notification = this.firebaseNotificationService.buildNotificationTemplate(
                 NotificationType.ANNOUNCEMENT,
@@ -328,7 +353,10 @@ export class NotificationIntegrationExampleService {
                 },
             );
 
-            const result = await this.firebaseNotificationService.sendToTopic('all_users', notification);
+            const result = await this.firebaseNotificationService.sendToTopic(
+                "all_users",
+                notification,
+            );
 
             this.logger.log(`Global announcement sent to topic 'all_users'`);
 
@@ -344,7 +372,7 @@ export class NotificationIntegrationExampleService {
      */
     async subscribeNewUserToDefaultTopics(userId: string) {
         try {
-            const defaultTopics = ['all_users', 'announcements'];
+            const defaultTopics = ["all_users", "announcements"];
 
             for (const topic of defaultTopics) {
                 await this.firebaseNotificationService.subscribeUserToTopic(userId, topic);
@@ -361,7 +389,7 @@ export class NotificationIntegrationExampleService {
      */
     async updateUserFcmTokenOnLogin(userId: string, fcmToken: string) {
         try {
-            if (!fcmToken || fcmToken === '') {
+            if (!fcmToken || fcmToken === "") {
                 return;
             }
 

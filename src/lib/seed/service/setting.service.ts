@@ -10,7 +10,7 @@ export class seedSettingSrvice implements OnModuleInit {
         private readonly prisma: PrismaService,
         private readonly utils: UtilsService,
         private readonly configService: ConfigService,
-    ) { }
+    ) {}
 
     onModuleInit(): Promise<void> {
         return this.seedSettings();

@@ -9,4 +9,4 @@ import { NotificationSettingService } from "./notification.service";
     providers: [NotificationSettingService, FirebaseNotificationService],
     exports: [NotificationSettingService, FirebaseNotificationService],
 })
-export class NotificationModule { }
+export class NotificationModule {}

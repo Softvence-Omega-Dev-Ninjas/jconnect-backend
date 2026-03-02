@@ -32,7 +32,7 @@ import { FirebaseModule } from "./firebase/firebase.module";
         SeedModule,
         MulterModule,
         NotificationModule,
-        FirebaseModule
+        FirebaseModule,
     ],
     providers: [],
 })

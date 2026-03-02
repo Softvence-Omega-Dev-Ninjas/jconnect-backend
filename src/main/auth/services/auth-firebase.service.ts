@@ -118,7 +118,7 @@ export class AuthFirebaseService {
                     username: generatedUsername,
                     full_name: name,
                     googleId: provider === "google" ? firebaseUid : null,
-                    password: "", 
+                    password: "",
                     isVerified: true,
                     auth_provider: provider.toUpperCase() as any,
                     role: Role.ARTIST,

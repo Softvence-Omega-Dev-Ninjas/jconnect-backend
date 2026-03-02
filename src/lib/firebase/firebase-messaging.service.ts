@@ -1,12 +1,12 @@
-import { Inject, Injectable, Logger } from '@nestjs/common';
-import * as admin from 'firebase-admin';
+import { Inject, Injectable, Logger } from "@nestjs/common";
+import * as admin from "firebase-admin";
 import {
     NotificationPayload,
     SendMultipleNotificationDto,
     SendNotificationDto,
-    SendTopicNotificationDto
-} from './dto/notification.dto';
-import { FirebaseAdmin } from './firebase.admin.provider';
+    SendTopicNotificationDto,
+} from "./dto/notification.dto";
+import { FirebaseAdmin } from "./firebase.admin.provider";
 
 @Injectable()
 export class FirebaseMessagingService {
@@ -15,61 +15,71 @@ export class FirebaseMessagingService {
     constructor(
         @Inject(FirebaseAdmin)
         private readonly firebaseApp: admin.app.App,
-    ) { }
+    ) {}
 
     /**
      * Send notification to a single device
      */
-    async sendToDevice(dto: SendNotificationDto): Promise<{ success: boolean; messageId?: string; error?: string }> {
+    async sendToDevice(
+        dto: SendNotificationDto,
+    ): Promise<{ success: boolean; messageId?: string; error?: string }> {
         try {
             const { fcmToken, notification, data, android, apns, webpush } = dto;
 
             if (!fcmToken) {
-                throw new Error('FCM token is required');
+                throw new Error("FCM token is required");
             }
 
             const message: admin.messaging.Message = {
                 token: fcmToken,
-                notification: notification ? {
-                    title: notification.title,
-                    body: notification.body,
-                    imageUrl: notification.imageUrl,
-                } : undefined,
+                notification: notification
+                    ? {
+                          title: notification.title,
+                          body: notification.body,
+                          imageUrl: notification.imageUrl,
+                      }
+                    : undefined,
                 data: data || {},
-                android: android ? {
-                    priority: android.priority || 'high',
-                    notification: {
-                        sound: android.sound || 'default',
-                        channelId: android.channelId,
-                        icon: android.icon,
-                        color: android.color,
-                        clickAction: android.clickAction,
-                        tag: android.tag,
-                    },
-                } : undefined,
-                apns: apns ? {
-                    payload: {
-                        aps: {
-                            alert: apns.alert,
-                            badge: apns.badge,
-                            sound: apns.sound || 'default',
-                            contentAvailable: apns.contentAvailable,
-                            category: apns.category,
-                        },
-                    },
-                } : undefined,
-                webpush: webpush ? {
-                    notification: {
-                        title: webpush.title,
-                        body: webpush.body,
-                        icon: webpush.icon,
-                        badge: webpush.badge,
-                        image: webpush.image,
-                    },
-                    fcmOptions: {
-                        link: webpush.link,
-                    },
-                } : undefined,
+                android: android
+                    ? {
+                          priority: android.priority || "high",
+                          notification: {
+                              sound: android.sound || "default",
+                              channelId: android.channelId,
+                              icon: android.icon,
+                              color: android.color,
+                              clickAction: android.clickAction,
+                              tag: android.tag,
+                          },
+                      }
+                    : undefined,
+                apns: apns
+                    ? {
+                          payload: {
+                              aps: {
+                                  alert: apns.alert,
+                                  badge: apns.badge,
+                                  sound: apns.sound || "default",
+                                  contentAvailable: apns.contentAvailable,
+                                  category: apns.category,
+                              },
+                          },
+                      }
+                    : undefined,
+                webpush: webpush
+                    ? {
+                          notification: {
+                              title: webpush.title,
+                              body: webpush.body,
+                              icon: webpush.icon,
+                              badge: webpush.badge,
+                              image: webpush.image,
+                          },
+                          fcmOptions: {
+                              link: webpush.link,
+                          },
+                      }
+                    : undefined,
             };
 
             const response = await this.firebaseApp.messaging().send(message);
@@ -81,7 +91,10 @@ export class FirebaseMessagingService {
                 messageId: response,
             };
         } catch (error) {
-            this.logger.error(`Error sending notification to device: ${error.message}`, error.stack);
+            this.logger.error(
+                `Error sending notification to device: ${error.message}`,
+                error.stack,
+            );
             return {
                 success: false,
                 error: error.message,
@@ -102,52 +115,60 @@ export class FirebaseMessagingService {
             const { fcmTokens, notification, data, android, apns, webpush } = dto;
 
             if (!fcmTokens || fcmTokens.length === 0) {
-                throw new Error('At least one FCM token is required');
+                throw new Error("At least one FCM token is required");
             }
 
             // Filter out invalid tokens
-            const validTokens = fcmTokens.filter(token => token && token.trim() !== '');
+            const validTokens = fcmTokens.filter((token) => token && token.trim() !== "");
 
             if (validTokens.length === 0) {
-                throw new Error('No valid FCM tokens provided');
+                throw new Error("No valid FCM tokens provided");
             }
 
             const message: admin.messaging.MulticastMessage = {
                 tokens: validTokens,
-                notification: notification ? {
-                    title: notification.title,
-                    body: notification.body,
-                    imageUrl: notification.imageUrl,
-                } : undefined,
+                notification: notification
+                    ? {
+                          title: notification.title,
+                          body: notification.body,
+                          imageUrl: notification.imageUrl,
+                      }
+                    : undefined,
                 data: data || {},
-                android: android ? {
-                    priority: android.priority || 'high',
-                    notification: {
-                        sound: android.sound || 'default',
-                        channelId: android.channelId,
-                        icon: android.icon,
-                        color: android.color,
-                    },
-                } : undefined,
-                apns: apns ? {
-                    payload: {
-                        aps: {
-                            alert: apns.alert,
-                            badge: apns.badge,
-                            sound: apns.sound || 'default',
-                        },
-                    },
-                } : undefined,
-                webpush: webpush ? {
-                    notification: {
-                        title: webpush.title,
-                        body: webpush.body,
-                        icon: webpush.icon,
-                    },
-                    fcmOptions: {
-                        link: webpush.link,
-                    },
-                } : undefined,
+                android: android
+                    ? {
+                          priority: android.priority || "high",
+                          notification: {
+                              sound: android.sound || "default",
+                              channelId: android.channelId,
+                              icon: android.icon,
+                              color: android.color,
+                          },
+                      }
+                    : undefined,
+                apns: apns
+                    ? {
+                          payload: {
+                              aps: {
+                                  alert: apns.alert,
+                                  badge: apns.badge,
+                                  sound: apns.sound || "default",
+                              },
+                          },
+                      }
+                    : undefined,
+                webpush: webpush
+                    ? {
+                          notification: {
+                              title: webpush.title,
+                              body: webpush.body,
+                              icon: webpush.icon,
+                          },
+                          fcmOptions: {
+                              link: webpush.link,
+                          },
+                      }
+                    : undefined,
             };
 
             const response = await this.firebaseApp.messaging().sendEachForMulticast(message);
@@ -160,7 +181,9 @@ export class FirebaseMessagingService {
             if (response.failureCount > 0) {
                 response.responses.forEach((resp, idx) => {
                     if (!resp.success) {
-                        this.logger.warn(`Failed to send to token ${validTokens[idx]}: ${resp.error?.message}`);
+                        this.logger.warn(
+                            `Failed to send to token ${validTokens[idx]}: ${resp.error?.message}`,
+                        );
                     }
                 });
             }
@@ -172,7 +195,10 @@ export class FirebaseMessagingService {
                 responses: response,
             };
         } catch (error) {
-            this.logger.error(`Error sending notifications to multiple devices: ${error.message}`, error.stack);
+            this.logger.error(
+                `Error sending notifications to multiple devices: ${error.message}`,
+                error.stack,
+            );
             return {
                 success: false,
                 successCount: 0,
@@ -184,47 +210,57 @@ export class FirebaseMessagingService {
     /**
      * Send notification to a topic
      */
-    async sendToTopic(dto: SendTopicNotificationDto): Promise<{ success: boolean; messageId?: string; error?: string }> {
+    async sendToTopic(
+        dto: SendTopicNotificationDto,
+    ): Promise<{ success: boolean; messageId?: string; error?: string }> {
         try {
             const { topic, notification, data, android, apns, webpush } = dto;
 
             if (!topic) {
-                throw new Error('Topic is required');
+                throw new Error("Topic is required");
             }
 
             const message: admin.messaging.Message = {
                 topic: topic,
-                notification: notification ? {
-                    title: notification.title,
-                    body: notification.body,
-                    imageUrl: notification.imageUrl,
-                } : undefined,
+                notification: notification
+                    ? {
+                          title: notification.title,
+                          body: notification.body,
+                          imageUrl: notification.imageUrl,
+                      }
+                    : undefined,
                 data: data || {},
-                android: android ? {
-                    priority: android.priority || 'high',
-                    notification: {
-                        sound: android.sound || 'default',
-                        channelId: android.channelId,
-                        icon: android.icon,
-                        color: android.color,
-                    },
-                } : undefined,
-                apns: apns ? {
-                    payload: {
-                        aps: {
-                            alert: apns.alert,
-                            badge: apns.badge,
-                            sound: apns.sound || 'default',
-                        },
-                    },
-                } : undefined,
-                webpush: webpush ? {
-                    notification: {
-                        title: webpush.title,
-                        body: webpush.body,
-                        icon: webpush.icon,
-                    },
-                } : undefined,
+                android: android
+                    ? {
+                          priority: android.priority || "high",
+                          notification: {
+                              sound: android.sound || "default",
+                              channelId: android.channelId,
+                              icon: android.icon,
+                              color: android.color,
+                          },
+                      }
+                    : undefined,
+                apns: apns
+                    ? {
+                          payload: {
+                              aps: {
+                                  alert: apns.alert,
+                                  badge: apns.badge,
+                                  sound: apns.sound || "default",
+                              },
+                          },
+                      }
+                    : undefined,
+                webpush: webpush
+                    ? {
+                          notification: {
+                              title: webpush.title,
+                              body: webpush.body,
+                              icon: webpush.icon,
+                          },
+                      }
+                    : undefined,
             };
 
             const response = await this.firebaseApp.messaging().send(message);
@@ -247,7 +283,10 @@ export class FirebaseMessagingService {
     /**
      * Subscribe devices to a topic
      */
-    async subscribeToTopic(tokens: string[], topic: string): Promise<{
+    async subscribeToTopic(
+        tokens: string[],
+        topic: string,
+    ): Promise<{
         success: boolean;
         successCount: number;
         failureCount: number;
@@ -255,11 +294,11 @@ export class FirebaseMessagingService {
     }> {
         try {
             if (!tokens || tokens.length === 0) {
-                throw new Error('At least one FCM token is required');
+                throw new Error("At least one FCM token is required");
             }
 
             if (!topic) {
-                throw new Error('Topic is required');
+                throw new Error("Topic is required");
             }
 
             const response = await this.firebaseApp.messaging().subscribeToTopic(tokens, topic);
@@ -287,7 +326,10 @@ export class FirebaseMessagingService {
     /**
      * Unsubscribe devices from a topic
      */
-    async unsubscribeFromTopic(tokens: string[], topic: string): Promise<{
+    async unsubscribeFromTopic(
+        tokens: string[],
+        topic: string,
+    ): Promise<{
         success: boolean;
         successCount: number;
         failureCount: number;
@@ -295,11 +337,11 @@ export class FirebaseMessagingService {
     }> {
         try {
             if (!tokens || tokens.length === 0) {
-                throw new Error('At least one FCM token is required');
+                throw new Error("At least one FCM token is required");
             }
 
             if (!topic) {
-                throw new Error('Topic is required');
+                throw new Error("Topic is required");
             }
 
             const response = await this.firebaseApp.messaging().unsubscribeFromTopic(tokens, topic);
@@ -363,7 +405,7 @@ export class FirebaseMessagingService {
             await this.firebaseApp.messaging().send(
                 {
                     token: fcmToken,
-                    data: { test: 'test' },
+                    data: { test: "test" },
                 },
                 true, // dry run
             );

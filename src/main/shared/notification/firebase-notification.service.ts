@@ -1,7 +1,7 @@
-import { Injectable, Logger } from '@nestjs/common';
-import { NotificationType } from 'src/lib/firebase/dto/notification.dto';
-import { FirebaseMessagingService } from 'src/lib/firebase/firebase-messaging.service';
-import { PrismaService } from 'src/lib/prisma/prisma.service';
+import { Injectable, Logger } from "@nestjs/common";
+import { NotificationType } from "src/lib/firebase/dto/notification.dto";
+import { FirebaseMessagingService } from "src/lib/firebase/firebase-messaging.service";
+import { PrismaService } from "src/lib/prisma/prisma.service";
 
 export interface NotificationTemplate {
     title: string;
@@ -17,7 +17,7 @@ export class FirebaseNotificationService {
     constructor(
         private readonly prisma: PrismaService,
         private readonly fcmService: FirebaseMessagingService,
-    ) { }
+    ) {}
 
     /**
      * Send notification to a user
@@ -29,21 +29,21 @@ export class FirebaseNotificationService {
     ): Promise<{ success: boolean; error?: string }> {
         try {
             // Get user's FCM token
-            const user = await this.prisma.user.findUnique({
+            const user = (await this.prisma.user.findUnique({
                 where: { id: userId },
                 select: { fcmToken: true },
-            }) as { fcmToken: string | null } | null;
+            })) as { fcmToken: string | null } | null;
 
             if (!user || !user.fcmToken) {
                 this.logger.warn(`User ${userId} has no FCM token`);
-                return { success: false, error: 'User has no FCM token' };
+                return { success: false, error: "User has no FCM token" };
             }
 
             // Check notification settings
             const canSend = await this.checkNotificationSettings(userId, notification.type);
             if (!canSend) {
                 this.logger.log(`User ${userId} has disabled ${notification.type} notifications`);
-                return { success: false, error: 'User has disabled this notification type' };
+                return { success: false, error: "User has disabled this notification type" };
             }
 
             // Send FCM notification
@@ -58,12 +58,12 @@ export class FirebaseNotificationService {
                     ...notification.data,
                 },
                 android: {
-                    priority: 'high',
-                    sound: 'default',
-                    channelId: 'default_channel',
+                    priority: "high",
+                    sound: "default",
+                    channelId: "default_channel",
                 },
                 apns: {
-                    sound: 'default',
+                    sound: "default",
                     badge: 1,
                 },
             });
@@ -93,26 +93,26 @@ export class FirebaseNotificationService {
             const users = (await this.prisma.user.findMany({
                 where: {
                     id: { in: userIds },
-                    fcmToken: { not: null, notIn: ['', 'null'] },
+                    fcmToken: { not: null, notIn: ["", "null"] },
                 },
                 select: { id: true, fcmToken: true },
             })) as unknown as Array<{ id: string; fcmToken: string | null }>;
 
             if (users.length === 0) {
-                this.logger.warn('No users with FCM tokens found');
+                this.logger.warn("No users with FCM tokens found");
                 return { successCount: 0, failureCount: userIds.length };
             }
 
             // Filter users based on notification settings
             const eligibleUsers = await this.filterUsersByNotificationSettings(
-                users.map(u => u.id),
+                users.map((u) => u.id),
                 notification.type,
             );
 
             const eligibleTokens = users
-                .filter(u => eligibleUsers.includes(u.id))
-                .map(u => u.fcmToken as string)
-                .filter(token => token && token.trim() !== '');
+                .filter((u) => eligibleUsers.includes(u.id))
+                .map((u) => u.fcmToken as string)
+                .filter((token) => token && token.trim() !== "");
 
             if (eligibleTokens.length === 0) {
                 return { successCount: 0, failureCount: userIds.length };
@@ -130,18 +130,18 @@ export class FirebaseNotificationService {
                     ...notification.data,
                 },
                 android: {
-                    priority: 'high',
-                    sound: 'default',
+                    priority: "high",
+                    sound: "default",
                 },
                 apns: {
-                    sound: 'default',
+                    sound: "default",
                 },
             });
 
             // Save notifications to database
             if (saveToDb && result.successCount > 0) {
                 await Promise.all(
-                    eligibleUsers.map(userId => this.saveNotificationToDb(userId, notification)),
+                    eligibleUsers.map((userId) => this.saveNotificationToDb(userId, notification)),
                 );
             }
 
@@ -174,11 +174,11 @@ export class FirebaseNotificationService {
                     ...notification.data,
                 },
                 android: {
-                    priority: 'high',
-                    sound: 'default',
+                    priority: "high",
+                    sound: "default",
                 },
                 apns: {
-                    sound: 'default',
+                    sound: "default",
                 },
             });
 
@@ -210,10 +210,10 @@ export class FirebaseNotificationService {
      */
     async subscribeUserToTopic(userId: string, topic: string): Promise<{ success: boolean }> {
         try {
-            const user = await this.prisma.user.findUnique({
+            const user = (await this.prisma.user.findUnique({
                 where: { id: userId },
                 select: { fcmToken: true },
-            }) as { fcmToken: string | null } | null;
+            })) as { fcmToken: string | null } | null;
 
             if (!user || !user.fcmToken) {
                 return { success: false };
@@ -222,7 +222,9 @@ export class FirebaseNotificationService {
             const result = await this.fcmService.subscribeToTopic([user.fcmToken], topic);
             return { success: result.success };
         } catch (error) {
-            this.logger.error(`Error subscribing user ${userId} to topic ${topic}: ${error.message}`);
+            this.logger.error(
+                `Error subscribing user ${userId} to topic ${topic}: ${error.message}`,
+            );
             return { success: false };
         }
     }
@@ -232,10 +234,10 @@ export class FirebaseNotificationService {
      */
     async unsubscribeUserFromTopic(userId: string, topic: string): Promise<{ success: boolean }> {
         try {
-            const user = await this.prisma.user.findUnique({
+            const user = (await this.prisma.user.findUnique({
                 where: { id: userId },
                 select: { fcmToken: true },
-            }) as { fcmToken: string | null } | null;
+            })) as { fcmToken: string | null } | null;
 
             if (!user || !user.fcmToken) {
                 return { success: false };
@@ -244,7 +246,9 @@ export class FirebaseNotificationService {
             const result = await this.fcmService.unsubscribeFromTopic([user.fcmToken], topic);
             return { success: result.success };
         } catch (error) {
-            this.logger.error(`Error unsubscribing user ${userId} from topic ${topic}: ${error.message}`);
+            this.logger.error(
+                `Error unsubscribing user ${userId} from topic ${topic}: ${error.message}`,
+            );
             return { success: false };
         }
     }
@@ -268,10 +272,10 @@ export class FirebaseNotificationService {
             // Map notification types to settings fields - use existing fields only
             // Default to 'message' for most notification types
             const typeMapping: Partial<Record<NotificationType, string>> = {
-                [NotificationType.NEW_MESSAGE]: 'message',
-                [NotificationType.SERVICE_REQUEST]: 'Service',
-                [NotificationType.REVIEW_RECEIVED]: 'review',
-                [NotificationType.ANNOUNCEMENT]: 'post', // Use post for announcements
+                [NotificationType.NEW_MESSAGE]: "message",
+                [NotificationType.SERVICE_REQUEST]: "Service",
+                [NotificationType.REVIEW_RECEIVED]: "review",
+                [NotificationType.ANNOUNCEMENT]: "post", // Use post for announcements
             };
 
             const settingKey = typeMapping[type];
@@ -346,9 +350,9 @@ export class FirebaseNotificationService {
     private mapToPrismaNotificationType(type: NotificationType): any {
         // Prisma enum has: Service, Payment, UserRegistration, Inquiry
         const mapping: Partial<Record<NotificationType, string>> = {
-            [NotificationType.SERVICE_REQUEST]: 'Service',
-            [NotificationType.PAYMENT_RECEIVED]: 'Payment',
-            [NotificationType.NEW_MESSAGE]: 'Inquiry',
+            [NotificationType.SERVICE_REQUEST]: "Service",
+            [NotificationType.PAYMENT_RECEIVED]: "Payment",
+            [NotificationType.NEW_MESSAGE]: "Inquiry",
         };
 
         return mapping[type] || null; // Return null for types not in Prisma enum
@@ -363,55 +367,55 @@ export class FirebaseNotificationService {
     ): NotificationTemplate {
         const templates: Record<NotificationType, (data: any) => NotificationTemplate> = {
             [NotificationType.NEW_MESSAGE]: (d) => ({
-                title: 'New Message',
+                title: "New Message",
                 body: `${d.senderName} sent you a message: ${d.messagePreview}`,
                 type: NotificationType.NEW_MESSAGE,
                 data: { senderId: d.senderId, conversationId: d.conversationId },
             }),
             [NotificationType.NEW_FOLLOWER]: (d) => ({
-                title: 'New Follower',
+                title: "New Follower",
                 body: `${d.followerName} started following you`,
                 type: NotificationType.NEW_FOLLOWER,
                 data: { followerId: d.followerId },
             }),
             [NotificationType.NEW_LIKE]: (d) => ({
-                title: 'New Like',
+                title: "New Like",
                 body: `${d.userName} liked your ${d.contentType}`,
                 type: NotificationType.NEW_LIKE,
                 data: { userId: d.userId, contentId: d.contentId, contentType: d.contentType },
             }),
             [NotificationType.NEW_COMMENT]: (d) => ({
-                title: 'New Comment',
+                title: "New Comment",
                 body: `${d.userName} commented on your ${d.contentType}: ${d.commentPreview}`,
                 type: NotificationType.NEW_COMMENT,
                 data: { userId: d.userId, contentId: d.contentId, commentId: d.commentId },
             }),
             [NotificationType.SERVICE_REQUEST]: (d) => ({
-                title: 'New Service Request',
+                title: "New Service Request",
                 body: `${d.clientName} requested your ${d.serviceName} service`,
                 type: NotificationType.SERVICE_REQUEST,
                 data: { requestId: d.requestId, serviceId: d.serviceId },
             }),
             [NotificationType.ORDER_UPDATE]: (d) => ({
-                title: 'Order Update',
+                title: "Order Update",
                 body: `Your order #${d.orderId} status: ${d.status}`,
                 type: NotificationType.ORDER_UPDATE,
                 data: { orderId: d.orderId, status: d.status },
             }),
             [NotificationType.PAYMENT_RECEIVED]: (d) => ({
-                title: 'Payment Received',
+                title: "Payment Received",
                 body: `You received $${d.amount} from ${d.payerName}`,
                 type: NotificationType.PAYMENT_RECEIVED,
                 data: { paymentId: d.paymentId, amount: d.amount.toString() },
             }),
             [NotificationType.REVIEW_RECEIVED]: (d) => ({
-                title: 'New Review',
+                title: "New Review",
                 body: `${d.reviewerName} left you a ${d.rating}-star review`,
                 type: NotificationType.REVIEW_RECEIVED,
                 data: { reviewId: d.reviewId, rating: d.rating.toString() },
             }),
             [NotificationType.ANNOUNCEMENT]: (d) => ({
-                title: d.title || 'Announcement',
+                title: d.title || "Announcement",
                 body: d.message,
                 type: NotificationType.ANNOUNCEMENT,
                 data: { announcementId: d.announcementId },

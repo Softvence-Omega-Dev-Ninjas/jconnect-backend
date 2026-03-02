@@ -42,7 +42,7 @@ export class UsersController {
     constructor(
         private readonly usersService: UsersService,
         private awsservice: AwsService,
-    ) { }
+    ) {}
 
     @Get("check-username/:username")
     @ApiOperation({ summary: "Check if username is available" })

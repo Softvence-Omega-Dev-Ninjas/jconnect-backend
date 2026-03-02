@@ -9,7 +9,7 @@ import {
     TopicSubscriptionDto,
     UpdateFcmTokenDto,
     SendTemplatedNotificationDto,
-    NotificationType
+    NotificationType,
 } from "src/lib/firebase/dto/notification.dto";
 
 @ApiTags("Firebase Notifications")
@@ -17,26 +17,18 @@ import {
 @ApiBearerAuth()
 @Controller("firebase-notifications")
 export class FirebaseNotificationController {
-    constructor(
-        private readonly firebaseNotificationService: FirebaseNotificationService,
-    ) { }
+    constructor(private readonly firebaseNotificationService: FirebaseNotificationService) {}
 
     @Post("update-fcm-token")
     @ApiOperation({ summary: "Update user's FCM token" })
-    async updateFcmToken(
-        @GetUser("userId") userId: string,
-        @Body() dto: UpdateFcmTokenDto,
-    ) {
+    async updateFcmToken(@GetUser("userId") userId: string, @Body() dto: UpdateFcmTokenDto) {
         await this.firebaseNotificationService.updateFcmToken(userId, dto.fcmToken);
         return { success: true, message: "FCM token updated successfully" };
     }
 
     @Post("subscribe-topic")
     @ApiOperation({ summary: "Subscribe user to a notification topic" })
-    async subscribeToTopic(
-        @GetUser("userId") userId: string,
-        @Body() dto: { topic: string },
-    ) {
+    async subscribeToTopic(@GetUser("userId") userId: string, @Body() dto: { topic: string }) {
         const result = await this.firebaseNotificationService.subscribeUserToTopic(
             userId,
             dto.topic,
@@ -46,10 +38,7 @@ export class FirebaseNotificationController {
 
     @Post("unsubscribe-topic")
     @ApiOperation({ summary: "Unsubscribe user from a notification topic" })
-    async unsubscribeFromTopic(
-        @GetUser("userId") userId: string,
-        @Body() dto: { topic: string },
-    ) {
+    async unsubscribeFromTopic(@GetUser("userId") userId: string, @Body() dto: { topic: string }) {
         const result = await this.firebaseNotificationService.unsubscribeUserFromTopic(
             userId,
             dto.topic,
