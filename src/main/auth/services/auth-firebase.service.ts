@@ -29,6 +29,13 @@ export class AuthFirebaseService {
 
     private initializeFirebase() {
         try {
+            // Check if Firebase app already exists
+            if (admin.apps.length > 0) {
+                this.firebaseApp = admin.app();
+                console.log("✅ Using existing Firebase Admin SDK instance");
+                return;
+            }
+
             // Get Firebase configuration from environment variables
             const projectId = this.configService.get<string>(ENVEnum.FIREBASE_PROJECT_ID);
             const privateKey = this.configService
@@ -111,8 +118,8 @@ export class AuthFirebaseService {
                     username: generatedUsername,
                     full_name: name,
                     googleId: provider === "google" ? firebaseUid : null,
-                    password: "", // No password for social login
-                    isVerified: true, // Auto-verify for Firebase auth
+                    password: "", 
+                    isVerified: true,
                     auth_provider: provider.toUpperCase() as any,
                     role: Role.ARTIST,
                     customerIdStripe: customer.id,

@@ -8,6 +8,8 @@ import { SeedModule } from "./seed/seed.module";
 import { TwilioModule } from "./twilio/twilo.module";
 import { UtilsModule } from "./utils/utils.module";
 
+import { FirebaseModule } from "./firebase/firebase.module";
+
 @Module({
     imports: [
         PrismaModule,
@@ -18,6 +20,7 @@ import { UtilsModule } from "./utils/utils.module";
         SeedModule,
         MulterModule,
         NotificationModule,
+        FirebaseModule,
     ],
     controllers: [],
     exports: [
@@ -29,6 +32,7 @@ import { UtilsModule } from "./utils/utils.module";
         SeedModule,
         MulterModule,
         NotificationModule,
+        FirebaseModule
     ],
     providers: [],
 })

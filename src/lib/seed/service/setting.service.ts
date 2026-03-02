@@ -10,30 +10,27 @@ export class seedSettingSrvice implements OnModuleInit {
         private readonly prisma: PrismaService,
         private readonly utils: UtilsService,
         private readonly configService: ConfigService,
-    ) {}
+    ) { }
 
     onModuleInit(): Promise<void> {
         return this.seedSettings();
     }
 
     async seedSettings(): Promise<void> {
-        const settingExitst = await this.prisma.setting.findFirst({
+        // Use upsert to create or update the settings
+        await this.prisma.setting.upsert({
             where: {
                 id: "platform_settings",
             },
+            create: {
+                platformFee_percents: 10,
+                minimum_payout: 10,
+            },
+            update: {
+                // Update only if values are not set
+                platformFee_percents: 10,
+                minimum_payout: 10,
+            },
         });
-
-        // * create super admin
-        if (!settingExitst) {
-            await this.prisma.setting.create({
-                data: {
-                    platformFee_percents: 10,
-                    minimum_payout: 10,
-                },
-            });
-            return;
-        }
-
-        // * Log & update if super admin already exists
     }
 }
