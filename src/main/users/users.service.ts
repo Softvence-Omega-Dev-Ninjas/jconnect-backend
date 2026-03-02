@@ -18,7 +18,7 @@ export class UsersService {
         private utils: UtilsService,
         private readonly eventEmitter: EventEmitter2,
         private readonly firebaseNotificationService: FirebaseNotificationService,
-    ) { }
+    ) {}
 
     async create(Userdata: CreateUserDto) {
         const { password, ...users } = Userdata;
@@ -557,12 +557,12 @@ export class UsersService {
                 const avgA =
                     a.ReviewsReceived.length > 0
                         ? a.ReviewsReceived.reduce((sum: number, r: any) => sum + r.rating, 0) /
-                        a.ReviewsReceived.length
+                          a.ReviewsReceived.length
                         : 0;
                 const avgB =
                     b.ReviewsReceived.length > 0
                         ? b.ReviewsReceived.reduce((sum: number, r: any) => sum + r.rating, 0) /
-                        b.ReviewsReceived.length
+                          b.ReviewsReceived.length
                         : 0;
                 return avgB - avgA;
             });
@@ -809,7 +809,7 @@ export class UsersService {
             } as unknown as InquiryMeta);
 
             // -------------------------- Firebase Push Notification --------------------------
-        
+
             try {
                 const inquiryMessage = `I like your profile and I wanna buy your service - ${currentUser.full_name}`;
 
@@ -820,22 +820,22 @@ export class UsersService {
                         senderName: currentUser.full_name,
                         senderId: currentUser.id,
                         messagePreview: inquiryMessage,
-                        conversationId: `inquiry_${currentUser.id}_${user.id}`, 
+                        conversationId: `inquiry_${currentUser.id}_${user.id}`,
                     },
                 );
 
                 // Send notification to the service provider (user being inquired)
-              
-                await this.firebaseNotificationService.sendToUser(
-                    user.id,
-                    notification,
-                    true, 
-                );
 
-                console.log(`✅ Firebase notification sent for inquiry from ${currentUser.full_name} to ${user.full_name || user.email}`);
+                await this.firebaseNotificationService.sendToUser(user.id, notification, true);
+
+                console.log(
+                    `✅ Firebase notification sent for inquiry from ${currentUser.full_name} to ${user.full_name || user.email}`,
+                );
             } catch (firebaseError) {
-             
-                console.error('⚠️ Firebase notification failed for inquiry:', firebaseError.message);
+                console.error(
+                    "⚠️ Firebase notification failed for inquiry:",
+                    firebaseError.message,
+                );
             }
         }
 
