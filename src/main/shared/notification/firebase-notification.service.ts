@@ -29,10 +29,10 @@ export class FirebaseNotificationService {
     ): Promise<{ success: boolean; error?: string }> {
         try {
             // Get user's FCM token
-            const user = await this.prisma.user.findUnique({
+            const user = (await this.prisma.user.findUnique({
                 where: { id: userId },
                 select: { fcmToken: true } as any,
-            }) as { fcmToken: string | null } | null;
+            })) as { fcmToken: string | null } | null;
 
             if (!user || !user.fcmToken) {
                 this.logger.warn(`User ${userId} has no FCM token`);
@@ -99,7 +99,7 @@ export class FirebaseNotificationService {
 
             // Filter out users without valid FCM tokens
             const validUsers = users.filter(
-                (u) => u.fcmToken && u.fcmToken.trim() !== "" && u.fcmToken !== "null"
+                (u) => u.fcmToken && u.fcmToken.trim() !== "" && u.fcmToken !== "null",
             );
 
             if (validUsers.length === 0) {
@@ -214,10 +214,10 @@ export class FirebaseNotificationService {
      */
     async subscribeUserToTopic(userId: string, topic: string): Promise<{ success: boolean }> {
         try {
-            const user = await this.prisma.user.findUnique({
+            const user = (await this.prisma.user.findUnique({
                 where: { id: userId },
                 select: { fcmToken: true } as any,
-            }) as { fcmToken: string | null } | null;
+            })) as { fcmToken: string | null } | null;
 
             if (!user || !user.fcmToken) {
                 return { success: false };
@@ -238,10 +238,10 @@ export class FirebaseNotificationService {
      */
     async unsubscribeUserFromTopic(userId: string, topic: string): Promise<{ success: boolean }> {
         try {
-            const user = await this.prisma.user.findUnique({
+            const user = (await this.prisma.user.findUnique({
                 where: { id: userId },
                 select: { fcmToken: true } as any,
-            }) as { fcmToken: string | null } | null;
+            })) as { fcmToken: string | null } | null;
 
             if (!user || !user.fcmToken) {
                 return { success: false };
