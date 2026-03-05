@@ -18,7 +18,7 @@ export class UsersService {
         private utils: UtilsService,
         private readonly eventEmitter: EventEmitter2,
         private readonly firebaseNotificationService: FirebaseNotificationService,
-    ) {}
+    ) { }
 
     async create(Userdata: CreateUserDto) {
         const { password, ...users } = Userdata;
@@ -208,6 +208,8 @@ export class UsersService {
                                 id: true,
                                 full_name: true,
                                 profilePhoto: true,
+                                fcmToken: true,
+                                username: true,
                             },
                         },
                     },
@@ -219,6 +221,7 @@ export class UsersService {
                                 id: true,
                                 full_name: true,
                                 profilePhoto: true,
+                                fcmToken: true,
                             },
                         },
                     },
@@ -328,6 +331,8 @@ export class UsersService {
         };
     }
 
+    // ---------------------------- update profile with transaction and social profiles handling ----------------------------
+    @HandleError("Failed to update profile", "Update Profile")
     async updateMe(userId: string, dto: UpdateMeDto) {
         console.log("Received DTO:", JSON.stringify(dto, null, 2));
 
@@ -557,12 +562,12 @@ export class UsersService {
                 const avgA =
                     a.ReviewsReceived.length > 0
                         ? a.ReviewsReceived.reduce((sum: number, r: any) => sum + r.rating, 0) /
-                          a.ReviewsReceived.length
+                        a.ReviewsReceived.length
                         : 0;
                 const avgB =
                     b.ReviewsReceived.length > 0
                         ? b.ReviewsReceived.reduce((sum: number, r: any) => sum + r.rating, 0) /
-                          b.ReviewsReceived.length
+                        b.ReviewsReceived.length
                         : 0;
                 return avgB - avgA;
             });
@@ -700,7 +705,7 @@ export class UsersService {
         };
     }
 
-    // --------find one and inquery user by email---------
+    // --------find one and inquiry user by email & notify service provider---------
 
     @HandleError("Failed to send inquiry", "User")
     async findOneUserIdInquiry(id: string, currentUserId: string) {
@@ -724,6 +729,7 @@ export class UsersService {
                                 full_name: true,
                                 profilePhoto: true,
                                 username: true,
+                                fcmToken: true,
                             },
                         },
                     },
@@ -738,7 +744,7 @@ export class UsersService {
                                 id: true,
                                 full_name: true,
                                 profilePhoto: true,
-
+                                fcmToken: true,
                                 username: true,
                             },
                         },
@@ -752,6 +758,7 @@ export class UsersService {
                                 full_name: true,
                                 profilePhoto: true,
                                 username: true,
+                                fcmToken: true,
                             },
                         },
                     },
@@ -771,7 +778,7 @@ export class UsersService {
         const followerCount = user.follwers ? user.follwers.length : 0;
         // -------------------------- notification send logic --------------------------
 
-        // Example location: after user is created in database
+      
 
         //    --------- this user-------------
         const currentUser = await this.prisma.user.findUnique({
@@ -783,6 +790,7 @@ export class UsersService {
                 role: true,
                 username: true,
                 profilePhoto: true,
+                fcmToken: true,
             },
         });
 
@@ -812,7 +820,7 @@ export class UsersService {
 
             try {
                 const inquiryMessage = `I like your profile and I wanna buy your service - ${currentUser.full_name}`;
-
+           console.log('the message is now',inquiryMessage);
                 // Build notification using the NEW_MESSAGE template (most appropriate for inquiries)
                 const notification = this.firebaseNotificationService.buildNotificationTemplate(
                     NotificationType.NEW_MESSAGE,
@@ -829,7 +837,7 @@ export class UsersService {
                 await this.firebaseNotificationService.sendToUser(user.id, notification, true);
 
                 console.log(
-                    `✅ Firebase notification sent for inquiry from ${currentUser.full_name} to ${user.full_name || user.email}`,
+                    ` Firebase notification sent for inquiry from ${currentUser.full_name} to ${user.full_name || user.email}`,
                 );
             } catch (firebaseError) {
                 console.error(

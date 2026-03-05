@@ -171,7 +171,7 @@ export class AuthService {
         if (!isMatch) throw new AppError(400, "Invalid credentials");
 
         // Update last login timestamp and FCM token
-        await this.prisma.user.update({
+        const updatedUser = await this.prisma.user.update({
             where: { id: user.id },
             data: {
                 last_login_at: new Date(),
@@ -187,13 +187,13 @@ export class AuthService {
         }
 
         const token = this.utils.generateToken({
-            sub: user.id,
-            email: user.email,
-            roles: user.role as any,
+            sub: updatedUser.id,
+            email: updatedUser.email,
+            roles: updatedUser.role as any,
         });
 
-        const safeUser = this.utils.sanitizedResponse(UserResponseDto, user);
-        const device = await this.deviceService.getUserDevices(user.id);
+        const safeUser = this.utils.sanitizedResponse(UserResponseDto, updatedUser);
+        const device = await this.deviceService.getUserDevices(updatedUser.id);
 
         return successResponse({ token, user: safeUser, devices: device }, "Login successful");
     }
@@ -203,7 +203,7 @@ export class AuthService {
     async forgetPassword(payload: ForgotPasswordDto) {
         const { email } = payload;
 
-        // Find user by email
+        // -------------Find user by email --------------
         const user = await this.prisma.user.findUnique({
             where: { email },
         });
@@ -212,10 +212,10 @@ export class AuthService {
             throw new NotFoundException("User does not exist!");
         }
 
-        // Generate OTP
+        // -------------Generate OTP --------------
         const { otp, expiryTime } = this.utils.generateOtpAndExpiry();
 
-        // Store OTP and expiry in user record
+        // -------------Store OTP and expiry in user record --------------
         await this.prisma.user.update({
             where: { id: user.id },
             data: {
