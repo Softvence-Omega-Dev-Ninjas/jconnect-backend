@@ -9,7 +9,7 @@ export class ServiceRequestService {
     constructor(
         private prisma: PrismaService,
         private awsService: AwsService,
-    ) { }
+    ) {}
 
     async create(dto: CreateServiceRequestDto, files: Express.Multer.File[], user: any) {
         // -------------------------------
@@ -122,10 +122,7 @@ export class ServiceRequestService {
         });
     }
 
-    async updateIsDeclined(
-        id: string,
-        updateData: { isDeclined?: boolean; isAccepted?: boolean },
-    ) {
+    async updateIsDeclined(id: string, updateData: { isDeclined?: boolean; isAccepted?: boolean }) {
         const serviceRequest = await this.prisma.serviceRequest.findUnique({
             where: { id },
         });
@@ -135,7 +132,10 @@ export class ServiceRequestService {
         }
 
         if (Object.keys(updateData).length === 0) {
-            throw new HttpException("At least one field (isDeclined or isAccepted) must be provided", 400);
+            throw new HttpException(
+                "At least one field (isDeclined or isAccepted) must be provided",
+                400,
+            );
         }
 
         return this.prisma.serviceRequest.update({

@@ -25,7 +25,7 @@ import { ServiceRequestService } from "./service-request.service";
 @ApiTags("Service Requests")
 @Controller("service-requests")
 export class ServiceRequestController {
-    constructor(private readonly serviceRequestService: ServiceRequestService) { }
+    constructor(private readonly serviceRequestService: ServiceRequestService) {}
 
     @ApiBearerAuth()
     @ValidateUser()
@@ -133,7 +133,8 @@ export class ServiceRequestController {
     @ApiConsumes("multipart/form-data")
     @UseInterceptors(FileFieldsInterceptor([{ name: "files", maxCount: 5 }]))
     @ApiBody({
-        description: "Update uploaded files (deletes old files and uploads new ones, sets isDeclined to false)",
+        description:
+            "Update uploaded files (deletes old files and uploads new ones, sets isDeclined to false)",
         schema: {
             type: "object",
             properties: {
