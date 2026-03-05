@@ -131,4 +131,48 @@ export class AwsService {
             throw error;
         }
     }
+
+    async deleteFile(fileUrl: string): Promise<any> {
+        try {
+            // Extract the file key from the URL
+            // URL format: https://bucketname.s3.region.amazonaws.com/filename
+            const urlParts = fileUrl.split("/");
+            const fileKey = urlParts[urlParts.length - 1];
+
+            if (!fileKey || fileKey === "no file") {
+                console.log("⚠️ Skipping deletion: Invalid file key");
+                return { success: true, message: "No file to delete" };
+            }
+
+            console.log("🗑️ Deleting file:", {
+                fileKey,
+                bucket: this.bucketName,
+            });
+
+            await this.s3
+                .deleteObject({
+                    Bucket: this.bucketName,
+                    Key: decodeURIComponent(fileKey),
+                })
+                .promise();
+
+            console.log("✅ File deleted successfully");
+
+            return {
+                success: true,
+                message: "File deleted successfully",
+            };
+        } catch (error) {
+            console.error("❌ Delete error:", {
+                message: error.message,
+                code: error.code,
+                statusCode: error.statusCode,
+            });
+            // Don't throw error, just log it and continue
+            return {
+                success: false,
+                message: error.message,
+            };
+        }
+    }
 }

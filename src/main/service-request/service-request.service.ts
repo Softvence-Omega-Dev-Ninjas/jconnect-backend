@@ -121,4 +121,82 @@ export class ServiceRequestService {
             },
         });
     }
+
+    async updateIsDeclined(id: string, updateData: { isDeclined?: boolean; isAccepted?: boolean }) {
+        const serviceRequest = await this.prisma.serviceRequest.findUnique({
+            where: { id },
+        });
+
+        if (!serviceRequest) {
+            throw new HttpException("Service request not found", 404);
+        }
+
+        if (Object.keys(updateData).length === 0) {
+            throw new HttpException(
+                "At least one field (isDeclined or isAccepted) must be provided",
+                400,
+            );
+        }
+
+        return this.prisma.serviceRequest.update({
+            where: { id },
+            data: updateData,
+            include: {
+                service: { include: { creator: { omit: { password: true } } } },
+                buyer: { omit: { password: true } },
+            },
+        });
+    }
+
+    async updateUploadedFiles(id: string, files: Express.Multer.File[], user: any) {
+        // 1️⃣ Find the service request
+        const serviceRequest = await this.prisma.serviceRequest.findUnique({
+            where: { id },
+        });
+
+        if (!serviceRequest) {
+            throw new HttpException("Service request not found", 404);
+        }
+
+        // 2️⃣ Verify the user is the buyer
+        if (serviceRequest.buyerId !== user.userId) {
+            throw new HttpException("You are not authorized to update this service request", 403);
+        }
+
+        // 3️⃣ Delete old files from S3 (if they exist)
+        if (serviceRequest.uploadedFileUrl && serviceRequest.uploadedFileUrl.length > 0) {
+            for (const fileUrl of serviceRequest.uploadedFileUrl) {
+                if (fileUrl !== "no file") {
+                    await this.awsService.deleteFile(fileUrl);
+                }
+            }
+        }
+
+        // 4️⃣ Upload new files
+        let uploadedUrls: string[] = [];
+        if (files && files.length > 0) {
+            uploadedUrls = await Promise.all(
+                files.map(async (file) => {
+                    const result = await this.awsService.upload(file);
+                    return result.url;
+                }),
+            );
+        } else {
+            uploadedUrls = ["no file"];
+        }
+
+        // 5️⃣ Update the service request with new files and reset isDeclined to false
+        return this.prisma.serviceRequest.update({
+            where: { id },
+            data: {
+                uploadedFileUrl: uploadedUrls,
+                isDeclined: false,
+                isAccepted: false,
+            },
+            include: {
+                service: { include: { creator: { omit: { password: true } } } },
+                buyer: { omit: { password: true } },
+            },
+        });
+    }
 }
