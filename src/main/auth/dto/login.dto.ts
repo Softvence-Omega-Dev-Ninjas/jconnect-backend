@@ -1,5 +1,5 @@
 import { ApiProperty } from "@nestjs/swagger";
-import { IsEmail, IsNotEmpty, IsString } from "class-validator";
+import { IsEmail, IsNotEmpty, IsOptional, IsString } from "class-validator";
 
 export class LoginDto {
     @ApiProperty({
@@ -22,5 +22,12 @@ export class LoginDto {
         description: "FCM token for push notifications",
     })
     @IsString()
+    //  ------------ fcmToken is optional, as it may not be provided during login, but can be updated later when the user logs in from a device that supports push notifications. ------------
+    @ApiProperty({
+        example: "fcmToken",
+        description: "FCM token for push notifications (optional)",
+    })
+    @IsOptional()
     fcmToken?: string;
+
 }
