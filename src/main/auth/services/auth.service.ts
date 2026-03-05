@@ -36,7 +36,7 @@ export class AuthService {
         private readonly twilio: TwilioService,
         private readonly stripe: StripeService,
         private readonly eventEmitter: EventEmitter2,
-    ) {}
+    ) { }
 
     // ---------- REGISTER (send email verification OTP) ----------
     @HandleError("Failed to Register profile", "Register ")
@@ -158,7 +158,7 @@ export class AuthService {
     // ---------- LOGIN (require verified) ----------
     @HandleError("Failed to Login profile", "Login ")
     async login(dto: LoginDto, userAgent?: string, ipAddress?: string): Promise<TResponse<any>> {
-        const { email, password } = dto;
+        const { email, password, fcmToken } = dto;
 
         const user = await this.prisma.user.findUnique({ where: { email } });
         if (!user) throw new AppError(404, "User not found");
@@ -170,13 +170,14 @@ export class AuthService {
         const isMatch = await this.utils.compare(password, user.password);
         if (!isMatch) throw new AppError(400, "Invalid credentials");
 
-        // Update last login timestamp
+        // Update last login timestamp and FCM token
         await this.prisma.user.update({
             where: { id: user.id },
             data: {
                 last_login_at: new Date(),
                 isLogin: true,
                 login_attempts: 0,
+                ...(fcmToken && { fcmToken }),
             },
         });
 
