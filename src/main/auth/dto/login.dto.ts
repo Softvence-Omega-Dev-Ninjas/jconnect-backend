@@ -29,5 +29,4 @@ export class LoginDto {
     })
     @IsOptional()
     fcmToken?: string;
-
 }
