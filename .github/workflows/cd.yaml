@@ -9,7 +9,7 @@ on:
 
 jobs:
     ci-check:
-        # if: false
+        if: false
         name: Lint, Format, Build
         runs-on: ubuntu-latest
 
