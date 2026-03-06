@@ -200,7 +200,7 @@ export class FirebaseNotificationService {
         try {
             await this.prisma.user.update({
                 where: { id: userId },
-                data: { fcmToken } as any, // Type assertion for fcmToken
+                data: { fcmToken } as any,
             });
             this.logger.log(`Updated FCM token for user ${userId}`);
         } catch (error) {
@@ -279,7 +279,7 @@ export class FirebaseNotificationService {
                 [NotificationType.NEW_MESSAGE]: "message",
                 [NotificationType.SERVICE_REQUEST]: "Service",
                 [NotificationType.REVIEW_RECEIVED]: "review",
-                [NotificationType.ANNOUNCEMENT]: "post", // Use post for announcements
+                [NotificationType.ANNOUNCEMENT]: "post",
             };
 
             const settingKey = typeMapping[type];
@@ -290,7 +290,7 @@ export class FirebaseNotificationService {
             return settings[settingKey as keyof typeof settings] !== false;
         } catch (error) {
             this.logger.error(`Error checking notification settings: ${error.message}`);
-            return true; // Default to enabled on error
+            return true;
         }
     }
 
@@ -324,7 +324,7 @@ export class FirebaseNotificationService {
             // Create notification record with userId
             const notificationRecord = await this.prisma.notification.create({
                 data: {
-                    userId: userId, // Add required userId field
+                    userId: userId,
                     title: notification.title,
                     message: notification.body,
                     metadata: notification.data || {},
@@ -359,7 +359,7 @@ export class FirebaseNotificationService {
             [NotificationType.NEW_MESSAGE]: "Inquiry",
         };
 
-        return mapping[type] || null; // Return null for types not in Prisma enum
+        return mapping[type] || null;
     }
 
     /**
