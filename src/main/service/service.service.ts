@@ -5,15 +5,18 @@ import { EventEmitter2 } from "@nestjs/event-emitter";
 
 import { ServiceEvent } from "@common/interface/events-payload";
 import { EVENT_TYPES } from "@common/interface/events.name";
+import { NotificationType } from "src/lib/firebase/dto/notification.dto";
 import { PrismaService } from "src/lib/prisma/prisma.service";
 import Stripe from "stripe";
 import { CreateServiceDto } from "./dto/create-service.dto";
 import { UpdateServiceDto } from "./dto/update-service.dto";
+import { FirebaseNotificationService } from "@main/shared/notification/firebase-notification.service";
 @Injectable()
 export class ServiceService {
     constructor(
         private prisma: PrismaService,
         private readonly eventEmitter: EventEmitter2,
+         private readonly firebaseNotificationService: FirebaseNotificationService,
         @Inject("STRIPE_CLIENT") private stripe: Stripe,
     ) {}
 
@@ -98,6 +101,22 @@ export class ServiceService {
         };
 
         this.eventEmitter.emit(EVENT_TYPES.SERVICE_CREATE, payload);
+
+        // -----------------------------------------
+        // Send Firebase Push Notifications
+        // -----------------------------------------
+        await this.firebaseNotificationService.sendToMultipleUsers(
+            recipients.map((r) => r.user.id),
+            {
+                title: `New Service: ${service.serviceName}`,
+                body: `${user.email} created a new service. Check it out!`,
+                type: NotificationType.ANNOUNCEMENT,
+                data: {
+                    serviceId: service.id,
+                    serviceName: service.serviceName,
+                },
+            },
+        );
 
         return { message: "Service created successfully", service };
     }
