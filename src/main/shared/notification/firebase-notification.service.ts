@@ -200,7 +200,7 @@ export class FirebaseNotificationService {
         try {
             await this.prisma.user.update({
                 where: { id: userId },
-                data: { fcmToken } as any, 
+                data: { fcmToken } as any,
             });
             this.logger.log(`Updated FCM token for user ${userId}`);
         } catch (error) {
@@ -290,7 +290,7 @@ export class FirebaseNotificationService {
             return settings[settingKey as keyof typeof settings] !== false;
         } catch (error) {
             this.logger.error(`Error checking notification settings: ${error.message}`);
-            return true; 
+            return true;
         }
     }
 
@@ -324,7 +324,7 @@ export class FirebaseNotificationService {
             // Create notification record with userId
             const notificationRecord = await this.prisma.notification.create({
                 data: {
-                    userId: userId, 
+                    userId: userId,
                     title: notification.title,
                     message: notification.body,
                     metadata: notification.data || {},
@@ -359,7 +359,7 @@ export class FirebaseNotificationService {
             [NotificationType.NEW_MESSAGE]: "Inquiry",
         };
 
-        return mapping[type] || null; 
+        return mapping[type] || null;
     }
 
     /**

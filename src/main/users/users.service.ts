@@ -18,7 +18,7 @@ export class UsersService {
         private utils: UtilsService,
         private readonly eventEmitter: EventEmitter2,
         private readonly firebaseNotificationService: FirebaseNotificationService,
-    ) { }
+    ) {}
 
     @HandleError("Failed to create user", "Create User")
     async create(Userdata: CreateUserDto) {
@@ -76,7 +76,6 @@ export class UsersService {
         };
     }
 
-
     /// ---------------------------- find all users with pagination, filtering, and search ----------------------------
     @HandleError("Failed to fetch users", "Get Users")
     async findAll(params: {
@@ -89,7 +88,6 @@ export class UsersService {
         const { page, limit, isActive, search, currentUserId } = params;
 
         const whereCondition: any = {
-
             ...(isActive !== undefined ? { isActive } : {}),
             ...(currentUserId && { id: { not: currentUserId } }),
         };
@@ -568,12 +566,12 @@ export class UsersService {
                 const avgA =
                     a.ReviewsReceived.length > 0
                         ? a.ReviewsReceived.reduce((sum: number, r: any) => sum + r.rating, 0) /
-                        a.ReviewsReceived.length
+                          a.ReviewsReceived.length
                         : 0;
                 const avgB =
                     b.ReviewsReceived.length > 0
                         ? b.ReviewsReceived.reduce((sum: number, r: any) => sum + r.rating, 0) /
-                        b.ReviewsReceived.length
+                          b.ReviewsReceived.length
                         : 0;
                 return avgB - avgA;
             });
