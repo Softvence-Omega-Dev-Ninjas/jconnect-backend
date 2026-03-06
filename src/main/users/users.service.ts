@@ -20,6 +20,7 @@ export class UsersService {
         private readonly firebaseNotificationService: FirebaseNotificationService,
     ) {}
 
+    @HandleError("Failed to create user", "Create User")
     async create(Userdata: CreateUserDto) {
         const { password, ...users } = Userdata;
         try {
@@ -42,6 +43,8 @@ export class UsersService {
         }
     }
 
+    // -------------- check username availability ----------------
+    @HandleError("Failed to check username availability", "Check Username Availability")
     async checkUsernameAvailability(username: string) {
         if (!username || username.trim() === "") {
             throw new HttpException("Username is required", 400);
@@ -73,6 +76,8 @@ export class UsersService {
         };
     }
 
+    /// ---------------------------- find all users with pagination, filtering, and search ----------------------------
+    @HandleError("Failed to fetch users", "Get Users")
     async findAll(params: {
         page: number;
         limit: number;
@@ -83,7 +88,6 @@ export class UsersService {
         const { page, limit, isActive, search, currentUserId } = params;
 
         const whereCondition: any = {
-            // isDeleted: false,
             ...(isActive !== undefined ? { isActive } : {}),
             ...(currentUserId && { id: { not: currentUserId } }),
         };
@@ -208,6 +212,8 @@ export class UsersService {
                                 id: true,
                                 full_name: true,
                                 profilePhoto: true,
+                                fcmToken: true,
+                                username: true,
                             },
                         },
                     },
@@ -219,6 +225,7 @@ export class UsersService {
                                 id: true,
                                 full_name: true,
                                 profilePhoto: true,
+                                fcmToken: true,
                             },
                         },
                     },
@@ -299,7 +306,7 @@ export class UsersService {
         const pendingClearance = pendingOrders._sum.seller_amount || 0;
         let totalEarning = totalSuccessfullREleaseAmount + pendingClearance;
         totalEarning = totalEarning / 100;
-        // ----------------------------
+        // ---------------------------- total earnings calculation ----------------------------
 
         const avgRatingResult = await this.prisma.review.aggregate({
             _avg: { rating: true },
@@ -328,6 +335,8 @@ export class UsersService {
         };
     }
 
+    // ---------------------------- update profile with transaction and social profiles handling ----------------------------
+    @HandleError("Failed to update profile", "Update Profile")
     async updateMe(userId: string, dto: UpdateMeDto) {
         console.log("Received DTO:", JSON.stringify(dto, null, 2));
 
@@ -354,7 +363,7 @@ export class UsersService {
             }
         }
 
-        // User table updates
+        // -------------- User table updates ---------------
         const userPayload: UpdateUserDto = {};
         if (dto.full_name !== undefined) userPayload.full_name = dto.full_name;
         if (dto.phone !== undefined && dto.phone !== null && dto.phone.trim() !== "") {
@@ -392,7 +401,7 @@ export class UsersService {
             validSocialProfiles.length > 0;
 
         await this.prisma.$transaction(async (tx) => {
-            // Update user table if needed
+            // -------------- Update user table if needed ---------------
             if (Object.keys(userPayload).length > 0) {
                 await tx.user.update({
                     where: { id: userId },
@@ -400,7 +409,7 @@ export class UsersService {
                 });
             }
 
-            // Update or create profile if needed
+            // -------------- Update or create profile if needed -----------------
             if (hasProfileChanges) {
                 const profileExists = await tx.profile.findUnique({
                     where: { user_id: userId },
@@ -411,7 +420,7 @@ export class UsersService {
                     ...profilePayload,
                 };
 
-                // Remove undefined values
+                // -------------- Remove undefined values   -----------------
                 Object.keys(profileData).forEach((key) => {
                     if (profileData[key] === undefined) {
                         delete profileData[key];
@@ -419,20 +428,20 @@ export class UsersService {
                 });
 
                 if (profileExists) {
-                    // Update existing profile
+                    // -------------- Update existing profile ---------------
                     await tx.profile.update({
                         where: { user_id: userId },
                         data: profileData,
                     });
 
-                    // Always handle social profiles if provided
+                    // -------------- Always handle social profiles if provided ---------------
                     if (dto.socialProfiles !== undefined) {
                         // Delete existing social profiles
                         await tx.socialProfile.deleteMany({
                             where: { profileId: userId },
                         });
 
-                        // Create new social profiles if any
+                        // -------------- Create new social profiles if any ---------------
                         if (validSocialProfiles.length > 0) {
                             console.log("Creating social profiles:", validSocialProfiles);
                             await tx.socialProfile.createMany({
@@ -444,7 +453,7 @@ export class UsersService {
                         }
                     }
                 } else {
-                    // Create new profile
+                    // ----------  Create new profile if it doesn't exist ---------------
                     await tx.profile.create({
                         data: {
                             user_id: userId,
@@ -452,7 +461,7 @@ export class UsersService {
                         },
                     });
 
-                    // Create social profiles if any
+                    // ------------ Create social profiles if any   ------------
                     if (validSocialProfiles.length > 0) {
                         await tx.socialProfile.createMany({
                             data: validSocialProfiles.map((sp) => ({
@@ -518,11 +527,11 @@ export class UsersService {
             ];
         }
 
-        // 🔹 Determine if we need to fetch all data (for sorting filters)
+        // ------------- Determine if we need to fetch all data (for sorting filters) -----------
         const needsFullDataset =
             filter && ["top-rated", "recently-updated", "suggested"].includes(filter);
 
-        // 🔹 Build query options
+        // -------------- Build query options -------------
         const queryOptions: any = {
             where: baseWhere,
             include: {
@@ -535,19 +544,19 @@ export class UsersService {
             orderBy: { created_at: "desc" },
         };
 
-        // Only add database pagination if NO filter is applied AND limit is provided
+        // ---------------Only add database pagination if NO filter is applied AND limit is provided ----------------
         if (!needsFullDataset && limit) {
             queryOptions.skip = (page - 1) * limit;
             queryOptions.take = limit;
         }
 
-        // 🔹 Fetch data
+        // ------------- Fetch data -------------
         const [artistsData, total] = await this.prisma.$transaction([
             this.prisma.user.findMany(queryOptions),
             this.prisma.user.count({ where: baseWhere }),
         ]);
 
-        // Remove password from results and cast to any to preserve included relations
+        // ------------------Remove password from results and cast to any to preserve included relations ------------------
         const artists: any[] = artistsData.map(({ password, ...artist }) => artist);
 
         let sortedArtists: any[] = artists;
@@ -700,7 +709,7 @@ export class UsersService {
         };
     }
 
-    // --------find one and inquery user by email---------
+    // --------find one and inquiry user by email & notify service provider---------
 
     @HandleError("Failed to send inquiry", "User")
     async findOneUserIdInquiry(id: string, currentUserId: string) {
@@ -724,6 +733,7 @@ export class UsersService {
                                 full_name: true,
                                 profilePhoto: true,
                                 username: true,
+                                fcmToken: true,
                             },
                         },
                     },
@@ -738,7 +748,7 @@ export class UsersService {
                                 id: true,
                                 full_name: true,
                                 profilePhoto: true,
-
+                                fcmToken: true,
                                 username: true,
                             },
                         },
@@ -752,6 +762,7 @@ export class UsersService {
                                 full_name: true,
                                 profilePhoto: true,
                                 username: true,
+                                fcmToken: true,
                             },
                         },
                     },
@@ -771,8 +782,6 @@ export class UsersService {
         const followerCount = user.follwers ? user.follwers.length : 0;
         // -------------------------- notification send logic --------------------------
 
-        // Example location: after user is created in database
-
         //    --------- this user-------------
         const currentUser = await this.prisma.user.findUnique({
             where: { id: currentUserId },
@@ -783,12 +792,13 @@ export class UsersService {
                 role: true,
                 username: true,
                 profilePhoto: true,
+                fcmToken: true,
             },
         });
 
-        // Only emit if currentUser exists (prevents crash)
+        //  --------------------- Only emit if currentUser exists (prevents crash) --------------------
         if (currentUser) {
-            // Emit registration event
+            // ----------------  Emit registration event ------------------
             this.eventEmitter.emit(EVENT_TYPES.INQUIRY_CREATE, {
                 action: "CREATE",
                 info: {
@@ -812,8 +822,8 @@ export class UsersService {
 
             try {
                 const inquiryMessage = `I like your profile and I wanna buy your service - ${currentUser.full_name}`;
-
-                // Build notification using the NEW_MESSAGE template (most appropriate for inquiries)
+                console.log("the message is now", inquiryMessage);
+                //  ----------- Build notification using the NEW_MESSAGE template (most appropriate for inquiries) ---------------
                 const notification = this.firebaseNotificationService.buildNotificationTemplate(
                     NotificationType.NEW_MESSAGE,
                     {
@@ -824,12 +834,12 @@ export class UsersService {
                     },
                 );
 
-                // Send notification to the service provider (user being inquired)
+                // ---------------- Send notification to the service provider (user being inquired) ----------------
 
                 await this.firebaseNotificationService.sendToUser(user.id, notification, true);
 
                 console.log(
-                    `✅ Firebase notification sent for inquiry from ${currentUser.full_name} to ${user.full_name || user.email}`,
+                    ` Firebase notification sent for inquiry from ${currentUser.full_name} to ${user.full_name || user.email}`,
                 );
             } catch (firebaseError) {
                 console.error(
@@ -848,7 +858,7 @@ export class UsersService {
         };
     }
 
-    // Update user
+    //--------------  Update user ---------------------
     async update(id: string, data: UpdateUserDto) {
         const exists = await this.prisma.user.findUnique({
             where: { id },
@@ -866,7 +876,7 @@ export class UsersService {
         });
     }
 
-    // reset password
+    // --------------reset password ----------------------------
     async reset_password(id: string, old: string, newPass: string) {
         const exists = await this.prisma.user.findUnique({ where: { id } });
         if (!exists) throw new NotFoundException("User not found");
@@ -890,7 +900,7 @@ export class UsersService {
         if (!user) throw new NotFoundException("User not found");
         if (user.isDeleted) throw new NotFoundException("User already deleted");
 
-        // 🔹 Update role
+        // ------------------  Update role ----------------------------
         const updatedUser = await this.prisma.user.update({
             where: { id },
             data: { role },
