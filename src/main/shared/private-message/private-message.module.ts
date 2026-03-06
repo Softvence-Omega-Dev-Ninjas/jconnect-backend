@@ -10,4 +10,4 @@ import { PrivateChatService } from "./service/private-message.service";
     controllers: [PrivateChatController],
     providers: [PrivateChatService, PrivateChatGateway],
 })
-export class PrivateMessageModule { }
+export class PrivateMessageModule {}
