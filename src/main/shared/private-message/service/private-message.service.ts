@@ -1,13 +1,17 @@
+import { FirebaseNotificationService } from "@main/shared/notification/firebase-notification.service";
 import { Injectable, NotFoundException } from "@nestjs/common";
 import { AppError } from "src/common/error/handle-error.app";
 import { HandleError } from "src/common/error/handle-error.decorator";
 import { successResponse } from "src/common/utilsResponse/response.util";
+import { NotificationType } from "src/lib/firebase/dto/notification.dto";
 import { PrismaService } from "src/lib/prisma/prisma.service";
 import { SendPrivateMessageDto } from "../dto/privateChatGateway.dto";
 
 @Injectable()
 export class PrivateChatService {
-    constructor(private readonly prisma: PrismaService) {}
+    constructor(private readonly prisma: PrismaService,
+        private readonly firebaseNotificationService: FirebaseNotificationService,
+    ) { }
 
     /**
      * Send a private message and update lastMessage in conversation
@@ -48,8 +52,8 @@ export class PrivateChatService {
                 ...(serviceRequestId && { serviceRequestId }),
                 ...(dto.files &&
                     dto.files.length > 0 && {
-                        files: dto.files,
-                    }),
+                    files: dto.files,
+                }),
             },
             include: {
                 sender: {
@@ -99,6 +103,34 @@ export class PrivateChatService {
             ],
             skipDuplicates: true,
         });
+
+
+        // -------------Send Firebase notification to recipient user--------------
+
+        const recipientId = conversation.user1Id === senderId ? conversation.user2Id : conversation.user1Id;
+
+        try {
+            await this.firebaseNotificationService.sendToUser(
+                recipientId,
+                {
+                    title: message.sender.full_name || "New Message",
+                    body: dto.content || "You have a new message",
+                    type: NotificationType.NEW_MESSAGE,
+                    data: {
+                        conversationId: conversationId,
+                        messageId: message.id,
+                        senderId: senderId,
+                        senderName: message.sender.full_name || "User",
+                        timestamp: message.createdAt.toISOString(),
+                    },
+                },
+                false,
+            );
+            console.log(`📲 Firebase notification sent to user ${recipientId}`);
+        } catch (error) {
+            console.error(`❌ Failed to send Firebase notification: ${error.message}`);
+            throw error;
+        }
 
         return message;
     }
@@ -151,12 +183,12 @@ export class PrivateChatService {
                 participant: otherUser,
                 lastMessage: chat.lastMessage
                     ? {
-                          id: chat.lastMessage.id,
-                          content: chat.lastMessage.content,
-                          createdAt: chat.lastMessage.createdAt,
-                          sender: chat.lastMessage.sender,
-                          file: chat.lastMessage.file,
-                      }
+                        id: chat.lastMessage.id,
+                        content: chat.lastMessage.content,
+                        createdAt: chat.lastMessage.createdAt,
+                        sender: chat.lastMessage.sender,
+                        file: chat.lastMessage.file,
+                    }
                     : null,
                 updatedAt: chat.updatedAt,
             };
@@ -459,14 +491,14 @@ export class PrivateChatService {
                 unreadCount,
                 lastMessage: conversation.lastMessage
                     ? {
-                          id: conversation.lastMessage.id,
-                          content: conversation.lastMessage.content,
-                          createdAt: conversation.lastMessage.createdAt,
-                          senderId: conversation.lastMessage.senderId,
-                          sender: conversation.lastMessage.sender,
-                          service: conversation.lastMessage.service,
-                          isRead: isLastMessageRead,
-                      }
+                        id: conversation.lastMessage.id,
+                        content: conversation.lastMessage.content,
+                        createdAt: conversation.lastMessage.createdAt,
+                        senderId: conversation.lastMessage.senderId,
+                        sender: conversation.lastMessage.sender,
+                        service: conversation.lastMessage.service,
+                        isRead: isLastMessageRead,
+                    }
                     : null,
                 updatedAt: conversation.updatedAt,
             };
