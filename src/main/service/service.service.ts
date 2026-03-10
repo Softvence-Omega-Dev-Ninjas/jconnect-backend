@@ -16,7 +16,7 @@ export class ServiceService {
     constructor(
         private prisma: PrismaService,
         private readonly eventEmitter: EventEmitter2,
-         private readonly firebaseNotificationService: FirebaseNotificationService,
+        private readonly firebaseNotificationService: FirebaseNotificationService,
         @Inject("STRIPE_CLIENT") private stripe: Stripe,
     ) {}
 
