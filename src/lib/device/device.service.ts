@@ -16,7 +16,7 @@ export interface DeviceInfo {
 export class DeviceService {
     private readonly logger = new Logger(DeviceService.name);
 
-    constructor(private readonly prisma: PrismaService) { }
+    constructor(private readonly prisma: PrismaService) {}
 
     /**
      * Parse User-Agent string and extract device information

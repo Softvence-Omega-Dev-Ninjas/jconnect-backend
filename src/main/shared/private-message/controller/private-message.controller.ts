@@ -28,7 +28,7 @@ export class PrivateChatController implements OnModuleInit {
         private readonly privateService: PrivateChatService,
         @Inject(forwardRef(() => PrivateChatGateway))
         private readonly injectedGateway: PrivateChatGateway,
-    ) { }
+    ) {}
 
     onModuleInit() {
         this.gateway = this.injectedGateway;

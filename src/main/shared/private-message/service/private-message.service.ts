@@ -351,7 +351,6 @@ export class PrivateChatService {
                         },
                         service: { include: { serviceRequests: true } },
                         serviceRequest: true,
-                      
                     },
                 },
             },

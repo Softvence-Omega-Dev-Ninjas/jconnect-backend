@@ -156,6 +156,4 @@ export class ServiceRequestController {
     ) {
         return this.serviceRequestService.updateUploadedFiles(id, files.files || [], user);
     }
-
-    
 }
