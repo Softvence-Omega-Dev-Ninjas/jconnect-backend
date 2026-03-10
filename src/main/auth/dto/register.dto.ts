@@ -1,6 +1,7 @@
+import { IsOptional } from 'class-validator';
 // ==================== register.dto.ts ====================
 import { ApiProperty } from "@nestjs/swagger";
-import { IsEmail, IsNotEmpty, IsOptional, IsString, MaxLength, MinLength } from "class-validator";
+import { IsEmail, IsNotEmpty,  IsString, MaxLength, MinLength } from "class-validator";
 
 export class RegisterDto {
     @ApiProperty({
@@ -47,4 +48,14 @@ export class RegisterDto {
     })
     @IsString()
     phone?: string;
+
+    // ---fcm token for push notifications (optional)---
+    @ApiProperty({
+        example: "fcm_token_example",
+        description: "FCM token for push notifications (optional)",
+        required: false,
+    })
+    @IsOptional()
+    @IsString()
+    fcmToken ?: string;
 }

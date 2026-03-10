@@ -11,12 +11,16 @@ import { CustomServiceRequest } from "@prisma/client";
 import { CustomServiceRequestService } from "./custom-service-request.service";
 import { CreateCustomRequestDto } from "./dto/create-custom-request.dto";
 import { UpdateCustomRequestDto } from "./dto/update-custom-request.dto";
+import { serviceGateway } from "./service-socket/serviceGateway";
 
 @ApiExcludeController()
 @ApiTags("Custom Service Requests")
 @Controller("custom-requests")
 export class CustomServiceRequestController {
-    constructor(private readonly customRequestService: CustomServiceRequestService) {}
+    constructor(
+        private readonly customRequestService: CustomServiceRequestService,
+        private readonly serviceGateway: serviceGateway,
+    ) { }
 
     @ApiBearerAuth()
     @ValidateUser()
@@ -24,7 +28,12 @@ export class CustomServiceRequestController {
     @ApiOperation({ summary: "Send a new custom service request to a creator/platform." })
     @ApiResponse({ status: 201, description: "Custom request created successfully." })
     async create(@Body() createDto: CreateCustomRequestDto): Promise<CustomServiceRequest> {
-        return this.customRequestService.create(createDto);
+        const newRequest = await this.customRequestService.create(createDto);
+
+        // Emit socket event for real-time updates
+        this.serviceGateway.emitServiceCreated(newRequest);
+
+        return newRequest;
     }
 
     @ApiBearerAuth()
@@ -33,7 +42,12 @@ export class CustomServiceRequestController {
     @ApiOperation({ summary: "Get all custom requests (admin/creator view)." })
     @ApiResponse({ status: 200, description: "List of all custom requests." })
     async findAll(): Promise<CustomServiceRequest[]> {
-        return this.customRequestService.findAll();
+        const requests = await this.customRequestService.findAll();
+
+        // Emit socket event for real-time list fetch (broadcast to all users)
+        this.serviceGateway.emitServiceListFetched(null, requests);
+
+        return requests;
     }
 
     @ApiBearerAuth()
@@ -43,7 +57,12 @@ export class CustomServiceRequestController {
     @ApiResponse({ status: 200, description: "Request found." })
     @ApiResponse({ status: 404, description: "Request not found." })
     async findOne(@Param("id") id: string): Promise<CustomServiceRequest> {
-        return this.customRequestService.findOne(id);
+        const request = await this.customRequestService.findOne(id);
+
+        // Note: For findOne via REST, we don't emit socket events as it's a read operation
+        // Socket events are emitted only for the socket-based fetch in the gateway
+
+        return request;
     }
 
     @ApiBearerAuth()
@@ -56,7 +75,12 @@ export class CustomServiceRequestController {
         @Param("id") id: string,
         @Body() updateDto: UpdateCustomRequestDto,
     ): Promise<CustomServiceRequest> {
-        return this.customRequestService.update(id, updateDto);
+        const updated = await this.customRequestService.update(id, updateDto);
+
+        // Emit socket event for real-time updates
+        this.serviceGateway.emitServiceUpdated(updated);
+
+        return updated;
     }
 
     @ApiBearerAuth()
@@ -66,6 +90,11 @@ export class CustomServiceRequestController {
     @ApiResponse({ status: 200, description: "Request deleted successfully." })
     @ApiResponse({ status: 404, description: "Request not found." })
     async remove(@Param("id") id: string): Promise<CustomServiceRequest> {
-        return this.customRequestService.remove(id);
+        const deleted = await this.customRequestService.remove(id);
+
+        // Emit socket event for real-time updates
+        this.serviceGateway.emitServiceDeleted(deleted);
+
+        return deleted;
     }
 }
