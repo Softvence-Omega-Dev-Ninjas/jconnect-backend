@@ -20,7 +20,7 @@ export class CustomServiceRequestController {
     constructor(
         private readonly customRequestService: CustomServiceRequestService,
         private readonly serviceGateway: serviceGateway,
-    ) { }
+    ) {}
 
     @ApiBearerAuth()
     @ValidateUser()

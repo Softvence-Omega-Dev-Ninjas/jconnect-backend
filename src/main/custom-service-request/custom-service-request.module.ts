@@ -8,6 +8,5 @@ import { serviceGateway } from "./service-socket/serviceGateway";
     imports: [PrismaModule],
     controllers: [CustomServiceRequestController],
     providers: [CustomServiceRequestService, serviceGateway],
-   
 })
-export class CustomServiceRequestModule { }
+export class CustomServiceRequestModule {}

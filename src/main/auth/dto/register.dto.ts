@@ -1,7 +1,7 @@
-import { IsOptional } from 'class-validator';
+import { IsOptional } from "class-validator";
 // ==================== register.dto.ts ====================
 import { ApiProperty } from "@nestjs/swagger";
-import { IsEmail, IsNotEmpty,  IsString, MaxLength, MinLength } from "class-validator";
+import { IsEmail, IsNotEmpty, IsString, MaxLength, MinLength } from "class-validator";
 
 export class RegisterDto {
     @ApiProperty({
@@ -57,5 +57,5 @@ export class RegisterDto {
     })
     @IsOptional()
     @IsString()
-    fcmToken ?: string;
+    fcmToken?: string;
 }
