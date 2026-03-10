@@ -7,6 +7,7 @@ import {
     Inject,
     OnModuleInit,
     Param,
+    Patch,
     Post,
     Query,
 } from "@nestjs/common";
@@ -38,7 +39,7 @@ export class PrivateChatController implements OnModuleInit {
     async getAllPrivateMessage(@GetUser("userId") userId: string) {
         return await this.privateService.getAllChatsWithLastMessage(userId);
     }
-    // ----------------- get conversation message----------------
+    // ----------------- get conversation message with service id and show all service request data----------------
     @Get(":conversationId")
     @ApiOperation({ summary: "Get messages for a specific private conversation" })
     @ApiQuery({
@@ -93,6 +94,7 @@ export class PrivateChatController implements OnModuleInit {
         return await this.privateService.makePrivateMassageReadTrue(messageId);
     }
 
+    @ApiOperation({ summary: "Delete a private conversation and all its messages" })
     @Delete(":conversationId")
     async deleteConversation(@Param("conversationId") conversationId: string) {
         return await this.privateService.deleteConversation(conversationId);
@@ -102,5 +104,33 @@ export class PrivateChatController implements OnModuleInit {
     @ApiOperation({ summary: "Get all users who have chatted with me with unread counts" })
     async getAllUsersChatWithMe(@GetUser("userId") userId: string) {
         return await this.privateService.getAllUsersChatWithMe(userId);
+    }
+
+    @Patch(":id/is-declined")
+    @ApiOperation({ summary: "Decline or accept a service request" })
+    @ApiQuery({ name: "isDeclined", type: Boolean, required: false })
+    @ApiQuery({ name: "isAccepted", type: Boolean, required: false })
+    async updateIsDeclined(
+        @Param("id") id: string,
+        @Query("isDeclined") isDeclined?: boolean,
+        @Query("isAccepted") isAccepted?: boolean,
+        @GetUser("userId") userId?: string,
+    ) {
+        const updateData: { isDeclined?: boolean; isAccepted?: boolean } = {};
+
+        if (isDeclined !== undefined) {
+            updateData.isDeclined = isDeclined;
+        }
+
+        if (isAccepted !== undefined) {
+            updateData.isAccepted = isAccepted;
+        }
+
+        const updatedServiceRequest = await this.privateService.updateIsDeclined(id, updateData);
+
+        // Emit the update to relevant users (buyer and seller) via WebSocket gateway
+        this.gateway.emitServiceRequestUpdate(updatedServiceRequest);
+
+        return { success: true, updatedServiceRequest };
     }
 }

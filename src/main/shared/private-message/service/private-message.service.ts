@@ -351,7 +351,6 @@ export class PrivateChatService {
                         },
                         service: { include: { serviceRequests: true } },
                         serviceRequest: true,
-                        // file: true,
                     },
                 },
             },
@@ -506,5 +505,66 @@ export class PrivateChatService {
         });
 
         return successResponse(formattedUsers, "Users who chatted with you fetched successfully");
+    }
+
+    /**
+     * ---  Update service request isDeclined and isAccepted status----
+     */
+    @HandleError("Failed to update service request", "PRIVATE_CHAT")
+    async updateIsDeclined(id: string, updateData: { isDeclined?: boolean; isAccepted?: boolean }) {
+        const serviceRequest = await this.prisma.serviceRequest.findUnique({
+            where: { id },
+            include: {
+                service: {
+                    include: {
+                        creator: {
+                            select: {
+                                id: true,
+                                full_name: true,
+                                profilePhoto: true,
+                            },
+                        },
+                    },
+                },
+                buyer: {
+                    select: {
+                        id: true,
+                        full_name: true,
+                        profilePhoto: true,
+                    },
+                },
+            },
+        });
+
+        if (!serviceRequest) {
+            throw new NotFoundException(`Service request with ID ${id} not found`);
+        }
+
+        const updated = await this.prisma.serviceRequest.update({
+            where: { id },
+            data: updateData,
+            include: {
+                service: {
+                    include: {
+                        creator: {
+                            select: {
+                                id: true,
+                                full_name: true,
+                                profilePhoto: true,
+                            },
+                        },
+                    },
+                },
+                buyer: {
+                    select: {
+                        id: true,
+                        full_name: true,
+                        profilePhoto: true,
+                    },
+                },
+            },
+        });
+
+        return updated;
     }
 }

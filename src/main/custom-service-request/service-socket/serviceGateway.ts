@@ -37,7 +37,7 @@ export class serviceGateway implements OnGatewayInit, OnGatewayConnection, OnGat
         private readonly customServiceRequestService: CustomServiceRequestService,
         private readonly configService: ConfigService,
         private readonly prisma: PrismaService,
-    ) { }
+    ) {}
 
     @WebSocketServer()
     server: Server;

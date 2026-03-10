@@ -88,7 +88,7 @@ export class DeviceService {
             }
         } catch (error) {
             this.logger.error(`❌ Failed to save device info for user ${userId}:`, error);
-            // Don't throw error - device tracking should not break authentication
+            throw error;
         }
     }
 
