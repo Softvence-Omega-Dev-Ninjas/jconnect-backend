@@ -83,6 +83,7 @@ export class AuthService {
                 username,
                 full_name: full_name,
                 phone: phone,
+                fcmToken: payload.fcmToken,
                 password: hashedPassword,
                 isVerified: false,
                 role: Role.ARTIST,

@@ -26,7 +26,6 @@ export class AuthController {
         private readonly authGoogleService: AuthGoogleService,
         private readonly authFirebaseService: AuthFirebaseService,
         private readonly deviceService: DeviceService,
-        private readonly twilio: TwilioService,
     ) {}
 
     // -------------- User Registration --------------
