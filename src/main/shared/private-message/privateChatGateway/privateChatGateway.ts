@@ -40,7 +40,7 @@ export class PrivateChatGateway implements OnGatewayInit, OnGatewayConnection, O
         private readonly privateChatService: PrivateChatService,
         private readonly configService: ConfigService,
         private readonly prisma: PrismaService,
-    ) {}
+    ) { }
 
     @WebSocketServer()
     server: Server;
@@ -141,7 +141,7 @@ export class PrivateChatGateway implements OnGatewayInit, OnGatewayConnection, O
         const conversation = await this.privateChatService.getPrivateConversationWithMessages(
             conversationId,
             userId,
-            undefined, // serviceRequestsId is optional
+            undefined,
         );
         client.emit(PrivateChatEvents.NEW_CONVERSATION, conversation);
     }
@@ -212,6 +212,23 @@ export class PrivateChatGateway implements OnGatewayInit, OnGatewayConnection, O
     /** Helper for external services to emit new messages */
     emitNewMessage(userId: string, message: any) {
         this.server.to(userId).emit(PrivateChatEvents.NEW_MESSAGE, message);
+    }
+
+    /** Helper to emit service request updates to relevant users */
+    emitServiceRequestUpdate(updatedServiceRequest: any) {
+        // Notify buyer
+        if (updatedServiceRequest.buyer?.id) {
+            this.server.to(updatedServiceRequest.buyer.id).emit('serviceRequestUpdated', updatedServiceRequest);
+            this.logger.log(`Service request update sent to buyer: ${updatedServiceRequest.buyer.id}`);
+        }
+
+        // Notify seller (service creator)
+        if (updatedServiceRequest.service?.creator?.id) {
+            this.server.to(updatedServiceRequest.service.creator.id).emit('serviceRequestUpdated', updatedServiceRequest);
+            this.logger.log(`Service request update sent to seller: ${updatedServiceRequest.service.creator.id}`);
+        }
+
+        this.logger.log(`Service Request ${updatedServiceRequest.id} updated and notified to relevant users`);
     }
 
     private getUserIdFromSocket(client: Socket): string | null {

@@ -15,6 +15,7 @@ import {
     ApiBearerAuth,
     ApiBody,
     ApiConsumes,
+    ApiOperation,
     ApiProperty,
     ApiQuery,
     ApiTags,
@@ -92,6 +93,8 @@ export class ServiceRequestController {
         return this.serviceRequestService.updateIsPaid(id, isPaidBoolean);
     }
 
+    // ----------------- decline or accept service request-----------------
+    @ApiOperation({ summary: "Decline or accept a service request" })
     @ApiBearerAuth()
     @ValidateUser()
     @Patch(":id/is-declined")
@@ -153,4 +156,6 @@ export class ServiceRequestController {
     ) {
         return this.serviceRequestService.updateUploadedFiles(id, files.files || [], user);
     }
+
+    
 }

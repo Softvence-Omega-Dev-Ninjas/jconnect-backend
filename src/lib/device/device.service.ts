@@ -16,7 +16,7 @@ export interface DeviceInfo {
 export class DeviceService {
     private readonly logger = new Logger(DeviceService.name);
 
-    constructor(private readonly prisma: PrismaService) {}
+    constructor(private readonly prisma: PrismaService) { }
 
     /**
      * Parse User-Agent string and extract device information
@@ -88,7 +88,7 @@ export class DeviceService {
             }
         } catch (error) {
             this.logger.error(`❌ Failed to save device info for user ${userId}:`, error);
-            // Don't throw error - device tracking should not break authentication
+            throw error;
         }
     }
 
