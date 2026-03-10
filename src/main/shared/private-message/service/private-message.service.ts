@@ -1,5 +1,5 @@
 import { FirebaseNotificationService } from "@main/shared/notification/firebase-notification.service";
-import { Injectable, NotFoundException } from "@nestjs/common";
+import { HttpException, Injectable, NotFoundException } from "@nestjs/common";
 import { AppError } from "src/common/error/handle-error.app";
 import { HandleError } from "src/common/error/handle-error.decorator";
 import { successResponse } from "src/common/utilsResponse/response.util";
@@ -12,7 +12,7 @@ export class PrivateChatService {
     constructor(
         private readonly prisma: PrismaService,
         private readonly firebaseNotificationService: FirebaseNotificationService,
-    ) {}
+    ) { }
 
     /**
      * Send a private message and update lastMessage in conversation
@@ -53,8 +53,8 @@ export class PrivateChatService {
                 ...(serviceRequestId && { serviceRequestId }),
                 ...(dto.files &&
                     dto.files.length > 0 && {
-                        files: dto.files,
-                    }),
+                    files: dto.files,
+                }),
             },
             include: {
                 sender: {
@@ -184,12 +184,12 @@ export class PrivateChatService {
                 participant: otherUser,
                 lastMessage: chat.lastMessage
                     ? {
-                          id: chat.lastMessage.id,
-                          content: chat.lastMessage.content,
-                          createdAt: chat.lastMessage.createdAt,
-                          sender: chat.lastMessage.sender,
-                          file: chat.lastMessage.file,
-                      }
+                        id: chat.lastMessage.id,
+                        content: chat.lastMessage.content,
+                        createdAt: chat.lastMessage.createdAt,
+                        sender: chat.lastMessage.sender,
+                        file: chat.lastMessage.file,
+                    }
                     : null,
                 updatedAt: chat.updatedAt,
             };
@@ -491,14 +491,14 @@ export class PrivateChatService {
                 unreadCount,
                 lastMessage: conversation.lastMessage
                     ? {
-                          id: conversation.lastMessage.id,
-                          content: conversation.lastMessage.content,
-                          createdAt: conversation.lastMessage.createdAt,
-                          senderId: conversation.lastMessage.senderId,
-                          sender: conversation.lastMessage.sender,
-                          service: conversation.lastMessage.service,
-                          isRead: isLastMessageRead,
-                      }
+                        id: conversation.lastMessage.id,
+                        content: conversation.lastMessage.content,
+                        createdAt: conversation.lastMessage.createdAt,
+                        senderId: conversation.lastMessage.senderId,
+                        sender: conversation.lastMessage.sender,
+                        service: conversation.lastMessage.service,
+                        isRead: isLastMessageRead,
+                    }
                     : null,
                 updatedAt: conversation.updatedAt,
             };
@@ -543,6 +543,56 @@ export class PrivateChatService {
         const updated = await this.prisma.serviceRequest.update({
             where: { id },
             data: updateData,
+            include: {
+                service: {
+                    include: {
+                        creator: {
+                            select: {
+                                id: true,
+                                full_name: true,
+                                profilePhoto: true,
+                            },
+                        },
+                    },
+                },
+                buyer: {
+                    select: {
+                        id: true,
+                        full_name: true,
+                        profilePhoto: true,
+                    },
+                },
+            },
+        });
+
+        return updated;
+    }
+
+    /**
+     * Update uploaded file URLs for a service request
+     */
+    @HandleError("Failed to update uploaded files for service request", "PRIVATE_CHAT")
+    async updateUploadedFiles(id: string, uploadedUrls: string[], user: any) {
+        const serviceRequest = await this.prisma.serviceRequest.findUnique({
+            where: { id },
+        });
+
+        if (!serviceRequest) {
+            throw new HttpException("Service request not found", 404);
+        }
+
+        if (serviceRequest.buyerId !== user.userId) {
+            throw new HttpException("You are not authorized to update this service request", 403);
+        }
+
+        // Update service request with new URLs and reset status
+        const updated = await this.prisma.serviceRequest.update({
+            where: { id },
+            data: {
+                uploadedFileUrl: uploadedUrls.length > 0 ? uploadedUrls : ["no file"],
+                isDeclined: false,
+                isAccepted: false,
+            },
             include: {
                 service: {
                     include: {
