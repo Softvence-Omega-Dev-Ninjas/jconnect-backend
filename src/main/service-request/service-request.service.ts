@@ -3,6 +3,7 @@ import { PrismaService } from "src/lib/prisma/prisma.service";
 
 import { AwsService } from "@main/aws/aws.service";
 import { CreateServiceRequestDto } from "./dto/create-service-request.dto";
+import { HandleError } from "@common/error/handle-error.decorator";
 
 @Injectable()
 export class ServiceRequestService {
@@ -122,6 +123,8 @@ export class ServiceRequestService {
         });
     }
 
+    // ------------ decline or accept service request-----------------
+    @HandleError("Failed to update service request status")
     async updateIsDeclined(id: string, updateData: { isDeclined?: boolean; isAccepted?: boolean }) {
         const serviceRequest = await this.prisma.serviceRequest.findUnique({
             where: { id },
