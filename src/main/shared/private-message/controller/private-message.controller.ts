@@ -12,7 +12,7 @@ import {
     Query,
 } from "@nestjs/common";
 import { ApiBearerAuth, ApiOperation, ApiQuery, ApiTags } from "@nestjs/swagger";
-import { GetUser, ValidateAuth } from "src/common/jwt/jwt.decorator";
+import { GetUser, ValidateAuth, ValidateUser } from "src/common/jwt/jwt.decorator";
 import { SendPrivateMessageDto } from "../dto/privateChatGateway.dto";
 import { PrivateChatGateway } from "../privateChatGateway/privateChatGateway";
 import { PrivateChatService } from "../service/private-message.service";
@@ -28,7 +28,7 @@ export class PrivateChatController implements OnModuleInit {
         private readonly privateService: PrivateChatService,
         @Inject(forwardRef(() => PrivateChatGateway))
         private readonly injectedGateway: PrivateChatGateway,
-    ) {}
+    ) { }
 
     onModuleInit() {
         this.gateway = this.injectedGateway;
@@ -106,6 +106,7 @@ export class PrivateChatController implements OnModuleInit {
         return await this.privateService.getAllUsersChatWithMe(userId);
     }
 
+    //------------------- Decline or accept a service request----------------
     @Patch(":id/is-declined")
     @ApiOperation({ summary: "Decline or accept a service request" })
     @ApiQuery({ name: "isDeclined", type: Boolean, required: false })
@@ -133,4 +134,27 @@ export class PrivateChatController implements OnModuleInit {
 
         return { success: true, updatedServiceRequest };
     }
+
+    //  ------------- update file URLs for service request----------------
+    @ApiBearerAuth()
+    @ValidateUser()
+    @Patch(":id/uploaded-files")
+    @ApiOperation({ summary: "Update uploaded file URLs for service request" })
+    async updateUploadedFiles(
+        @Param("id") id: string,
+        @Body() body: { uploadedFileUrl: string[] },
+        @GetUser() user: any,
+    ) {
+        const updatedServiceRequest = await this.privateService.updateUploadedFiles(
+            id,
+            body.uploadedFileUrl || [],
+            user,
+        );
+
+        // Emit the files update to relevant users via WebSocket
+        this.gateway.emitServiceRequestFilesUpdate(updatedServiceRequest);
+
+        return { success: true, updatedServiceRequest };
+    }
+
 }
