@@ -27,6 +27,8 @@ enum PrivateChatEvents {
     CONVERSATION_LIST = "private:conversation_list",
     LOAD_CONVERSATIONS = "private:load_conversations",
     LOAD_SINGLE_CONVERSATION = "private:load_single_conversation",
+    SERVICE_REQUEST_UPDATED = "serviceRequestUpdated",
+    SERVICE_REQUEST_FILES_UPDATED = "serviceRequestFilesUpdated",
 }
 
 @WebSocketGateway({
@@ -40,7 +42,7 @@ export class PrivateChatGateway implements OnGatewayInit, OnGatewayConnection, O
         private readonly privateChatService: PrivateChatService,
         private readonly configService: ConfigService,
         private readonly prisma: PrismaService,
-    ) {}
+    ) { }
 
     @WebSocketServer()
     server: Server;
@@ -220,7 +222,7 @@ export class PrivateChatGateway implements OnGatewayInit, OnGatewayConnection, O
         if (updatedServiceRequest.buyer?.id) {
             this.server
                 .to(updatedServiceRequest.buyer.id)
-                .emit("serviceRequestUpdated", updatedServiceRequest);
+                .emit(PrivateChatEvents.SERVICE_REQUEST_UPDATED, updatedServiceRequest);
             this.logger.log(
                 `Service request update sent to buyer: ${updatedServiceRequest.buyer.id}`,
             );
@@ -230,7 +232,7 @@ export class PrivateChatGateway implements OnGatewayInit, OnGatewayConnection, O
         if (updatedServiceRequest.service?.creator?.id) {
             this.server
                 .to(updatedServiceRequest.service.creator.id)
-                .emit("serviceRequestUpdated", updatedServiceRequest);
+                .emit(PrivateChatEvents.SERVICE_REQUEST_UPDATED, updatedServiceRequest);
             this.logger.log(
                 `Service request update sent to seller: ${updatedServiceRequest.service.creator.id}`,
             );
@@ -238,6 +240,33 @@ export class PrivateChatGateway implements OnGatewayInit, OnGatewayConnection, O
 
         this.logger.log(
             `Service Request ${updatedServiceRequest.id} updated and notified to relevant users`,
+        );
+    }
+
+    /** Helper to emit service request file URL updates to relevant users */
+    emitServiceRequestFilesUpdate(updatedServiceRequest: any) {
+        // Notify buyer
+        if (updatedServiceRequest.buyer?.id) {
+            this.server
+                .to(updatedServiceRequest.buyer.id)
+                .emit(PrivateChatEvents.SERVICE_REQUEST_FILES_UPDATED, updatedServiceRequest);
+            this.logger.log(
+                `Service request files update sent to buyer: ${updatedServiceRequest.buyer.id}`,
+            );
+        }
+
+        // Notify seller (service creator)
+        if (updatedServiceRequest.service?.creator?.id) {
+            this.server
+                .to(updatedServiceRequest.service.creator.id)
+                .emit(PrivateChatEvents.SERVICE_REQUEST_FILES_UPDATED, updatedServiceRequest);
+            this.logger.log(
+                `Service request files update sent to seller: ${updatedServiceRequest.service.creator.id}`,
+            );
+        }
+
+        this.logger.log(
+            `Service Request ${updatedServiceRequest.id} files updated and notified to relevant users`,
         );
     }
 
