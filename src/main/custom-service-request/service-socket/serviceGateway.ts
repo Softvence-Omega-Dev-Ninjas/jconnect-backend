@@ -1,120 +1,4 @@
-/**
- * Service Request WebSocket Gateway
- *
- * This gateway provides real-time socket events for all custom service request REST API operations.
- *
- * USAGE IN CONTROLLER/SERVICE:
- *
- * 1. Inject the gateway in your controller or service constructor:
- *    constructor(private readonly serviceGateway: serviceGateway) {}
- *
- * 2. Call the appropriate emit methods after REST API operations:
- *
- *    // After creating a service request
- *    const newRequest = await this.service.create(dto);
- *    this.serviceGateway.emitServiceCreated(newRequest);
- *
- *    // After updating a service request
- *    const updated = await this.service.update(id, dto);
- *    this.serviceGateway.emitServiceUpdated(updated);
- *
- *    // After deleting a service request
- *    const deleted = await this.service.remove(id);
- *    this.serviceGateway.emitServiceDeleted(deleted);
- *
- *    // After fetching a single service request
- *    const request = await this.service.findOne(id);
- *    this.serviceGateway.emitServiceFetched(userId, request);
- *
- *    // After fetching all service requests
- *    const requests = await this.service.findAll();
- *    this.serviceGateway.emitServiceListFetched(userId, requests);
- *
- *    // When service status changes
- *    this.serviceGateway.emitServiceStatusChanged(request, 'ACCEPTED');
- *
- *    // When service is accepted
- *    this.serviceGateway.emitServiceAccepted(request);
- *
- *    // When service is declined
- *    this.serviceGateway.emitServiceDeclined(request, 'Not available');
- *
- * FRONTEND CLIENT USAGE:
- *
- * Connect to the socket:
- * const socket = io('http://localhost:3000/service', {
- *   auth: { token: 'Bearer YOUR_JWT_TOKEN' }
- * });
- *
- * Listen to events:
- * socket.on('service:created', (data) => console.log('New service created:', data));
- * socket.on('service:updated', (data) => console.log('Service updated:', data));
- * socket.on('service:deleted', (data) => console.log('Service deleted:', data));
- * socket.on('service:fetched', (data) => console.log('Service fetched:', data));
- * socket.on('service:get_service_requests', (data) => console.log('Service list:', data));
- * socket.on('service:list_updated', (data) => console.log('Service list updated:', data));
- * socket.on('service_request_status', (data) => console.log('Status changed:', data));
- * socket.on('service_request_accept', (data) => console.log('Service accepted:', data));
- * socket.on('service_request_decline', (data) => console.log('Service declined:', data));
- * socket.on('service:error', (error) => console.error('Error:', error));
- * socket.on('service:success', (userId) => console.log('Connected as:', userId));
- *
- * Emit events to perform operations:
- * // Create a new service request
- * socket.emit('service:create', {
- *   buyerId: 'user123',
- *   targetCreatorId: 'creator456',
- *   serviceName: 'Custom Design',
- *   description: 'I need a logo design',
- *   budgetRangeMin: 100,
- *   budgetRangeMax: 500
- * });
- *
- * // Get all service requests
- * socket.emit('service:get_all');
- *
- * // Get a specific service request
- * socket.emit('service:get_one', { id: 'request_id_123' });
- *
- * // Update a service request
- * socket.emit('service:update', {
- *   id: 'request_id_123',
- *   data: { status: 'IN_PROGRESS', quotedPrice: 350 }
- * });
- *
- * // Delete a service request
- * socket.emit('service:delete', { id: 'request_id_123' });
- *
- * // Accept a service request
- * socket.emit('service:accept', { id: 'request_id_123' });
- *
- * // Decline a service request
- * socket.emit('service:decline', { id: 'request_id_123', reason: 'Not available' });
- *
- * AVAILABLE EVENTS:
- *
- * INCOMING (Listen to these):
- * - service:created: Emitted when a new service request is created
- * - service:updated: Emitted when a service request is updated
- * - service:deleted: Emitted when a service request is deleted
- * - service:fetched: Emitted when a single service request is fetched
- * - service:get_service_requests: Emitted when service requests list is fetched
- * - service:list_updated: Broadcasted to all when any list change occurs
- * - service_request_status: Emitted when service request status changes
- * - service_request_accept: Emitted when service request is accepted
- * - service_request_decline: Emitted when service request is declined
- * - service:error: Emitted on errors
- * - service:success: Emitted on successful connection
- *
- * OUTGOING (Emit these to perform operations):
- * - service:create: Create a new service request
- * - service:get_all: Fetch all service requests
- * - service:get_one: Fetch a specific service request
- * - service:update: Update a service request
- * - service:delete: Delete a service request
- * - service:accept: Accept a service request
- * - service:decline: Decline a service request
- */
+
 
 import { Logger } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
@@ -136,19 +20,14 @@ import { CustomServiceRequestService } from "../custom-service-request.service";
 enum ServiceEvents {
     ERROR = "service:error",
     SUCCESS = "service:success",
-    SERVICE_REQUEST = "service_request",
     GET_SERVICE_REQUESTS = "service:get_service_requests",
-    SERVICE_REQUEST_ID = "service_request_id",
-    SERVICE_REQUEST_STATUS = "service_request_status",
-    SERVICE_REQUEST_DECLINE = "service_request_decline",
-    SERVICE_REQUEST_ACCEPT = "service_request_accept",
 
     // REST API Real-time Events
     SERVICE_CREATED = "service:created",
     SERVICE_UPDATED = "service:updated",
     SERVICE_DELETED = "service:deleted",
     SERVICE_FETCHED = "service:fetched",
-    SERVICE_LIST_UPDATED = "service:list_updated",
+    SERVICE_LIST_UPDATED="service:list_updated"
 }
 
 @WebSocketGateway({
@@ -233,7 +112,7 @@ export class serviceGateway implements OnGatewayInit, OnGatewayConnection, OnGat
      * Handle creating a new custom service request via WebSocket
   
      */
-    @SubscribeMessage("service:create")
+    @SubscribeMessage('service:create')
     async handleCreateService(client: Socket, payload: any) {
         try {
             const userId = client.data.userId;
@@ -249,7 +128,7 @@ export class serviceGateway implements OnGatewayInit, OnGatewayConnection, OnGat
             client.emit(ServiceEvents.SERVICE_CREATED, {
                 event: "created",
                 data: newRequest,
-                timestamp: new Date().toISOString(),
+                timestamp: new Date().toISOString()
             });
 
             // Broadcast to all relevant parties
@@ -261,7 +140,7 @@ export class serviceGateway implements OnGatewayInit, OnGatewayConnection, OnGat
             this.logger.error(`Error creating service via socket: ${error.message}`);
             client.emit(ServiceEvents.ERROR, {
                 message: error.message || "Failed to create service request",
-                timestamp: new Date().toISOString(),
+                timestamp: new Date().toISOString()
             });
             return { success: false, error: error.message };
         }
@@ -271,7 +150,7 @@ export class serviceGateway implements OnGatewayInit, OnGatewayConnection, OnGat
      * Handle fetching all custom service requests via WebSocket
  
      */
-    @SubscribeMessage("service:get_all")
+    @SubscribeMessage('service:get_all')
     async handleGetAllServices(client: Socket) {
         try {
             const userId = client.data.userId;
@@ -292,7 +171,7 @@ export class serviceGateway implements OnGatewayInit, OnGatewayConnection, OnGat
             this.logger.error(`Error fetching services via socket: ${error.message}`);
             client.emit(ServiceEvents.ERROR, {
                 message: error.message || "Failed to fetch service requests",
-                timestamp: new Date().toISOString(),
+                timestamp: new Date().toISOString()
             });
             return { success: false, error: error.message };
         }
@@ -302,7 +181,7 @@ export class serviceGateway implements OnGatewayInit, OnGatewayConnection, OnGat
      * Handle fetching a single custom service request via WebSocket
     
      */
-    @SubscribeMessage("service:get_one")
+    @SubscribeMessage('service:get_one')
     async handleGetOneService(client: Socket, payload: { id: string }) {
         try {
             const userId = client.data.userId;
@@ -328,7 +207,7 @@ export class serviceGateway implements OnGatewayInit, OnGatewayConnection, OnGat
             this.logger.error(`Error fetching service via socket: ${error.message}`);
             client.emit(ServiceEvents.ERROR, {
                 message: error.message || "Failed to fetch service request",
-                timestamp: new Date().toISOString(),
+                timestamp: new Date().toISOString()
             });
             return { success: false, error: error.message };
         }
@@ -338,7 +217,7 @@ export class serviceGateway implements OnGatewayInit, OnGatewayConnection, OnGat
      * Handle updating a custom service request via WebSocket
    
      */
-    @SubscribeMessage("service:update")
+    @SubscribeMessage('service:update')
     async handleUpdateService(client: Socket, payload: { id: string; data: any }) {
         try {
             const userId = client.data.userId;
@@ -359,7 +238,7 @@ export class serviceGateway implements OnGatewayInit, OnGatewayConnection, OnGat
             client.emit(ServiceEvents.SERVICE_UPDATED, {
                 event: "updated",
                 data: updated,
-                timestamp: new Date().toISOString(),
+                timestamp: new Date().toISOString()
             });
 
             // Broadcast to all relevant parties
@@ -371,7 +250,7 @@ export class serviceGateway implements OnGatewayInit, OnGatewayConnection, OnGat
             this.logger.error(`Error updating service via socket: ${error.message}`);
             client.emit(ServiceEvents.ERROR, {
                 message: error.message || "Failed to update service request",
-                timestamp: new Date().toISOString(),
+                timestamp: new Date().toISOString()
             });
             return { success: false, error: error.message };
         }
@@ -381,7 +260,7 @@ export class serviceGateway implements OnGatewayInit, OnGatewayConnection, OnGat
      * Handle deleting a custom service request via WebSocket
   
      */
-    @SubscribeMessage("service:delete")
+    @SubscribeMessage('service:delete')
     async handleDeleteService(client: Socket, payload: { id: string }) {
         try {
             const userId = client.data.userId;
@@ -402,7 +281,7 @@ export class serviceGateway implements OnGatewayInit, OnGatewayConnection, OnGat
             client.emit(ServiceEvents.SERVICE_DELETED, {
                 event: "deleted",
                 data: deleted,
-                timestamp: new Date().toISOString(),
+                timestamp: new Date().toISOString()
             });
 
             // Broadcast to all relevant parties
@@ -414,7 +293,7 @@ export class serviceGateway implements OnGatewayInit, OnGatewayConnection, OnGat
             this.logger.error(`Error deleting service via socket: ${error.message}`);
             client.emit(ServiceEvents.ERROR, {
                 message: error.message || "Failed to delete service request",
-                timestamp: new Date().toISOString(),
+                timestamp: new Date().toISOString()
             });
             return { success: false, error: error.message };
         }
@@ -424,7 +303,7 @@ export class serviceGateway implements OnGatewayInit, OnGatewayConnection, OnGat
      * Handle accepting a service request via WebSocket
      
      */
-    @SubscribeMessage("service:accept")
+    @SubscribeMessage('service:accept')
     async handleAcceptService(client: Socket, payload: { id: string }) {
         try {
             const userId = client.data.userId;
@@ -443,7 +322,7 @@ export class serviceGateway implements OnGatewayInit, OnGatewayConnection, OnGat
 
             // Emit acceptance events
             this.emitServiceAccepted(accepted);
-            this.emitServiceStatusChanged(accepted, "ACCEPTED");
+            this.emitServiceStatusChanged(accepted, 'ACCEPTED');
 
             this.logger.log(`Service request accepted via socket: ${payload.id}`);
             return { success: true, data: accepted };
@@ -451,7 +330,7 @@ export class serviceGateway implements OnGatewayInit, OnGatewayConnection, OnGat
             this.logger.error(`Error accepting service via socket: ${error.message}`);
             client.emit(ServiceEvents.ERROR, {
                 message: error.message || "Failed to accept service request",
-                timestamp: new Date().toISOString(),
+                timestamp: new Date().toISOString()
             });
             return { success: false, error: error.message };
         }
@@ -461,7 +340,7 @@ export class serviceGateway implements OnGatewayInit, OnGatewayConnection, OnGat
      * Handle declining a service request via WebSocket
     
      */
-    @SubscribeMessage("service:decline")
+    @SubscribeMessage('service:decline')
     async handleDeclineService(client: Socket, payload: { id: string; reason?: string }) {
         try {
             const userId = client.data.userId;
@@ -480,7 +359,7 @@ export class serviceGateway implements OnGatewayInit, OnGatewayConnection, OnGat
 
             // Emit decline events
             this.emitServiceDeclined(declined, payload.reason);
-            this.emitServiceStatusChanged(declined, "DECLINED");
+            this.emitServiceStatusChanged(declined, 'DECLINED');
 
             this.logger.log(`Service request declined via socket: ${payload.id}`);
             return { success: true, data: declined };
@@ -488,7 +367,7 @@ export class serviceGateway implements OnGatewayInit, OnGatewayConnection, OnGat
             this.logger.error(`Error declining service via socket: ${error.message}`);
             client.emit(ServiceEvents.ERROR, {
                 message: error.message || "Failed to decline service request",
-                timestamp: new Date().toISOString(),
+                timestamp: new Date().toISOString()
             });
             return { success: false, error: error.message };
         }
@@ -498,7 +377,7 @@ export class serviceGateway implements OnGatewayInit, OnGatewayConnection, OnGat
 
     /**
      * Emit event when a new custom service request is created
-   
+     * Called by REST API controller after creating a request
      */
     emitServiceCreated(serviceRequest: any) {
         try {
@@ -616,7 +495,7 @@ export class serviceGateway implements OnGatewayInit, OnGatewayConnection, OnGat
             this.server.to(userId).emit(ServiceEvents.SERVICE_FETCHED, {
                 event: "fetched",
                 data: serviceRequest,
-                timestamp: new Date().toISOString(),
+                timestamp: new Date().toISOString()
             });
 
             this.logger.log(`Service request fetched event emitted to user ${userId}`);
@@ -627,7 +506,7 @@ export class serviceGateway implements OnGatewayInit, OnGatewayConnection, OnGat
 
     /**
      * Emit event when service requests list is fetched
-     
+     * Called by REST API controller after fetching all requests
      */
     emitServiceListFetched(userId: string | null, serviceRequests: any[]) {
         try {
@@ -660,26 +539,20 @@ export class serviceGateway implements OnGatewayInit, OnGatewayConnection, OnGat
                 event: "status_changed",
                 data: serviceRequest,
                 status: status,
-                timestamp: new Date().toISOString(),
+                timestamp: new Date().toISOString()
             };
 
             // Emit to the buyer
             if (serviceRequest.buyerId) {
-                this.server
-                    .to(serviceRequest.buyerId)
-                    .emit(ServiceEvents.SERVICE_REQUEST_STATUS, payload);
+                this.server.to(serviceRequest.buyerId).emit(ServiceEvents.SERVICE_REQUEST_STATUS, payload);
             }
 
             // Emit to the target creator if specified
             if (serviceRequest.targetCreatorId) {
-                this.server
-                    .to(serviceRequest.targetCreatorId)
-                    .emit(ServiceEvents.SERVICE_REQUEST_STATUS, payload);
+                this.server.to(serviceRequest.targetCreatorId).emit(ServiceEvents.SERVICE_REQUEST_STATUS, payload);
             }
 
-            this.logger.log(
-                `Service request status changed event emitted: ${serviceRequest.id} - ${status}`,
-            );
+            this.logger.log(`Service request status changed event emitted: ${serviceRequest.id} - ${status}`);
         } catch (error) {
             this.logger.error(`Error emitting service status changed event: ${error.message}`);
         }
@@ -694,21 +567,17 @@ export class serviceGateway implements OnGatewayInit, OnGatewayConnection, OnGat
             const payload = {
                 event: "accepted",
                 data: serviceRequest,
-                timestamp: new Date().toISOString(),
+                timestamp: new Date().toISOString()
             };
 
             // Emit to the buyer
             if (serviceRequest.buyerId) {
-                this.server
-                    .to(serviceRequest.buyerId)
-                    .emit(ServiceEvents.SERVICE_REQUEST_ACCEPT, payload);
+                this.server.to(serviceRequest.buyerId).emit(ServiceEvents.SERVICE_REQUEST_ACCEPT, payload);
             }
 
             // Emit to the target creator if specified
             if (serviceRequest.targetCreatorId) {
-                this.server
-                    .to(serviceRequest.targetCreatorId)
-                    .emit(ServiceEvents.SERVICE_REQUEST_ACCEPT, payload);
+                this.server.to(serviceRequest.targetCreatorId).emit(ServiceEvents.SERVICE_REQUEST_ACCEPT, payload);
             }
 
             this.logger.log(`Service request accepted event emitted: ${serviceRequest.id}`);
@@ -727,21 +596,17 @@ export class serviceGateway implements OnGatewayInit, OnGatewayConnection, OnGat
                 event: "declined",
                 data: serviceRequest,
                 reason: reason,
-                timestamp: new Date().toISOString(),
+                timestamp: new Date().toISOString()
             };
 
             // Emit to the buyer
             if (serviceRequest.buyerId) {
-                this.server
-                    .to(serviceRequest.buyerId)
-                    .emit(ServiceEvents.SERVICE_REQUEST_DECLINE, payload);
+                this.server.to(serviceRequest.buyerId).emit(ServiceEvents.SERVICE_REQUEST_DECLINE, payload);
             }
 
             // Emit to the target creator if specified
             if (serviceRequest.targetCreatorId) {
-                this.server
-                    .to(serviceRequest.targetCreatorId)
-                    .emit(ServiceEvents.SERVICE_REQUEST_DECLINE, payload);
+                this.server.to(serviceRequest.targetCreatorId).emit(ServiceEvents.SERVICE_REQUEST_DECLINE, payload);
             }
 
             this.logger.log(`Service request declined event emitted: ${serviceRequest.id}`);
@@ -752,7 +617,6 @@ export class serviceGateway implements OnGatewayInit, OnGatewayConnection, OnGat
 
     /**
      * Broadcast error event to specific user or all users
-   
      */
     emitError(error: any, userId?: string) {
         try {
