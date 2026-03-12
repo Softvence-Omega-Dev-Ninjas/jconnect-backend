@@ -55,7 +55,6 @@ export class AuthFirebaseService {
                     projectId,
                     privateKey,
                     clientEmail,
-
                 }),
             });
 

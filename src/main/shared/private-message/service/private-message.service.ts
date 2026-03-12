@@ -12,7 +12,7 @@ export class PrivateChatService {
     constructor(
         private readonly prisma: PrismaService,
         private readonly firebaseNotificationService: FirebaseNotificationService,
-    ) { }
+    ) {}
 
     /**
      * Send a private message and update lastMessage in conversation
@@ -53,8 +53,8 @@ export class PrivateChatService {
                 ...(serviceRequestId && { serviceRequestId }),
                 ...(dto.files &&
                     dto.files.length > 0 && {
-                    files: dto.files,
-                }),
+                        files: dto.files,
+                    }),
             },
             include: {
                 sender: {
@@ -115,7 +115,8 @@ export class PrivateChatService {
             await this.firebaseNotificationService.sendToUser(
                 recipientId,
                 {
-                    title: message.sender.full_name || message.sender.username || "User new message",
+                    title:
+                        message.sender.full_name || message.sender.username || "User new message",
                     body: dto.content || "You have a new message",
                     type: NotificationType.NEW_MESSAGE,
                     data: {
@@ -188,12 +189,12 @@ export class PrivateChatService {
                 participant: otherUser,
                 lastMessage: chat.lastMessage
                     ? {
-                        id: chat.lastMessage.id,
-                        content: chat.lastMessage.content,
-                        createdAt: chat.lastMessage.createdAt,
-                        sender: chat.lastMessage.sender,
-                        file: chat.lastMessage.file,
-                    }
+                          id: chat.lastMessage.id,
+                          content: chat.lastMessage.content,
+                          createdAt: chat.lastMessage.createdAt,
+                          sender: chat.lastMessage.sender,
+                          file: chat.lastMessage.file,
+                      }
                     : null,
                 updatedAt: chat.updatedAt,
             };
@@ -467,7 +468,7 @@ export class PrivateChatService {
                 messages: {
                     where: {
                         senderId: {
-                            not: userId, 
+                            not: userId,
                         },
                         statuses: {
                             some: {
@@ -505,15 +506,15 @@ export class PrivateChatService {
                 unreadCount,
                 lastMessage: conversation.lastMessage
                     ? {
-                        id: conversation.lastMessage.id,
-                        content: conversation.lastMessage.content,
-                        createdAt: conversation.lastMessage.createdAt,
-                        senderId: conversation.lastMessage.senderId,
-                        sender: conversation.lastMessage.sender,
-                        service: conversation.lastMessage.service,
-                        username: conversation.lastMessage.sender.username,
-                        isRead: isLastMessageRead,
-                    }
+                          id: conversation.lastMessage.id,
+                          content: conversation.lastMessage.content,
+                          createdAt: conversation.lastMessage.createdAt,
+                          senderId: conversation.lastMessage.senderId,
+                          sender: conversation.lastMessage.sender,
+                          service: conversation.lastMessage.service,
+                          username: conversation.lastMessage.sender.username,
+                          isRead: isLastMessageRead,
+                      }
                     : null,
                 updatedAt: conversation.updatedAt,
             };
