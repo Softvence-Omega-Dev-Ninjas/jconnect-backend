@@ -55,6 +55,7 @@ export class AuthFirebaseService {
                     projectId,
                     privateKey,
                     clientEmail,
+
                 }),
             });
 
@@ -123,6 +124,7 @@ export class AuthFirebaseService {
                     auth_provider: provider.toUpperCase() as any,
                     role: Role.ARTIST,
                     customerIdStripe: customer.id,
+                    fcmToken: dto.fcmToken || null,
                 },
             });
 

@@ -28,4 +28,14 @@ export class FirebaseLoginDto {
     @IsString()
     @IsOptional()
     username?: string;
+
+    // --- fcmToken is optional and can be used for push notifications ---
+    @ApiProperty({
+        example: "fcm_token_example_123456",
+        description: "Optional FCM token for push notifications",
+        required: false,
+    })
+    @IsString()
+    @IsOptional()
+    fcmToken?: string;
 }
