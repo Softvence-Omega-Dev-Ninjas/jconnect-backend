@@ -80,8 +80,7 @@ export class AuthFirebaseService {
         const email = decodedToken.email;
         const firebaseUid = decodedToken.uid;
         const name = decodedToken.name || "User";
-        const providerId = decodedToken.firebase.sign_in_provider;
-        const fcmToken = dto.fcmToken || null;
+        const fcmToken = dto.fcmToken?.trim() || null;
 
         if (!email) {
             throw new AppError(400, "Email not found in Firebase token");
@@ -109,7 +108,6 @@ export class AuthFirebaseService {
                 }
             }
 
-
             // Create Stripe customer
             const customer = await this.stripe.createCustomer(email, name);
 
@@ -129,13 +127,14 @@ export class AuthFirebaseService {
                 },
             });
 
-            console.log("🆕 New user created via Firebase:", user.email);
+            console.log("🆕 New user created via Firebase:", user);
         } else {
             // Update existing user with Firebase UID if not already linked
             const updateData: any = {
                 isVerified: true,
                 last_login_at: new Date(),
                 isLogin: true,
+                ...(fcmToken && { fcmToken }),
             };
 
             if (provider === "google" && !user.googleId) {
@@ -156,6 +155,7 @@ export class AuthFirebaseService {
                 last_login_at: new Date(),
                 isLogin: true,
                 login_attempts: 0,
+                ...(fcmToken && { fcmToken }),
             },
         });
 

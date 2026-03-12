@@ -603,7 +603,7 @@ export class AuthService {
             data: {
                 phoneOtp: otp,
                 phoneOtpExpiresAt: expiryTime,
-                isVerified: true, 
+                isVerified: true,
                 validation_type: ValidationType.PHONE,
             },
         });
