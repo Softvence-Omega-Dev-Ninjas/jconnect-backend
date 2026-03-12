@@ -62,6 +62,7 @@ export class PrivateChatService {
                         id: true,
                         profilePhoto: true,
                         full_name: true,
+                        username: true,
                     },
                 },
                 service: true,
@@ -114,14 +115,15 @@ export class PrivateChatService {
             await this.firebaseNotificationService.sendToUser(
                 recipientId,
                 {
-                    title: message.sender.full_name || "New Message",
+                    title:
+                        message.sender.full_name || message.sender.username || "User new message",
                     body: dto.content || "You have a new message",
                     type: NotificationType.NEW_MESSAGE,
                     data: {
                         conversationId: conversationId,
                         messageId: message.id,
                         senderId: senderId,
-                        senderName: message.sender.full_name || "User",
+                        senderName: message.sender.full_name || message.sender.username || "User",
                         timestamp: message.createdAt.toISOString(),
                     },
                 },
@@ -154,6 +156,7 @@ export class PrivateChatService {
                                 id: true,
                                 profilePhoto: true,
                                 full_name: true,
+                                username: true,
                             },
                         },
                     },
@@ -163,6 +166,7 @@ export class PrivateChatService {
                         id: true,
                         profilePhoto: true,
                         full_name: true,
+                        username: true,
                     },
                 },
                 user2: {
@@ -170,6 +174,7 @@ export class PrivateChatService {
                         id: true,
                         profilePhoto: true,
                         full_name: true,
+                        username: true,
                     },
                 },
             },
@@ -259,6 +264,7 @@ export class PrivateChatService {
                                 id: true,
                                 profilePhoto: true,
                                 full_name: true,
+                                username: true,
                             },
                         },
                         service: true,
@@ -269,6 +275,7 @@ export class PrivateChatService {
                         id: true,
                         profilePhoto: true,
                         full_name: true,
+                        username: true,
                     },
                 },
                 user2: {
@@ -276,6 +283,7 @@ export class PrivateChatService {
                         id: true,
                         profilePhoto: true,
                         full_name: true,
+                        username: true,
                     },
                 },
             },
@@ -330,6 +338,7 @@ export class PrivateChatService {
                         id: true,
                         profilePhoto: true,
                         full_name: true,
+                        username: true,
                     },
                 },
                 user2: {
@@ -337,6 +346,7 @@ export class PrivateChatService {
                         id: true,
                         profilePhoto: true,
                         full_name: true,
+                        username: true,
                     },
                 },
                 messages: {
@@ -347,6 +357,7 @@ export class PrivateChatService {
                                 id: true,
                                 profilePhoto: true,
                                 full_name: true,
+                                username: true,
                             },
                         },
                         service: { include: { serviceRequests: true } },
@@ -422,6 +433,7 @@ export class PrivateChatService {
                                 id: true,
                                 profilePhoto: true,
                                 full_name: true,
+                                username: true,
                             },
                         },
                         service: true,
@@ -441,6 +453,7 @@ export class PrivateChatService {
                         email: true,
                         profilePhoto: true,
                         full_name: true,
+                        username: true,
                     },
                 },
                 user2: {
@@ -449,12 +462,13 @@ export class PrivateChatService {
                         email: true,
                         profilePhoto: true,
                         full_name: true,
+                        username: true,
                     },
                 },
                 messages: {
                     where: {
                         senderId: {
-                            not: userId, // Messages sent TO me
+                            not: userId,
                         },
                         statuses: {
                             some: {
@@ -487,6 +501,7 @@ export class PrivateChatService {
                 email: otherUser.email,
                 fullName: otherUser.full_name,
                 profilePhoto: otherUser.profilePhoto,
+                username: otherUser.username,
                 conversationId: conversation.id,
                 unreadCount,
                 lastMessage: conversation.lastMessage
@@ -497,6 +512,7 @@ export class PrivateChatService {
                           senderId: conversation.lastMessage.senderId,
                           sender: conversation.lastMessage.sender,
                           service: conversation.lastMessage.service,
+                          username: conversation.lastMessage.sender.username,
                           isRead: isLastMessageRead,
                       }
                     : null,
@@ -522,6 +538,7 @@ export class PrivateChatService {
                                 id: true,
                                 full_name: true,
                                 profilePhoto: true,
+                                username: true,
                             },
                         },
                     },
@@ -531,6 +548,7 @@ export class PrivateChatService {
                         id: true,
                         full_name: true,
                         profilePhoto: true,
+                        username: true,
                     },
                 },
             },
@@ -551,6 +569,7 @@ export class PrivateChatService {
                                 id: true,
                                 full_name: true,
                                 profilePhoto: true,
+                                username: true,
                             },
                         },
                     },
@@ -560,6 +579,7 @@ export class PrivateChatService {
                         id: true,
                         full_name: true,
                         profilePhoto: true,
+                        username: true,
                     },
                 },
             },
@@ -601,6 +621,7 @@ export class PrivateChatService {
                                 id: true,
                                 full_name: true,
                                 profilePhoto: true,
+                                username: true,
                             },
                         },
                     },
@@ -610,6 +631,7 @@ export class PrivateChatService {
                         id: true,
                         full_name: true,
                         profilePhoto: true,
+                        username: true,
                     },
                 },
             },
