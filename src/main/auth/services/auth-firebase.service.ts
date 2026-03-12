@@ -80,8 +80,8 @@ export class AuthFirebaseService {
         const email = decodedToken.email;
         const firebaseUid = decodedToken.uid;
         const name = decodedToken.name || "User";
-        const providerId = decodedToken.firebase.sign_in_provider; // 'google.com' or 'apple.com'
-        const fcmToken= dto.fcmToken || null;
+        const providerId = decodedToken.firebase.sign_in_provider;
+        const fcmToken = dto.fcmToken || null;
 
         if (!email) {
             throw new AppError(400, "Email not found in Firebase token");
@@ -94,7 +94,7 @@ export class AuthFirebaseService {
 
         if (!user) {
             // Generate unique username
-            let generatedUsername = username || name.trim().toLowerCase().replace(/\s+/g, "_");
+            let generatedUsername = (username || name.trim().toLowerCase()).replace(/[\s_]+/g, "");
             let isUnique = false;
 
             while (!isUnique) {
@@ -105,9 +105,10 @@ export class AuthFirebaseService {
                 if (!exists) {
                     isUnique = true;
                 } else {
-                    generatedUsername = `${generatedUsername}_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`;
+                    generatedUsername = `${generatedUsername}${Date.now()}${Math.random().toString(36).slice(2, 6)}`;
                 }
             }
+
 
             // Create Stripe customer
             const customer = await this.stripe.createCustomer(email, name);
@@ -163,7 +164,6 @@ export class AuthFirebaseService {
             sub: user.id,
             email: user.email,
             roles: user.role,
-            
         });
 
         return successResponse(
