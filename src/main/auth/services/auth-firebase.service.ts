@@ -81,6 +81,7 @@ export class AuthFirebaseService {
         const firebaseUid = decodedToken.uid;
         const name = decodedToken.name || "User";
         const providerId = decodedToken.firebase.sign_in_provider; // 'google.com' or 'apple.com'
+        const fcmToken= dto.fcmToken || null;
 
         if (!email) {
             throw new AppError(400, "Email not found in Firebase token");
@@ -162,6 +163,7 @@ export class AuthFirebaseService {
             sub: user.id,
             email: user.email,
             roles: user.role,
+            
         });
 
         return successResponse(
