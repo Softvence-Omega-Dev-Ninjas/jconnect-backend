@@ -124,14 +124,15 @@ export class PrivateChatService {
                         messageId: message.id,
                         senderId: senderId,
                         senderName: message.sender.full_name || message.sender.username || "User",
+                        userName: message.sender.username || "username",
                         timestamp: message.createdAt.toISOString(),
                     },
                 },
                 false,
             );
-            console.log(`📲 Firebase notification sent to user ${recipientId}`);
+            console.log(` Firebase notification sent to user ${recipientId}`);
         } catch (error) {
-            console.error(`❌ Failed to send Firebase notification: ${error.message}`);
+            console.error(` Failed to send Firebase notification: ${error.message}`);
             throw error;
         }
 
