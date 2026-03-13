@@ -18,7 +18,7 @@ export class ServiceService {
         private readonly eventEmitter: EventEmitter2,
         private readonly firebaseNotificationService: FirebaseNotificationService,
         @Inject("STRIPE_CLIENT") private stripe: Stripe,
-    ) {}
+    ) { }
 
     @HandleError("Failed to create service")
     async create(dto: CreateServiceDto, user: any): Promise<any> {
@@ -44,7 +44,7 @@ export class ServiceService {
         const recipients = await this.prisma.notificationToggle.findMany({
             where: { serviceCreate: true },
             select: {
-                user: { select: { id: true, email: true } },
+                user: { select: { id: true, email: true, fcmToken: true, username: true } },
             },
         });
 
@@ -54,7 +54,7 @@ export class ServiceService {
         const notification = await this.prisma.notification.create({
             data: {
                 title: `New Service Created: ${service.serviceName}`,
-                message: `${user.username || "unknown userName"} created a service: ${service.serviceName}`,
+                message: `New Service Created: ${service.serviceName} by ${user.username || "unknown userName"}`,
                 userId: user.userId,
                 entityId: service.id,
                 metadata: {
@@ -62,6 +62,10 @@ export class ServiceService {
                     serviceName: service.serviceName,
                     description: service.description,
                     author: user.email,
+                    recipients: recipients.map((r) => ({
+                        id: r.user.id,
+                        email: r.user.email,
+                    }))
                 },
             },
         });

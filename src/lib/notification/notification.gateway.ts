@@ -24,8 +24,7 @@ import { PrismaService } from "src/lib/prisma/prisma.service";
 })
 @Injectable()
 export class NotificationGateway
-    implements OnGatewayInit, OnGatewayConnection, OnGatewayDisconnect
-{
+    implements OnGatewayInit, OnGatewayConnection, OnGatewayDisconnect {
     private readonly logger = new Logger(NotificationGateway.name);
     private readonly clients = new Map<string, Set<Socket>>();
 
@@ -33,7 +32,7 @@ export class NotificationGateway
         private readonly jwtService: JwtService,
         private readonly configService: ConfigService,
         private readonly prisma: PrismaService,
-    ) {}
+    ) { }
 
     @WebSocketServer()
     server: Server;
@@ -329,10 +328,7 @@ export class NotificationGateway
 
                 const notificationData = {
                     type: EVENT_TYPES.INQUIRY_CREATE,
-                    title:
-                        "like your profile and I wanna buy your service created by " +
-                            payload.info.username ||
-                        "New Inquiry Received from User " + payload.info.name,
+                    title: "New Inquiry Received",
                     message:
                         payload.info.message ||
                         ` like your profile and I wanna buy your service created by ${payload.info.username}`,
