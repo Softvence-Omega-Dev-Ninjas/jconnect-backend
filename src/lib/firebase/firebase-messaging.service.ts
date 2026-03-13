@@ -407,7 +407,7 @@ export class FirebaseMessagingService {
                     token: fcmToken,
                     data: { test: "test" },
                 },
-                true, // dry run
+                true,
             );
             return true;
         } catch (error) {
