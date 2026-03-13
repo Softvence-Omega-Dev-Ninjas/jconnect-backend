@@ -115,15 +115,14 @@ export class PrivateChatService {
             await this.firebaseNotificationService.sendToUser(
                 recipientId,
                 {
-                    title:
-                        message.sender.full_name || message.sender.username || "User new message",
+                    title:message.sender.username || "User new message",
                     body: dto.content || "You have a new message",
                     type: NotificationType.NEW_MESSAGE,
                     data: {
                         conversationId: conversationId,
                         messageId: message.id,
                         senderId: senderId,
-                        senderName: message.sender.full_name || message.sender.username || "User",
+                        senderName:  message.sender.username || message.sender.full_name || "User",
                         userName: message.sender.username || "username",
                         timestamp: message.createdAt.toISOString(),
                     },
