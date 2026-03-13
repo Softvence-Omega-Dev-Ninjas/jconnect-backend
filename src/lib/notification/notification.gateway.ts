@@ -221,7 +221,7 @@ export class NotificationGateway
                 },
             });
 
-            // 3.1️⃣ ✅ SAVE TO USER NOTIFICATION (Mapping)
+            //  SAVE TO USER NOTIFICATION (Mapping)
             await this.prisma.userNotification.create({
                 data: {
                     userId: recipient.id,
@@ -298,7 +298,6 @@ export class NotificationGateway
         }
     }
 
-    // ------LISTEN TO INQUIRY CREATE EVENT----------------
     // ------ LISTEN TO INQUIRY CREATE EVENT ----------------
     @OnEvent(EVENT_TYPES.INQUIRY_CREATE)
     async handleInquiryCreated(payload: any) {
@@ -311,7 +310,7 @@ export class NotificationGateway
         }
 
         try {
-            // 1️⃣ Find users who enabled Inquiry notifications
+            // ------------- Find users who enabled Inquiry notifications -------------
             const enabledRecipients = await this.prisma.notificationToggle.findMany({
                 where: {
                     userId: { in: payload.info.recipients.map((r: any) => r.id) },
@@ -322,8 +321,7 @@ export class NotificationGateway
 
             const enabledUserIds = new Set(enabledRecipients.map((r) => r.userId));
 
-            for (const recipient of payload.info.recipients) {
-                // 2️⃣ Skip if notification disabled
+            for (const recipient of payload.info.recipients) { 
                 if (!enabledUserIds.has(recipient.id)) {
                     this.logger.log(`User ${recipient.id} disabled Inquiry notifications`);
                     continue;
@@ -331,19 +329,20 @@ export class NotificationGateway
 
                 const notificationData = {
                     type: EVENT_TYPES.INQUIRY_CREATE,
-                    title: "New Inquiry Received",
-                    message: payload.info.message || `New inquiry created by ${payload.info.name}`,
+                    title: "like your profile and I wanna buy your service created by " + payload.info.username || "New Inquiry Received from User " + payload.info.name ,
+                    message: payload.info.message || ` like your profile and I wanna buy your service created by ${payload.info.username}`,
                     createdAt: new Date(),
                     meta: {
                         inquirerId: payload.info.id,
                         inquirerEmail: payload.info.email,
                         inquirerName: payload.info.name,
                         inquirerRole: payload.info.role,
+                    
                         ...payload.meta,
                     },
                 };
 
-                // 3️⃣ ✅ SAVE TO DATABASE
+                // ------------- SAVE TO DATABASE ----------------
                 const notification = await this.prisma.notification.create({
                     data: {
                         userId: recipient.id,
@@ -358,19 +357,19 @@ export class NotificationGateway
                     },
                 });
 
-                // 3.1️⃣ ✅ SAVE TO USER NOTIFICATION (Mapping)
+                // ------------ SAVE TO USER NOTIFICATION (Mapping) ------------
                 await this.prisma.userNotification.create({
                     data: {
                         userId: recipient.id,
                         notificationId: notification.id,
-                        type: "Inquiry", // Using the enum type from Inquiry toggle
+                        type: "Inquiry",
                         read: false,
                     },
                 });
 
                 this.logger.log(`Notification saved for user ${recipient.id}`);
 
-                // 4️⃣ ✅ SEND REALTIME VIA SOCKET
+                // ------------- SEND REALTIME VIA SOCKET -------------
                 const clients = this.getClientsForUser(recipient.id);
 
                 if (!clients.size) {

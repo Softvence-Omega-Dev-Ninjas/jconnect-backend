@@ -36,7 +36,7 @@ export class AuthService {
         private readonly twilio: TwilioService,
         private readonly stripe: StripeService,
         private readonly eventEmitter: EventEmitter2,
-    ) {}
+    ) { }
 
     // ---------- REGISTER (send email verification OTP) ----------
     @HandleError("Failed to Register profile", "Register ")
@@ -467,7 +467,7 @@ export class AuthService {
             },
         });
 
-        // Send OTP email
+        //---------------------  Send OTP email ----------------------
         await this.mail.sendEmail(
             email,
             "DaConnect Account Verification - New Code 🔄",
@@ -525,7 +525,7 @@ export class AuthService {
     // ---------- VERIFY OTP (for password reset ) ----------
     @HandleError("Failed to verify reset OTP", "ResetVerifyOTP")
     async resetverifyOtp(payload: VerifyOtpAuthDto) {
-        // Verify the JWT token
+        // ---------------- Verify the JWT token ----------------
         let decoded: any;
         try {
             decoded = await this.jwt.verifyAsync(payload.resetToken);

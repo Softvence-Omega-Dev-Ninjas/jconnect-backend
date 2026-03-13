@@ -7,4 +7,4 @@ import { FirebaseAdminProvider } from "./firebase.admin.provider";
     providers: [FirebaseAdminProvider, FirebaseMessagingService],
     exports: [FirebaseAdminProvider, FirebaseMessagingService],
 })
-export class FirebaseModule {}
+export class FirebaseModule { }
