@@ -18,7 +18,7 @@ export class UsersService {
         private utils: UtilsService,
         private readonly eventEmitter: EventEmitter2,
         private readonly firebaseNotificationService: FirebaseNotificationService,
-    ) {}
+    ) { }
 
     @HandleError("Failed to create user", "Create User")
     async create(Userdata: CreateUserDto) {
@@ -116,6 +116,8 @@ export class UsersService {
                     isVerified: true,
                     created_at: true,
                     role: true,
+                    username: true,
+                    profilePhoto: true,
                 },
             }),
             this.prisma.user.count({ where: whereCondition }),
@@ -226,6 +228,7 @@ export class UsersService {
                                 full_name: true,
                                 profilePhoto: true,
                                 fcmToken: true,
+                                username: true,
                             },
                         },
                     },
@@ -566,12 +569,12 @@ export class UsersService {
                 const avgA =
                     a.ReviewsReceived.length > 0
                         ? a.ReviewsReceived.reduce((sum: number, r: any) => sum + r.rating, 0) /
-                          a.ReviewsReceived.length
+                        a.ReviewsReceived.length
                         : 0;
                 const avgB =
                     b.ReviewsReceived.length > 0
                         ? b.ReviewsReceived.reduce((sum: number, r: any) => sum + r.rating, 0) /
-                          b.ReviewsReceived.length
+                        b.ReviewsReceived.length
                         : 0;
                 return avgB - avgA;
             });
@@ -809,7 +812,8 @@ export class UsersService {
                     role: currentUser.role,
                     message:
                         " i like your profile and i wanna buy your service " +
-                        currentUser.full_name,
+                            currentUser.username ? `(@${currentUser.username})`
+                            : `(${currentUser.email})`,
                     recipients: [{ id: user.id, email: user.email }],
                 },
                 meta: {
@@ -827,7 +831,7 @@ export class UsersService {
                 const notification = this.firebaseNotificationService.buildNotificationTemplate(
                     NotificationType.NEW_MESSAGE,
                     {
-                        senderName: currentUser.full_name,
+                        senderName: currentUser.username || 'unknown userName',
                         senderId: currentUser.id,
                         messagePreview: inquiryMessage,
                         conversationId: `inquiry_${currentUser.id}_${user.id}`,
@@ -839,11 +843,11 @@ export class UsersService {
                 await this.firebaseNotificationService.sendToUser(user.id, notification, true);
 
                 console.log(
-                    ` Firebase notification sent for inquiry from ${currentUser.full_name} to ${user.full_name || user.email}`,
+                    ` Firebase notification sent for inquiry from ${currentUser.username} to ${user.username || user.email}`,
                 );
             } catch (firebaseError) {
                 console.error(
-                    "⚠️ Firebase notification failed for inquiry:",
+                    " Firebase notification failed for inquiry:",
                     firebaseError.message,
                 );
             }
@@ -894,7 +898,7 @@ export class UsersService {
     }
 
     async updateRole(id: string, role: Role) {
-        // 🔹 Check if user exists
+        // ------------------Check if user exists--------------
         const user = await this.prisma.user.findUnique({ where: { id } });
 
         if (!user) throw new NotFoundException("User not found");
