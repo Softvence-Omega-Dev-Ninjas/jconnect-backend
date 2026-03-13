@@ -321,7 +321,7 @@ export class NotificationGateway
 
             const enabledUserIds = new Set(enabledRecipients.map((r) => r.userId));
 
-            for (const recipient of payload.info.recipients) { 
+            for (const recipient of payload.info.recipients) {
                 if (!enabledUserIds.has(recipient.id)) {
                     this.logger.log(`User ${recipient.id} disabled Inquiry notifications`);
                     continue;
@@ -329,15 +329,20 @@ export class NotificationGateway
 
                 const notificationData = {
                     type: EVENT_TYPES.INQUIRY_CREATE,
-                    title: "like your profile and I wanna buy your service created by " + payload.info.username || "New Inquiry Received from User " + payload.info.name ,
-                    message: payload.info.message || ` like your profile and I wanna buy your service created by ${payload.info.username}`,
+                    title:
+                        "like your profile and I wanna buy your service created by " +
+                            payload.info.username ||
+                        "New Inquiry Received from User " + payload.info.name,
+                    message:
+                        payload.info.message ||
+                        ` like your profile and I wanna buy your service created by ${payload.info.username}`,
                     createdAt: new Date(),
                     meta: {
                         inquirerId: payload.info.id,
                         inquirerEmail: payload.info.email,
                         inquirerName: payload.info.name,
                         inquirerRole: payload.info.role,
-                    
+
                         ...payload.meta,
                     },
                 };
