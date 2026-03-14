@@ -41,10 +41,12 @@ export class ServiceService {
         // -----------------------------------------
         // Get users who enabled SERVICE notifications
         // -----------------------------------------
-        const recipients = await this.prisma.notificationToggle.findMany({
-            where: { serviceCreate: true },
+        const recipients = await this.prisma.user.findMany({
             select: {
-                user: { select: { id: true, email: true, fcmToken: true, username: true } },
+                id: true,
+                email: true,
+                fcmToken: true,
+                username: true,
             },
         });
 
@@ -62,10 +64,11 @@ export class ServiceService {
                     serviceName: service.serviceName,
                     description: service.description,
                     author: user.email,
+                    creatorId: user.userId,
                     recipients: recipients.map((r) => ({
-                        id: r.user.id,
-                        email: r.user.email,
-                    }))
+                        id: r.id,
+                        email: r.email,
+                    })),
                 },
             },
         });
@@ -74,8 +77,9 @@ export class ServiceService {
             recipients.map((r) =>
                 this.prisma.userNotification.create({
                     data: {
-                        userId: r.user.id,
+                        userId: r.id,
                         notificationId: notification.id,
+
                     },
                 }),
             ),
@@ -98,8 +102,8 @@ export class ServiceService {
                 authorId: user.userId,
                 publishedAt: new Date(),
                 recipients: recipients.map((r) => ({
-                    id: r.user.id,
-                    email: r.user.email,
+                    id: r.id,
+                    email: r.email,
                 })),
             },
         };
@@ -110,7 +114,7 @@ export class ServiceService {
         // Send Firebase Push Notifications
         // -----------------------------------------
         await this.firebaseNotificationService.sendToMultipleUsers(
-            recipients.map((r) => r.user.id),
+            recipients.map((r) => r.id),
             {
                 title: `New Service: ${service.serviceName}`,
                 body: `${user.username || "unknown userName"} created a new service. Check it out!`,
@@ -118,6 +122,7 @@ export class ServiceService {
                 data: {
                     serviceId: service.id,
                     serviceName: service.serviceName,
+                    userId: user.userId,
                 },
             },
         );
