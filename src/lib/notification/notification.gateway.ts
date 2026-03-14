@@ -24,7 +24,8 @@ import { PrismaService } from "src/lib/prisma/prisma.service";
 })
 @Injectable()
 export class NotificationGateway
-    implements OnGatewayInit, OnGatewayConnection, OnGatewayDisconnect {
+    implements OnGatewayInit, OnGatewayConnection, OnGatewayDisconnect
+{
     private readonly logger = new Logger(NotificationGateway.name);
     private readonly clients = new Map<string, Set<Socket>>();
 
@@ -32,7 +33,7 @@ export class NotificationGateway
         private readonly jwtService: JwtService,
         private readonly configService: ConfigService,
         private readonly prisma: PrismaService,
-    ) { }
+    ) {}
 
     @WebSocketServer()
     server: Server;
@@ -255,11 +256,11 @@ export class NotificationGateway
             return;
         }
 
-        // Check if user has notification toggle enabled
+        //----------------Check if user has notification toggle enabled -----------------------
         const enabledRecipients = await this.prisma.notificationToggle.findMany({
             where: {
                 userId: { in: payload.info.recipients.map((r) => r.id) },
-                serviceCreate: true,
+              
             },
             select: { userId: true },
         });
@@ -267,7 +268,7 @@ export class NotificationGateway
         const enabledUserIds = new Set(enabledRecipients.map((r) => r.userId));
 
         for (const recipient of payload.info.recipients) {
-            // Skip if user has disabled this notification type
+            // ------------ Skip if user has disabled this notification type---------------------
             if (!enabledUserIds.has(recipient.id)) {
                 this.logger.log(`User ${recipient.id} has disabled serviceCreate notifications`);
                 continue;
@@ -286,10 +287,12 @@ export class NotificationGateway
                 createdAt: new Date(),
                 meta: {
                     ...payload.meta,
+                    serviceName: payload.info.serviceName,
+                    userId: payload.info.authorId,
                 },
             };
 
-            // Send real-time notification via socket
+            // ------------------- Send real-time notification via socket -----------------------
             for (const client of clients) {
                 client.emit(EVENT_TYPES.SERVICE_CREATE, socketPayload);
                 this.logger.log(`Notification sent to ${recipient.id} (socket: ${client.id})`);
