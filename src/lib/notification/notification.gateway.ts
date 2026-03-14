@@ -260,7 +260,6 @@ export class NotificationGateway
         const enabledRecipients = await this.prisma.notificationToggle.findMany({
             where: {
                 userId: { in: payload.info.recipients.map((r) => r.id) },
-              
             },
             select: { userId: true },
         });

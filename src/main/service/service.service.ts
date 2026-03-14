@@ -24,6 +24,24 @@ export class ServiceService {
     async create(dto: CreateServiceDto, user: any): Promise<any> {
         if (!user.userId) return errorResponse("User ID is missing");
 
+        const currentUser = await this.prisma.user.findUnique({
+            where: { id: user.userId },
+            select: {
+                username: true,
+                full_name: true,
+                email: true,
+            },
+        });
+
+        const creatorDisplayName =
+            currentUser?.username ||
+            currentUser?.full_name ||
+            user.username ||
+            user.full_name ||
+            currentUser?.email ||
+            user.email ||
+            "A user";
+
         // Check if service already exists
         const existingService = await this.prisma.service.findFirst({
             where: { serviceName: dto.serviceName, creatorId: user.userId },
@@ -56,14 +74,14 @@ export class ServiceService {
         const notification = await this.prisma.notification.create({
             data: {
                 title: `New Service Created: ${service.serviceName}`,
-                message: `New Service Created: ${service.serviceName} by ${user.username || "unknown userName"}`,
+                message: `New Service Created: ${service.serviceName} by ${creatorDisplayName}`,
                 userId: user.userId,
                 entityId: service.id,
                 metadata: {
                     serviceId: service.id,
                     serviceName: service.serviceName,
                     description: service.description,
-                    author: user.email,
+                    author: currentUser?.email || user.email,
                     creatorId: user.userId,
                     recipients: recipients.map((r) => ({
                         id: r.id,
@@ -79,7 +97,6 @@ export class ServiceService {
                     data: {
                         userId: r.id,
                         notificationId: notification.id,
-
                     },
                 }),
             ),
@@ -117,7 +134,7 @@ export class ServiceService {
             recipients.map((r) => r.id),
             {
                 title: `New Service: ${service.serviceName}`,
-                body: `${user.username || "unknown userName"} created a new service. Check it out!`,
+                body: `${creatorDisplayName} created a new service. Check it out!`,
                 type: NotificationType.ANNOUNCEMENT,
                 data: {
                     serviceId: service.id,
