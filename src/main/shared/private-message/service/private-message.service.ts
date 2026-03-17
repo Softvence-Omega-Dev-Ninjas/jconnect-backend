@@ -1,5 +1,7 @@
+import { EVENT_TYPES } from "@common/interface/events.name";
 import { FirebaseNotificationService } from "@main/shared/notification/firebase-notification.service";
 import { HttpException, Injectable, NotFoundException } from "@nestjs/common";
+import { EventEmitter2 } from "@nestjs/event-emitter";
 import { AppError } from "src/common/error/handle-error.app";
 import { HandleError } from "src/common/error/handle-error.decorator";
 import { successResponse } from "src/common/utilsResponse/response.util";
@@ -12,6 +14,7 @@ export class PrivateChatService {
     constructor(
         private readonly prisma: PrismaService,
         private readonly firebaseNotificationService: FirebaseNotificationService,
+        private readonly eventEmitter: EventEmitter2,
     ) {}
 
     /**
@@ -312,7 +315,6 @@ export class PrivateChatService {
             where: { conversationId },
             include: {
                 sender: true,
-                // file: true,
             },
             orderBy: { createdAt: "asc" },
         });
@@ -584,6 +586,91 @@ export class PrivateChatService {
                 },
             },
         });
+
+        // Send notification to buyer when seller accepts or declines the service request
+        try {
+            if (updated.service && updated.service.creator) {
+                const sellerName =
+                    updated.service.creator.username ||
+                    updated.service.creator.full_name ||
+                    "Seller";
+                const serviceName = updated.service.serviceName || "Your service request";
+
+                if (updateData.isAccepted === true) {
+                    // Send acceptance notification to buyer
+                    await this.firebaseNotificationService.sendToUser(
+                        updated.buyerId,
+                        {
+                            title: "✅ Service Request Accepted",
+                            body: `${sellerName} has accepted your service request for "${serviceName}"`,
+                            type: NotificationType.SERVICE_REQUEST,
+                            data: {
+                                serviceRequestId: id,
+                                sellerId: updated.service.creator.id,
+                                sellerName,
+                                serviceName,
+                                status: "ACCEPTED",
+                                timestamp: new Date().toISOString(),
+                            },
+                        },
+                        true,
+                    );
+                    console.log(`✅ Acceptance notification sent to buyer ${updated.buyerId}`);
+
+                    // Emit event for websocket listeners
+                    this.eventEmitter.emit(EVENT_TYPES.SERVICE_REQUEST_ACCEPTED, {
+                        info: {
+                            serviceRequestId: id,
+                            serviceId: updated.serviceId,
+                            serviceName,
+                            sellerId: updated.service.creator.id,
+                            sellerName,
+                            buyerId: updated.buyerId,
+                            status: "ACCEPTED",
+                            actionAt: new Date(),
+                        },
+                    });
+                }
+
+                if (updateData.isDeclined === true) {
+                    // ------------------ Send decline notification to buyer ----------------
+                    await this.firebaseNotificationService.sendToUser(
+                        updated.buyerId,
+                        {
+                            title: "❌ Service Request Declined",
+                            body: `${sellerName} has declined your service request for "${serviceName}"`,
+                            type: NotificationType.SERVICE_REQUEST,
+                            data: {
+                                serviceRequestId: id,
+                                sellerId: updated.service.creator.id,
+                                sellerName,
+                                serviceName,
+                                status: "DECLINED",
+                                timestamp: new Date().toISOString(),
+                            },
+                        },
+                        true,
+                    );
+                    console.log(`❌ Decline notification sent to buyer ${updated.buyerId}`);
+
+                    //--------------- Send notification to seller Emit event for websocket listeners------------------
+                    this.eventEmitter.emit(EVENT_TYPES.SERVICE_REQUEST_DECLINED, {
+                        info: {
+                            serviceRequestId: id,
+                            serviceId: updated.serviceId,
+                            serviceName,
+                            sellerId: updated.service.creator.id,
+                            sellerName,
+                            buyerId: updated.buyerId,
+                            status: "DECLINED",
+                            actionAt: new Date(),
+                        },
+                    });
+                }
+            }
+        } catch (error) {
+            console.error(`Failed to send notification: ${error.message}`);
+        }
 
         return updated;
     }
