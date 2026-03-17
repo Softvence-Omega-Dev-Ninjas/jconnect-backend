@@ -9,6 +9,7 @@ model NotificationToggle {
   Inquiry          Boolean @default(true)
   userRegistration Boolean @default(true)
   Service          Boolean @default(true)
+  follow           Boolean @default(true)
   userId           String
   user             User    @relation(fields: [userId], references: [id], onDelete: Cascade)
 

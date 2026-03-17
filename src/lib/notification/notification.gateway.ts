@@ -17,8 +17,9 @@ import {
     WebSocketServer,
 } from "@nestjs/websockets";
 import { Server, Socket } from "socket.io";
-import { PrismaService } from "src/lib/prisma/prisma.service";
 import { NotificationType } from "src/lib/firebase/dto/notification.dto";
+import { MailService } from "src/lib/mail/mail.service";
+import { PrismaService } from "src/lib/prisma/prisma.service";
 
 @WebSocketGateway({
     cors: { origin: "*" },
@@ -35,6 +36,7 @@ export class NotificationGateway
         private readonly configService: ConfigService,
         private readonly prisma: PrismaService,
         private readonly firebaseNotificationService: FirebaseNotificationService,
+        private readonly mailService: MailService,
     ) { }
 
     @WebSocketServer()
@@ -208,7 +210,7 @@ export class NotificationGateway
                 },
             };
 
-            // 3️⃣ ✅ SAVE TO DATABASE
+            //  SAVE TO DATABASE
             const notification = await this.prisma.notification.create({
                 data: {
                     userId: recipient.id,
@@ -451,6 +453,30 @@ export class NotificationGateway
 
             this.logger.log(`Notification saved for buyer ${buyerId}`);
 
+            // ------------- SEND EMAIL NOTIFICATION ----------------
+            try {
+                const buyer = await this.prisma.user.findUnique({
+                    where: { id: buyerId },
+                    select: { email: true, full_name: true },
+                });
+
+                if (buyer?.email) {
+                    await this.mailService.sendEmail(
+                        buyer.email,
+                        "Service Request Accepted",
+                        `
+                        <p>Hello ${buyer.full_name || "Buyer"},</p>
+                        <p><strong>${payload.info.sellerName}</strong> has accepted your service request for <strong>"${payload.info.serviceName}"</strong>.</p>
+                        <p>You can now proceed with the next steps of your request.</p>
+                        <p>Thank you,<br/>DaConnect Team</p>
+                        `,
+                    );
+                    this.logger.log(` Email notification sent to buyer ${buyerId}`);
+                }
+            } catch (emailError: any) {
+                this.logger.error(`Failed to send email notification: ${emailError.message}`);
+            }
+
             // ------------- SEND FIREBASE NOTIFICATION ----------------
             try {
                 await this.firebaseNotificationService.sendToUser(
@@ -552,7 +578,33 @@ export class NotificationGateway
 
             this.logger.log(`Notification saved for buyer ${buyerId}`);
 
-            // ------------- SEND FIREBASE NOTIFICATION ----------------
+            // ------------- SEND EMAIL NOTIFICATION ----------------
+            try {
+                const buyer = await this.prisma.user.findUnique({
+                    where: { id: buyerId },
+                    select: { email: true, full_name: true },
+                });
+
+                if (buyer?.email) {
+                    const reasonText = payload.info.reason ? `<p><strong>Reason:</strong> ${payload.info.reason}</p>` : "";
+                    await this.mailService.sendEmail(
+                        buyer.email,
+                        "❌ Service Request Declined",
+                        `
+                        <p>Hello ${buyer.full_name || "Buyer"},</p>
+                        <p><strong>${payload.info.sellerName}</strong> has declined your service request for <strong>"${payload.info.serviceName}"</strong>.</p>
+                        ${reasonText}
+                        <p>You can create a new request or contact the seller for more details.</p>
+                        <p>Thank you,<br/>DaConnect Team</p>
+                        `,
+                    );
+                    this.logger.log(`❌ Email notification sent to buyer ${buyerId}`);
+                }
+            } catch (emailError: any) {
+                this.logger.error(`Failed to send email notification: ${emailError.message}`);
+            }
+
+            // ------------- SEND FIREBASE NOTIFICATION  ----------------
             try {
                 await this.firebaseNotificationService.sendToUser(
                     buyerId,
@@ -596,6 +648,4 @@ export class NotificationGateway
             this.logger.error(`Error processing SERVICE_REQUEST_DECLINED event: ${error.message}`);
         }
     }
-
-
 }

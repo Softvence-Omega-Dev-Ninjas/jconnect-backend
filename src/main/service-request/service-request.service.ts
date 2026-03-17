@@ -16,7 +16,7 @@ export class ServiceRequestService {
         private awsService: AwsService,
         private readonly firebaseNotificationService: FirebaseNotificationService,
         private readonly eventEmitter: EventEmitter2,
-    ) { }
+    ) {}
 
     async create(dto: CreateServiceRequestDto, files: Express.Multer.File[], user: any) {
         // -------------------------------
@@ -178,7 +178,10 @@ export class ServiceRequestService {
         // Send notification to buyer when seller accepts or declines the service request
         try {
             if (serviceRequest.service && serviceRequest.service.creator) {
-                const sellerName = serviceRequest.service.creator.username || serviceRequest.service.creator.full_name || "Seller";
+                const sellerName =
+                    serviceRequest.service.creator.username ||
+                    serviceRequest.service.creator.full_name ||
+                    "Seller";
                 const serviceName = serviceRequest.service.serviceName || "Your service request";
 
                 if (updateData.isAccepted === true) {
@@ -200,7 +203,9 @@ export class ServiceRequestService {
                         },
                         true,
                     );
-                    console.log(`✅ Acceptance notification sent to buyer ${serviceRequest.buyerId}`);
+                    console.log(
+                        `✅ Acceptance notification sent to buyer ${serviceRequest.buyerId}`,
+                    );
 
                     // Emit event for websocket listeners
                     this.eventEmitter.emit(EVENT_TYPES.SERVICE_REQUEST_ACCEPTED, {

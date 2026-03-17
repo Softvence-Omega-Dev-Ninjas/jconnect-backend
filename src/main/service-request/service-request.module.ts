@@ -11,4 +11,4 @@ import { ServiceRequestService } from "./service-request.service";
     controllers: [ServiceRequestController],
     providers: [ServiceRequestService, AwsService],
 })
-export class ServiceRequestModule { }
+export class ServiceRequestModule {}

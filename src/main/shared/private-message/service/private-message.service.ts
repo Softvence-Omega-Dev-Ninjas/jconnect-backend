@@ -15,7 +15,7 @@ export class PrivateChatService {
         private readonly prisma: PrismaService,
         private readonly firebaseNotificationService: FirebaseNotificationService,
         private readonly eventEmitter: EventEmitter2,
-    ) { }
+    ) {}
 
     /**
      * Send a private message and update lastMessage in conversation
@@ -56,8 +56,8 @@ export class PrivateChatService {
                 ...(serviceRequestId && { serviceRequestId }),
                 ...(dto.files &&
                     dto.files.length > 0 && {
-                    files: dto.files,
-                }),
+                        files: dto.files,
+                    }),
             },
             include: {
                 sender: {
@@ -192,12 +192,12 @@ export class PrivateChatService {
                 participant: otherUser,
                 lastMessage: chat.lastMessage
                     ? {
-                        id: chat.lastMessage.id,
-                        content: chat.lastMessage.content,
-                        createdAt: chat.lastMessage.createdAt,
-                        sender: chat.lastMessage.sender,
-                        file: chat.lastMessage.file,
-                    }
+                          id: chat.lastMessage.id,
+                          content: chat.lastMessage.content,
+                          createdAt: chat.lastMessage.createdAt,
+                          sender: chat.lastMessage.sender,
+                          file: chat.lastMessage.file,
+                      }
                     : null,
                 updatedAt: chat.updatedAt,
             };
@@ -315,7 +315,6 @@ export class PrivateChatService {
             where: { conversationId },
             include: {
                 sender: true,
-
             },
             orderBy: { createdAt: "asc" },
         });
@@ -509,15 +508,15 @@ export class PrivateChatService {
                 unreadCount,
                 lastMessage: conversation.lastMessage
                     ? {
-                        id: conversation.lastMessage.id,
-                        content: conversation.lastMessage.content,
-                        createdAt: conversation.lastMessage.createdAt,
-                        senderId: conversation.lastMessage.senderId,
-                        sender: conversation.lastMessage.sender,
-                        service: conversation.lastMessage.service,
-                        username: conversation.lastMessage.sender.username,
-                        isRead: isLastMessageRead,
-                    }
+                          id: conversation.lastMessage.id,
+                          content: conversation.lastMessage.content,
+                          createdAt: conversation.lastMessage.createdAt,
+                          senderId: conversation.lastMessage.senderId,
+                          sender: conversation.lastMessage.sender,
+                          service: conversation.lastMessage.service,
+                          username: conversation.lastMessage.sender.username,
+                          isRead: isLastMessageRead,
+                      }
                     : null,
                 updatedAt: conversation.updatedAt,
             };
@@ -591,7 +590,10 @@ export class PrivateChatService {
         // Send notification to buyer when seller accepts or declines the service request
         try {
             if (updated.service && updated.service.creator) {
-                const sellerName = updated.service.creator.username || updated.service.creator.full_name || "Seller";
+                const sellerName =
+                    updated.service.creator.username ||
+                    updated.service.creator.full_name ||
+                    "Seller";
                 const serviceName = updated.service.serviceName || "Your service request";
 
                 if (updateData.isAccepted === true) {
@@ -668,10 +670,7 @@ export class PrivateChatService {
             }
         } catch (error) {
             console.error(`Failed to send notification: ${error.message}`);
-
         }
-
-        
 
         return updated;
     }

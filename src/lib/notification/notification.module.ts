@@ -5,7 +5,7 @@ import { FirebaseNotificationService } from "@main/shared/notification/firebase-
 
 @Global()
 @Module({
-    providers: [NotificationGateway, JwtService,FirebaseNotificationService],
+    providers: [NotificationGateway, JwtService, FirebaseNotificationService],
     controllers: [],
     exports: [NotificationGateway],
 })

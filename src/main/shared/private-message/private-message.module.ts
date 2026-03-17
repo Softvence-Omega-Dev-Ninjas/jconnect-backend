@@ -9,6 +9,6 @@ import { FirebaseNotificationService } from "../notification/firebase-notificati
 @Module({
     imports: [NotificationModule],
     controllers: [PrivateChatController],
-    providers: [PrivateChatService, PrivateChatGateway,FirebaseNotificationService],
+    providers: [PrivateChatService, PrivateChatGateway, FirebaseNotificationService],
 })
 export class PrivateMessageModule {}
