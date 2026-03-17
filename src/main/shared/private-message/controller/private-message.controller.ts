@@ -129,7 +129,6 @@ export class PrivateChatController implements OnModuleInit {
 
         const updatedServiceRequest = await this.privateService.updateIsDeclined(id, updateData);
 
-        // Emit the update to relevant users (buyer and seller) via WebSocket gateway
         this.gateway.emitServiceRequestUpdate(updatedServiceRequest);
 
         return { success: true, updatedServiceRequest };
@@ -151,7 +150,6 @@ export class PrivateChatController implements OnModuleInit {
             user,
         );
 
-        // Emit the files update to relevant users via WebSocket
         this.gateway.emitServiceRequestFilesUpdate(updatedServiceRequest);
 
         return { success: true, updatedServiceRequest };

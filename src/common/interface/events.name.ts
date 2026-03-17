@@ -1,6 +1,6 @@
 import { AuthProvider, Role, ValidationType } from "@constant/enums";
 
-// Event payload interfaces (aligned with NotificationToggle schema)
+//  -----------------  Event payload interfaces (aligned with NotificationToggle schema) ---------------------
 export interface UserRegistrationMeta {
     action: "created";
     info: {
@@ -55,7 +55,19 @@ export interface InquiryMeta {
     submittedAt: Date;
 }
 
-// EVENT TYPE CONSTANTS
+export interface ServiceRequestMeta {
+    serviceRequestId: string;
+    serviceId: string;
+    serviceName: string;
+    sellerId: string;
+    sellerName: string;
+    buyerId: string;
+    status: "ACCEPTED" | "DECLINED";
+    reason?: string;
+    actionAt: Date;
+}
+
+//--------------------EVENT TYPE CONSTANTS --------------------
 export const EVENT_TYPES = {
     USERREGISTRATION_CREATE: "user.create",
     USERREGISTRATION_UPDATE: "user.update",
@@ -69,12 +81,14 @@ export const EVENT_TYPES = {
     SERVICE_CREATE: "service.create",
     REVIEW_CREATE: "review.create",
     INQUIRY_CREATE: "inquiry.create",
+    SERVICE_REQUEST_ACCEPTED: "service_request.accepted",
+    SERVICE_REQUEST_DECLINED: "service_request.declined",
 } as const;
 
-// Type-safe keys
+// ----------------- Type-safe keys for event types -----------------
 export type EventType = keyof typeof EVENT_TYPES;
 
-// Event payload mapping
+// ------------------ Event payload mapping ------------------
 export type EventPayloadMap = {
     [EVENT_TYPES.USERREGISTRATION_CREATE]: UserRegistrationMeta;
     [EVENT_TYPES.USERREGISTRATION_UPDATE]: UserRegistrationMeta;
@@ -89,4 +103,6 @@ export type EventPayloadMap = {
     [EVENT_TYPES.SERVICE_CREATE]: ServiceMeta;
     [EVENT_TYPES.REVIEW_CREATE]: ReviewMeta;
     [EVENT_TYPES.INQUIRY_CREATE]: InquiryMeta;
+    [EVENT_TYPES.SERVICE_REQUEST_ACCEPTED]: ServiceRequestMeta;
+    [EVENT_TYPES.SERVICE_REQUEST_DECLINED]: ServiceRequestMeta;
 };

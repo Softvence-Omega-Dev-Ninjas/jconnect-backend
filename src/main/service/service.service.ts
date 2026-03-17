@@ -2,7 +2,6 @@ import { HandleError } from "@common/error/handle-error.decorator";
 import { errorResponse } from "@common/utilsResponse/response.util";
 import { Inject, Injectable, NotFoundException } from "@nestjs/common";
 import { EventEmitter2 } from "@nestjs/event-emitter";
-
 import { ServiceEvent } from "@common/interface/events-payload";
 import { EVENT_TYPES } from "@common/interface/events.name";
 import { FirebaseNotificationService } from "@main/shared/notification/firebase-notification.service";
@@ -18,7 +17,7 @@ export class ServiceService {
         private readonly eventEmitter: EventEmitter2,
         private readonly firebaseNotificationService: FirebaseNotificationService,
         @Inject("STRIPE_CLIENT") private stripe: Stripe,
-    ) { }
+    ) {}
 
     @HandleError("Failed to create service")
     async create(dto: CreateServiceDto, user: any): Promise<any> {
@@ -42,13 +41,13 @@ export class ServiceService {
             user.email ||
             "A user";
 
-        // Check if service already exists
+        // ------------------ Check if service already exists ------------------
         const existingService = await this.prisma.service.findFirst({
             where: { serviceName: dto.serviceName, creatorId: user.userId },
         });
         if (existingService) return errorResponse("Service already exists");
 
-        // Create new service
+        //  ------------------  Create new service ------------------
         const service = await this.prisma.service.create({
             data: {
                 ...dto,
@@ -57,7 +56,7 @@ export class ServiceService {
         });
 
         // -----------------------------------------
-        // Get users who enabled SERVICE notifications
+        //  ------------  Get users who enabled SERVICE notifications ------------
         // -----------------------------------------
         const recipients = await this.prisma.user.findMany({
             select: {
@@ -69,7 +68,7 @@ export class ServiceService {
         });
 
         // -----------------------------------------
-        // Create Notification entry
+        //  ----------------- Create Notification entry -----------------
         // -----------------------------------------
         const notification = await this.prisma.notification.create({
             data: {
@@ -103,7 +102,7 @@ export class ServiceService {
         );
 
         // -----------------------------------------
-        // Emit Service Event
+        // --------------  Emit Service Event --------------
         // -----------------------------------------
         const payload: ServiceEvent = {
             action: "CREATE",
@@ -128,7 +127,7 @@ export class ServiceService {
         this.eventEmitter.emit(EVENT_TYPES.SERVICE_CREATE, payload);
 
         // -----------------------------------------
-        // Send Firebase Push Notifications
+        //  -------------------- Send Firebase Push Notifications --------------------
         // -----------------------------------------
         await this.firebaseNotificationService.sendToMultipleUsers(
             recipients.map((r) => r.id),
@@ -216,18 +215,18 @@ export class ServiceService {
     async update(id: string, dto: UpdateServiceDto, user: any): Promise<any> {
         if (!user.userId) return errorResponse("User ID is missing");
 
-        // Check if service exists
+        // ---------------- Check if service exists ----------------
         const service = await this.prisma.service.findUnique({
             where: { id },
         });
 
         if (!service) return errorResponse("Service not found");
 
-        // Check ownership
+        // ----------------------  Check ownership ----------------------
         if (service.creatorId !== user.userId)
             return errorResponse("You are not allowed to update this service");
 
-        // Update service
+        //  ------------------  Update service ------------------
         const updatedService = await this.prisma.service.update({
             where: { id },
             data: {
