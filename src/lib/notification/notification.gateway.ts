@@ -3,6 +3,7 @@ import { Notification } from "@common/interface/events-payload";
 import { EVENT_TYPES } from "@common/interface/events.name";
 import { PayloadForSocketClient } from "@common/interface/socket-client-payload";
 import { JWTPayload } from "@common/jwt/jwt.interface";
+import { FirebaseNotificationService } from "@main/shared/notification/firebase-notification.service";
 import { Injectable, Logger } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
 import { OnEvent } from "@nestjs/event-emitter";
@@ -17,6 +18,7 @@ import {
 } from "@nestjs/websockets";
 import { Server, Socket } from "socket.io";
 import { PrismaService } from "src/lib/prisma/prisma.service";
+import { NotificationType } from "src/lib/firebase/dto/notification.dto";
 
 @WebSocketGateway({
     cors: { origin: "*" },
@@ -24,8 +26,7 @@ import { PrismaService } from "src/lib/prisma/prisma.service";
 })
 @Injectable()
 export class NotificationGateway
-    implements OnGatewayInit, OnGatewayConnection, OnGatewayDisconnect
-{
+    implements OnGatewayInit, OnGatewayConnection, OnGatewayDisconnect {
     private readonly logger = new Logger(NotificationGateway.name);
     private readonly clients = new Map<string, Set<Socket>>();
 
@@ -33,7 +34,8 @@ export class NotificationGateway
         private readonly jwtService: JwtService,
         private readonly configService: ConfigService,
         private readonly prisma: PrismaService,
-    ) {}
+        private readonly firebaseNotificationService: FirebaseNotificationService,
+    ) { }
 
     @WebSocketServer()
     server: Server;
@@ -392,4 +394,208 @@ export class NotificationGateway
             this.logger.error(`Error processing INQUIRY_CREATE event: ${error.message}`);
         }
     }
+
+    // ------ LISTEN TO SERVICE REQUEST ACCEPTED EVENT ----------------
+    @OnEvent(EVENT_TYPES.SERVICE_REQUEST_ACCEPTED)
+    async handleServiceRequestAccepted(payload: any) {
+        this.logger.log("SERVICE_REQUEST_ACCEPTED EVENT RECEIVED");
+        this.logger.debug(JSON.stringify(payload, null, 2));
+
+        if (!payload.info) {
+            this.logger.warn("No info found for SERVICE_REQUEST_ACCEPTED");
+            return;
+        }
+
+        try {
+            const buyerId = payload.info.buyerId;
+            const notificationData = {
+                type: EVENT_TYPES.SERVICE_REQUEST_ACCEPTED,
+                title: " Service Request Accepted",
+                message: `${payload.info.sellerName} has accepted your service request for "${payload.info.serviceName}"`,
+                createdAt: new Date(),
+                meta: {
+                    serviceRequestId: payload.info.serviceRequestId,
+                    serviceId: payload.info.serviceId,
+                    serviceName: payload.info.serviceName,
+                    sellerId: payload.info.sellerId,
+                    sellerName: payload.info.sellerName,
+                    status: "ACCEPTED",
+                    ...payload.meta,
+                },
+            };
+
+            // ------------- SAVE TO DATABASE ----------------
+            const notification = await this.prisma.notification.create({
+                data: {
+                    userId: buyerId,
+                    title: notificationData.title,
+                    message: notificationData.message,
+                    metadata: {
+                        type: notificationData.type,
+                        ...notificationData.meta,
+                    },
+                    read: false,
+                    createdAt: new Date(),
+                },
+            });
+
+            // ------------ SAVE TO USER NOTIFICATION (Mapping) ------------
+            await this.prisma.userNotification.create({
+                data: {
+                    userId: buyerId,
+                    notificationId: notification.id,
+                    type: "Service",
+                    read: false,
+                },
+            });
+
+            this.logger.log(`Notification saved for buyer ${buyerId}`);
+
+            // ------------- SEND FIREBASE NOTIFICATION ----------------
+            try {
+                await this.firebaseNotificationService.sendToUser(
+                    buyerId,
+                    {
+                        title: " Service Request Accepted",
+                        body: `${payload.info.sellerName} has accepted your service request for "${payload.info.serviceName}"`,
+                        type: NotificationType.SERVICE_REQUEST,
+                        data: {
+                            serviceRequestId: payload.info.serviceRequestId,
+                            sellerId: payload.info.sellerId,
+                            sellerName: payload.info.sellerName,
+                            serviceName: payload.info.serviceName,
+                            status: "ACCEPTED",
+                            timestamp: new Date().toISOString(),
+                        },
+                    },
+                    false,
+                );
+                this.logger.log(` Firebase notification sent to buyer ${buyerId}`);
+            } catch (fbError: any) {
+                this.logger.error(`Failed to send Firebase notification: ${fbError.message}`);
+            }
+
+            // ------------- SEND REALTIME VIA SOCKET -------------
+            const clients = this.getClientsForUser(buyerId);
+
+            if (!clients.size) {
+                this.logger.warn(`No active socket for buyer ${buyerId}`);
+            }
+
+            for (const client of clients) {
+                client.emit(EVENT_TYPES.SERVICE_REQUEST_ACCEPTED, notificationData);
+                this.logger.log(
+                    `Service Request Accepted notification sent to ${buyerId} (socket: ${client.id})`,
+                );
+            }
+
+            this.logger.log("SERVICE_REQUEST_ACCEPTED event processing complete");
+        } catch (error: any) {
+            this.logger.error(`Error processing SERVICE_REQUEST_ACCEPTED event: ${error.message}`);
+        }
+    }
+
+    // ------ LISTEN TO SERVICE REQUEST DECLINED EVENT ----------------
+    @OnEvent(EVENT_TYPES.SERVICE_REQUEST_DECLINED)
+    async handleServiceRequestDeclined(payload: any) {
+        this.logger.log("SERVICE_REQUEST_DECLINED EVENT RECEIVED");
+        this.logger.debug(JSON.stringify(payload, null, 2));
+
+        if (!payload.info) {
+            this.logger.warn("No info found for SERVICE_REQUEST_DECLINED");
+            return;
+        }
+
+        try {
+            const buyerId = payload.info.buyerId;
+            const notificationData = {
+                type: EVENT_TYPES.SERVICE_REQUEST_DECLINED,
+                title: "❌ Service Request Declined",
+                message: `${payload.info.sellerName} has declined your service request for "${payload.info.serviceName}"`,
+                createdAt: new Date(),
+                meta: {
+                    serviceRequestId: payload.info.serviceRequestId,
+                    serviceId: payload.info.serviceId,
+                    serviceName: payload.info.serviceName,
+                    sellerId: payload.info.sellerId,
+                    sellerName: payload.info.sellerName,
+                    status: "DECLINED",
+                    reason: payload.info.reason || undefined,
+                    ...payload.meta,
+                },
+            };
+
+            // ------------- SAVE TO DATABASE ----------------
+            const notification = await this.prisma.notification.create({
+                data: {
+                    userId: buyerId,
+                    title: notificationData.title,
+                    message: notificationData.message,
+                    metadata: {
+                        type: notificationData.type,
+                        ...notificationData.meta,
+                    },
+                    read: false,
+                    createdAt: new Date(),
+                },
+            });
+
+            // ------------ SAVE TO USER NOTIFICATION (Mapping) ------------
+            await this.prisma.userNotification.create({
+                data: {
+                    userId: buyerId,
+                    notificationId: notification.id,
+                    type: "Service",
+                    read: false,
+                },
+            });
+
+            this.logger.log(`Notification saved for buyer ${buyerId}`);
+
+            // ------------- SEND FIREBASE NOTIFICATION ----------------
+            try {
+                await this.firebaseNotificationService.sendToUser(
+                    buyerId,
+                    {
+                        title: "❌ Service Request Declined",
+                        body: `${payload.info.sellerName} has declined your service request for "${payload.info.serviceName}"`,
+                        type: NotificationType.SERVICE_REQUEST,
+                        data: {
+                            serviceRequestId: payload.info.serviceRequestId,
+                            sellerId: payload.info.sellerId,
+                            sellerName: payload.info.sellerName,
+                            serviceName: payload.info.serviceName,
+                            status: "DECLINED",
+                            reason: payload.info.reason || undefined,
+                            timestamp: new Date().toISOString(),
+                        },
+                    },
+                    false,
+                );
+                this.logger.log(`❌ Firebase notification sent to buyer ${buyerId}`);
+            } catch (fbError: any) {
+                this.logger.error(`Failed to send Firebase notification: ${fbError.message}`);
+            }
+
+            // ------------- SEND REALTIME VIA SOCKET -------------
+            const clients = this.getClientsForUser(buyerId);
+
+            if (!clients.size) {
+                this.logger.warn(`No active socket for buyer ${buyerId}`);
+            }
+
+            for (const client of clients) {
+                client.emit(EVENT_TYPES.SERVICE_REQUEST_DECLINED, notificationData);
+                this.logger.log(
+                    `Service Request Declined notification sent to ${buyerId} (socket: ${client.id})`,
+                );
+            }
+
+            this.logger.log("SERVICE_REQUEST_DECLINED event processing complete");
+        } catch (error: any) {
+            this.logger.error(`Error processing SERVICE_REQUEST_DECLINED event: ${error.message}`);
+        }
+    }
+
+
 }

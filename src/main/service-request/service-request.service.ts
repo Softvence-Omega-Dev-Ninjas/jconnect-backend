@@ -1,16 +1,22 @@
 import { HttpException, Injectable } from "@nestjs/common";
 import { PrismaService } from "src/lib/prisma/prisma.service";
 
-import { AwsService } from "@main/aws/aws.service";
-import { CreateServiceRequestDto } from "./dto/create-service-request.dto";
 import { HandleError } from "@common/error/handle-error.decorator";
+import { AwsService } from "@main/aws/aws.service";
+import { FirebaseNotificationService } from "@main/shared/notification/firebase-notification.service";
+import { NotificationType } from "src/lib/firebase/dto/notification.dto";
+import { EVENT_TYPES } from "@common/interface/events.name";
+import { EventEmitter2 } from "@nestjs/event-emitter";
+import { CreateServiceRequestDto } from "./dto/create-service-request.dto";
 
 @Injectable()
 export class ServiceRequestService {
     constructor(
         private prisma: PrismaService,
         private awsService: AwsService,
-    ) {}
+        private readonly firebaseNotificationService: FirebaseNotificationService,
+        private readonly eventEmitter: EventEmitter2,
+    ) { }
 
     async create(dto: CreateServiceRequestDto, files: Express.Multer.File[], user: any) {
         // -------------------------------
@@ -128,6 +134,25 @@ export class ServiceRequestService {
     async updateIsDeclined(id: string, updateData: { isDeclined?: boolean; isAccepted?: boolean }) {
         const serviceRequest = await this.prisma.serviceRequest.findUnique({
             where: { id },
+            include: {
+                service: {
+                    include: {
+                        creator: {
+                            select: {
+                                id: true,
+                                full_name: true,
+                                username: true,
+                            },
+                        },
+                    },
+                },
+                buyer: {
+                    select: {
+                        id: true,
+                        full_name: true,
+                    },
+                },
+            },
         });
 
         if (!serviceRequest) {
@@ -141,7 +166,7 @@ export class ServiceRequestService {
             );
         }
 
-        return this.prisma.serviceRequest.update({
+        const updated = await this.prisma.serviceRequest.update({
             where: { id },
             data: updateData,
             include: {
@@ -149,6 +174,91 @@ export class ServiceRequestService {
                 buyer: { omit: { password: true } },
             },
         });
+
+        // Send notification to buyer when seller accepts or declines the service request
+        try {
+            if (serviceRequest.service && serviceRequest.service.creator) {
+                const sellerName = serviceRequest.service.creator.username || serviceRequest.service.creator.full_name || "Seller";
+                const serviceName = serviceRequest.service.serviceName || "Your service request";
+
+                if (updateData.isAccepted === true) {
+                    // Send acceptance notification to buyer
+                    await this.firebaseNotificationService.sendToUser(
+                        serviceRequest.buyerId,
+                        {
+                            title: "✅ Service Request Accepted",
+                            body: `${sellerName} has accepted your service request for "${serviceName}"`,
+                            type: NotificationType.SERVICE_REQUEST,
+                            data: {
+                                serviceRequestId: id,
+                                sellerId: serviceRequest.service.creator.id,
+                                sellerName,
+                                serviceName,
+                                status: "ACCEPTED",
+                                timestamp: new Date().toISOString(),
+                            },
+                        },
+                        true,
+                    );
+                    console.log(`✅ Acceptance notification sent to buyer ${serviceRequest.buyerId}`);
+
+                    // Emit event for websocket listeners
+                    this.eventEmitter.emit(EVENT_TYPES.SERVICE_REQUEST_ACCEPTED, {
+                        info: {
+                            serviceRequestId: id,
+                            serviceId: serviceRequest.serviceId,
+                            serviceName,
+                            sellerId: serviceRequest.service.creator.id,
+                            sellerName,
+                            buyerId: serviceRequest.buyerId,
+                            status: "ACCEPTED",
+                            actionAt: new Date(),
+                        },
+                    });
+                }
+
+                if (updateData.isDeclined === true) {
+                    // Send decline notification to buyer
+                    await this.firebaseNotificationService.sendToUser(
+                        serviceRequest.buyerId,
+                        {
+                            title: "❌ Service Request Declined",
+                            body: `${sellerName} has declined your service request for "${serviceName}"`,
+                            type: NotificationType.SERVICE_REQUEST,
+                            data: {
+                                serviceRequestId: id,
+                                sellerId: serviceRequest.service.creator.id,
+                                sellerName,
+                                serviceName,
+                                status: "DECLINED",
+                                timestamp: new Date().toISOString(),
+                            },
+                        },
+                        true,
+                    );
+                    console.log(`❌ Decline notification sent to buyer ${serviceRequest.buyerId}`);
+
+                    // Emit event for websocket listeners
+                    this.eventEmitter.emit(EVENT_TYPES.SERVICE_REQUEST_DECLINED, {
+                        info: {
+                            serviceRequestId: id,
+                            serviceId: serviceRequest.serviceId,
+                            serviceName,
+                            sellerId: serviceRequest.service.creator.id,
+                            sellerName,
+                            buyerId: serviceRequest.buyerId,
+                            status: "DECLINED",
+                            actionAt: new Date(),
+                        },
+                    });
+                }
+            }
+        } catch (error) {
+            console.error(`Failed to send notification: ${error.message}`);
+            // Continue execution even if notification fails
+        }
+
+        return updated;
     }
 
     async updateUploadedFiles(id: string, files: Express.Multer.File[], user: any) {
