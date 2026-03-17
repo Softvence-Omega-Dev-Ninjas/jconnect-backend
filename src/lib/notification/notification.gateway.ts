@@ -27,7 +27,8 @@ import { PrismaService } from "src/lib/prisma/prisma.service";
 })
 @Injectable()
 export class NotificationGateway
-    implements OnGatewayInit, OnGatewayConnection, OnGatewayDisconnect {
+    implements OnGatewayInit, OnGatewayConnection, OnGatewayDisconnect
+{
     private readonly logger = new Logger(NotificationGateway.name);
     private readonly clients = new Map<string, Set<Socket>>();
 
@@ -37,7 +38,7 @@ export class NotificationGateway
         private readonly prisma: PrismaService,
         private readonly firebaseNotificationService: FirebaseNotificationService,
         private readonly mailService: MailService,
-    ) { }
+    ) {}
 
     @WebSocketServer()
     server: Server;
@@ -176,7 +177,7 @@ export class NotificationGateway
 
         this.logger.log(`Total recipients: ${payload.info.recipients.length}`);
 
-        // Check if user has notification toggle enabled
+        // ----------------------Check if user has notification toggle enabled ----------------
         const enabledRecipients = await this.prisma.notificationToggle.findMany({
             where: {
                 userId: { in: payload.info.recipients.map((r) => r.id) },
@@ -188,7 +189,7 @@ export class NotificationGateway
         const enabledUserIds = new Set(enabledRecipients.map((r) => r.userId));
 
         for (const recipient of payload.info.recipients) {
-            // Skip if user has disabled this notification type
+            // ------------------- if user has disabled this notification type -------------------
             if (!enabledUserIds.has(recipient.id)) {
                 this.logger.log(`User ${recipient.id} has disabled userRegistration notifications`);
                 continue;
@@ -210,7 +211,7 @@ export class NotificationGateway
                 },
             };
 
-            //  SAVE TO DATABASE
+            //  ------------ SAVE TO DATABASE ----------------
             const notification = await this.prisma.notification.create({
                 data: {
                     userId: recipient.id,
@@ -225,7 +226,7 @@ export class NotificationGateway
                 },
             });
 
-            //  SAVE TO USER NOTIFICATION (Mapping)
+            //  -------------------  SAVE TO USER NOTIFICATION (Mapping) -------------------
             await this.prisma.userNotification.create({
                 data: {
                     userId: recipient.id,
@@ -235,7 +236,7 @@ export class NotificationGateway
                 },
             });
 
-            // Send real-time notification via socket
+            // -----------------  Send real-time notification via socket -----------------
             const clients = this.getClientsForUser(recipient.id);
             this.logger.log(`  → Connected sockets: ${clients.size}`);
 
@@ -586,7 +587,9 @@ export class NotificationGateway
                 });
 
                 if (buyer?.email) {
-                    const reasonText = payload.info.reason ? `<p><strong>Reason:</strong> ${payload.info.reason}</p>` : "";
+                    const reasonText = payload.info.reason
+                        ? `<p><strong>Reason:</strong> ${payload.info.reason}</p>`
+                        : "";
                     await this.mailService.sendEmail(
                         buyer.email,
                         "❌ Service Request Declined",
