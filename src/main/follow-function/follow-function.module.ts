@@ -9,4 +9,4 @@ import { FollowFunctionService } from "./follow-function.service";
     providers: [FollowFunctionService],
     controllers: [FollowFunctionController],
 })
-export class FollowFunctionModule { }
+export class FollowFunctionModule {}

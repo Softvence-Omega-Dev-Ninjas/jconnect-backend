@@ -14,7 +14,7 @@ export class FollowFunctionService {
         private readonly eventEmitter: EventEmitter2,
         private readonly firebaseNotificationService: FirebaseNotificationService,
         private readonly mailService: MailService,
-    ) { }
+    ) {}
 
     //------------------- Follow or Unfollow a user-------------------//
     @HandleError("Error in follow function")
@@ -61,7 +61,7 @@ export class FollowFunctionService {
             folowingdata.followingID,
             {
                 title: `${user.username} started following you`,
-                body: `${user.username} started following you so you can follow them back and connect with them!` ,
+                body: `${user.username} started following you so you can follow them back and connect with them!`,
                 type: NotificationType.NEW_FOLLOWER,
                 data: {
                     followerId: user.userId,
@@ -152,7 +152,7 @@ export class FollowFunctionService {
                 <body>
                     <div class="container">
                         <div class="header">
-                            <div class="logo">👤 DaConnect</div>
+                            <div class="logo">👤 DjConnect</div>
                             <div class="header-subtitle">New Follower Alert</div>
                         </div>
                         <div class="content">
@@ -193,8 +193,6 @@ export class FollowFunctionService {
         }
 
         return { message: "followed successfully", data: following };
-
-
     }
 
     //--------------- follow status a user check i following another user or not -------------------//

@@ -7,7 +7,7 @@ import { CreateProfileDto, UpdateProfileDto } from "./dto/profile.dto";
 
 @Injectable()
 export class ProfileService {
-    constructor(private prisma: PrismaService) { }
+    constructor(private prisma: PrismaService) {}
 
     async create(data: CreateProfileDto) {
         const user = await this.prisma.user.findUnique({
@@ -43,7 +43,6 @@ export class ProfileService {
         // ----------------Create Profile with nested socialProfiles when provided-------------------
         return this.prisma.profile.create({ data: profileData });
     }
-
 
     @HandleError("Error fetching profiles")
     async findAll() {
