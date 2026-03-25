@@ -36,7 +36,7 @@ export class AuthService {
         private readonly twilio: TwilioService,
         private readonly stripe: StripeService,
         private readonly eventEmitter: EventEmitter2,
-    ) { }
+    ) {}
 
     // ---------- REGISTER (send email verification OTP) ----------
     @HandleError("Failed to Register profile", "Register ")

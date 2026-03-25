@@ -161,7 +161,7 @@ export class PrivateChatGateway implements OnGatewayInit, OnGatewayConnection, O
         if (payload.serviceId) {
         }
         const userId = this.getUserIdFromSocket(client);
-        if (!userId) return; 
+        if (!userId) return;
 
         // Validate sender matches token
         if (client.data.userId !== userId) {

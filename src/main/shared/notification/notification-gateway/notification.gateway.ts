@@ -1,6 +1,9 @@
 import { JWTPayload } from "@common/jwt/jwt.interface";
 import { FirebaseNotificationService } from "@main/shared/notification/firebase-notification.service";
-import type { ServiceEvent, UserRegistration } from "@main/shared/notification/interface/events-payload";
+import type {
+    ServiceEvent,
+    UserRegistration,
+} from "@main/shared/notification/interface/events-payload";
 import { Notification } from "@main/shared/notification/interface/events-payload";
 import { EVENT_TYPES } from "@main/shared/notification/interface/events.name";
 import { PayloadForSocketClient } from "@main/shared/notification/interface/socket-client-payload";
@@ -27,7 +30,8 @@ import { PrismaService } from "src/lib/prisma/prisma.service";
 })
 @Injectable()
 export class NotificationGateway
-    implements OnGatewayInit, OnGatewayConnection, OnGatewayDisconnect {
+    implements OnGatewayInit, OnGatewayConnection, OnGatewayDisconnect
+{
     private readonly logger = new Logger(NotificationGateway.name);
     private readonly clients = new Map<string, Set<Socket>>();
 
@@ -37,7 +41,7 @@ export class NotificationGateway
         private readonly prisma: PrismaService,
         private readonly firebaseNotificationService: FirebaseNotificationService,
         private readonly mailService: MailService,
-    ) { }
+    ) {}
 
     @WebSocketServer()
     server: Server;

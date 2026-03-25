@@ -345,7 +345,7 @@ export enum NotificationType {
     SERVICE_REQUEST_ACCEPTED = "SERVICE_REQUEST_ACCEPTED",
     SERVICE_REQUEST_DECLINED = "SERVICE_REQUEST_DECLINED",
     UPLOAD_PROOF = "UPLOAD_PROOF",
-    follow= "follow",
+    follow = "follow",
 }
 
 // Send templated notification

@@ -81,15 +81,13 @@ export interface InquiryEvent extends BaseEvent<InquiryMeta> {
         fromUserId: string;
         recipients: { id: string; email: string }[];
     };
-
+}
+//  ---------------------Upload Proof Event ----------------------
+export interface UploadProofEvent extends BaseEvent<UploadProofMeta> {
+    info: {
+        uploadedFileUrl: string;
+        uploadedAt: Date;
+        uploadedByUserId: string;
+        recipients: { id: string; email: string }[];
     };
-    //  ---------------------Upload Proof Event ----------------------
-    export interface UploadProofEvent extends BaseEvent<UploadProofMeta> {
-        info: {
-            uploadedFileUrl: string;
-            uploadedAt: Date;
-            uploadedByUserId: string;
-            recipients: { id: string; email: string }[];
-        };
-    };
-
+}

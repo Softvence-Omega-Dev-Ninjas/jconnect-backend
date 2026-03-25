@@ -16,7 +16,7 @@ export class ServiceRequestService {
         private awsService: AwsService,
         private readonly firebaseNotificationService: FirebaseNotificationService,
         private readonly eventEmitter: EventEmitter2,
-    ) { }
+    ) {}
 
     async create(dto: CreateServiceRequestDto, files: Express.Multer.File[], user: any) {
         // -------------------------------

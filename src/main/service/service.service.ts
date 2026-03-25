@@ -17,7 +17,7 @@ export class ServiceService {
         private readonly eventEmitter: EventEmitter2,
         private readonly firebaseNotificationService: FirebaseNotificationService,
         @Inject("STRIPE_CLIENT") private stripe: Stripe,
-    ) { }
+    ) {}
 
     @HandleError("Failed to create service")
     async create(dto: CreateServiceDto, user: any): Promise<any> {

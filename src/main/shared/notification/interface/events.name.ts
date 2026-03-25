@@ -1,4 +1,4 @@
-import { Upload } from '@aws-sdk/lib-storage';
+import { Upload } from "@aws-sdk/lib-storage";
 import { AuthProvider, Role, ValidationType } from "@constant/enums";
 
 //  -----------------  Event payload interfaces (aligned with NotificationToggle schema) ---------------------
