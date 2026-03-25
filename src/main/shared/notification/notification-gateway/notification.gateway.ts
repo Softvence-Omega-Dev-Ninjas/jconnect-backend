@@ -1,9 +1,9 @@
-import type { ServiceEvent, UserRegistration } from "@common/interface/events-payload";
-import { Notification } from "@common/interface/events-payload";
-import { EVENT_TYPES } from "@common/interface/events.name";
-import { PayloadForSocketClient } from "@common/interface/socket-client-payload";
 import { JWTPayload } from "@common/jwt/jwt.interface";
 import { FirebaseNotificationService } from "@main/shared/notification/firebase-notification.service";
+import type { ServiceEvent, UserRegistration } from "@main/shared/notification/interface/events-payload";
+import { Notification } from "@main/shared/notification/interface/events-payload";
+import { EVENT_TYPES } from "@main/shared/notification/interface/events.name";
+import { PayloadForSocketClient } from "@main/shared/notification/interface/socket-client-payload";
 import { Injectable, Logger } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
 import { OnEvent } from "@nestjs/event-emitter";
@@ -27,8 +27,7 @@ import { PrismaService } from "src/lib/prisma/prisma.service";
 })
 @Injectable()
 export class NotificationGateway
-    implements OnGatewayInit, OnGatewayConnection, OnGatewayDisconnect
-{
+    implements OnGatewayInit, OnGatewayConnection, OnGatewayDisconnect {
     private readonly logger = new Logger(NotificationGateway.name);
     private readonly clients = new Map<string, Set<Socket>>();
 
@@ -38,7 +37,7 @@ export class NotificationGateway
         private readonly prisma: PrismaService,
         private readonly firebaseNotificationService: FirebaseNotificationService,
         private readonly mailService: MailService,
-    ) {}
+    ) { }
 
     @WebSocketServer()
     server: Server;
@@ -70,7 +69,7 @@ export class NotificationGateway
 
             if (!user) return client.disconnect(true);
 
-            // Ensure the user has a NotificationToggle record
+            // --------------------- Ensure the user has a NotificationToggle record ---------------------
             if (!user.notificationToggles?.length) {
                 await this.prisma.notificationToggle.create({
                     data: { userId: user.id },
@@ -93,6 +92,9 @@ export class NotificationGateway
                 message: toggle?.message || false,
                 userRegistration: toggle?.userRegistration || false,
                 Inquiry: toggle?.Inquiry || false,
+                follow: toggle?.follow || false,
+                UploadProof: toggle?.UploadProof || false,
+                PaymentReminder: toggle?.PaymentReminder || false,
             };
 
             client.data.user = payloadForSocketClient;
@@ -537,7 +539,7 @@ export class NotificationGateway
             const buyerId = payload.info.buyerId;
             const notificationData = {
                 type: EVENT_TYPES.SERVICE_REQUEST_DECLINED,
-                title: "❌ Service Request Declined",
+                title: " Service Request Declined",
                 message: `${payload.info.sellerName} has declined your service request for "${payload.info.serviceName}"`,
                 createdAt: new Date(),
                 meta: {
@@ -592,7 +594,7 @@ export class NotificationGateway
                         : "";
                     await this.mailService.sendEmail(
                         buyer.email,
-                        "❌ Service Request Declined",
+                        " Service Request Declined",
                         `
                         <p>Hello ${buyer.full_name || "Buyer"},</p>
                         <p><strong>${payload.info.sellerName}</strong> has declined your service request for <strong>"${payload.info.serviceName}"</strong>.</p>
@@ -601,7 +603,7 @@ export class NotificationGateway
                         <p>Thank you,<br/>DaConnect Team</p>
                         `,
                     );
-                    this.logger.log(`❌ Email notification sent to buyer ${buyerId}`);
+                    this.logger.log(` Email notification sent to buyer ${buyerId}`);
                 }
             } catch (emailError: any) {
                 this.logger.error(`Failed to send email notification: ${emailError.message}`);
@@ -612,7 +614,7 @@ export class NotificationGateway
                 await this.firebaseNotificationService.sendToUser(
                     buyerId,
                     {
-                        title: "❌ Service Request Declined",
+                        title: " Service Request Declined",
                         body: `${payload.info.sellerName} has declined your service request for "${payload.info.serviceName}"`,
                         type: NotificationType.SERVICE_REQUEST,
                         data: {
@@ -627,7 +629,7 @@ export class NotificationGateway
                     },
                     false,
                 );
-                this.logger.log(`❌ Firebase notification sent to buyer ${buyerId}`);
+                this.logger.log(` Firebase notification sent to buyer ${buyerId}`);
             } catch (fbError: any) {
                 this.logger.error(`Failed to send Firebase notification: ${fbError.message}`);
             }

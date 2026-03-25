@@ -4,9 +4,9 @@ import { PrismaService } from "src/lib/prisma/prisma.service";
 import { HandleError } from "@common/error/handle-error.decorator";
 import { AwsService } from "@main/aws/aws.service";
 import { FirebaseNotificationService } from "@main/shared/notification/firebase-notification.service";
-import { NotificationType } from "src/lib/firebase/dto/notification.dto";
-import { EVENT_TYPES } from "@common/interface/events.name";
+import { EVENT_TYPES } from "@main/shared/notification/interface/events.name";
 import { EventEmitter2 } from "@nestjs/event-emitter";
+import { NotificationType } from "src/lib/firebase/dto/notification.dto";
 import { CreateServiceRequestDto } from "./dto/create-service-request.dto";
 
 @Injectable()
@@ -16,7 +16,7 @@ export class ServiceRequestService {
         private awsService: AwsService,
         private readonly firebaseNotificationService: FirebaseNotificationService,
         private readonly eventEmitter: EventEmitter2,
-    ) {}
+    ) { }
 
     async create(dto: CreateServiceRequestDto, files: Express.Multer.File[], user: any) {
         // -------------------------------

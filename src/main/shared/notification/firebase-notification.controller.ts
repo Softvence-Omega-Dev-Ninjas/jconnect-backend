@@ -3,12 +3,8 @@ import { Body, Controller, Post, Param } from "@nestjs/common";
 import { ApiBearerAuth, ApiOperation, ApiTags } from "@nestjs/swagger";
 import { FirebaseNotificationService } from "./firebase-notification.service";
 import {
-    SendNotificationDto,
-    SendMultipleNotificationDto,
-    SendTopicNotificationDto,
-    TopicSubscriptionDto,
+  
     UpdateFcmTokenDto,
-    SendTemplatedNotificationDto,
     NotificationType,
 } from "src/lib/firebase/dto/notification.dto";
 

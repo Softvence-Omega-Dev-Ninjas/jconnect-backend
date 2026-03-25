@@ -161,7 +161,7 @@ export class PrivateChatGateway implements OnGatewayInit, OnGatewayConnection, O
         if (payload.serviceId) {
         }
         const userId = this.getUserIdFromSocket(client);
-        if (!userId) return; // already handled
+        if (!userId) return; 
 
         // Validate sender matches token
         if (client.data.userId !== userId) {
@@ -245,7 +245,7 @@ export class PrivateChatGateway implements OnGatewayInit, OnGatewayConnection, O
 
     /** Helper to emit service request file URL updates to relevant users */
     emitServiceRequestFilesUpdate(updatedServiceRequest: any) {
-        // Notify buyer
+        // --------------Notify buyer--------------------
         if (updatedServiceRequest.buyer?.id) {
             this.server
                 .to(updatedServiceRequest.buyer.id)
@@ -255,7 +255,7 @@ export class PrivateChatGateway implements OnGatewayInit, OnGatewayConnection, O
             );
         }
 
-        // Notify seller (service creator)
+        // -----------------------Notify seller (service creator)---------------------
         if (updatedServiceRequest.service?.creator?.id) {
             this.server
                 .to(updatedServiceRequest.service.creator.id)

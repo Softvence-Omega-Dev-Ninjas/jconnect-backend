@@ -1,10 +1,10 @@
 import { HandleError } from "@common/error/handle-error.decorator";
 import { errorResponse } from "@common/utilsResponse/response.util";
+import { FirebaseNotificationService } from "@main/shared/notification/firebase-notification.service";
+import { ServiceEvent } from "@main/shared/notification/interface/events-payload";
+import { EVENT_TYPES } from "@main/shared/notification/interface/events.name";
 import { Inject, Injectable, NotFoundException } from "@nestjs/common";
 import { EventEmitter2 } from "@nestjs/event-emitter";
-import { ServiceEvent } from "@common/interface/events-payload";
-import { EVENT_TYPES } from "@common/interface/events.name";
-import { FirebaseNotificationService } from "@main/shared/notification/firebase-notification.service";
 import { NotificationType } from "src/lib/firebase/dto/notification.dto";
 import { PrismaService } from "src/lib/prisma/prisma.service";
 import Stripe from "stripe";
@@ -17,7 +17,7 @@ export class ServiceService {
         private readonly eventEmitter: EventEmitter2,
         private readonly firebaseNotificationService: FirebaseNotificationService,
         @Inject("STRIPE_CLIENT") private stripe: Stripe,
-    ) {}
+    ) { }
 
     @HandleError("Failed to create service")
     async create(dto: CreateServiceDto, user: any): Promise<any> {

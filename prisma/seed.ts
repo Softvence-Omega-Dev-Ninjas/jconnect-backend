@@ -6,7 +6,7 @@ const prisma = new PrismaClient();
 async function main() {
     console.log("🌱 Seeding database...");
 
-    // Clear existing data (optional)
+    //------------------ Clear existing data --------------------------
     await prisma.liveMessageRead.deleteMany();
     await prisma.liveMessage.deleteMany();
     await prisma.liveChatParticipant.deleteMany();
@@ -35,10 +35,10 @@ async function main() {
     await prisma.device.deleteMany();
     await prisma.user.deleteMany();
 
-    // Hash password
+    //-------------------- Hash password -----------------------------
     const hashedPassword = await bcrypt.hash("12345678", 10);
 
-    // Create Users
+    //-------------------- Create Users -----------------------------
     const users = await Promise.all([
         prisma.user.create({
             data: {
@@ -96,7 +96,7 @@ async function main() {
 
     console.log("✅ Users created");
 
-    // Create Profiles
+    // ------------------Create Profiles ---------------------------
     await Promise.all([
         prisma.profile.create({
             data: {
@@ -147,7 +147,7 @@ async function main() {
 
     console.log("✅ Profiles created");
 
-    // Create Devices
+    //------------------------- Create Devices----------------------------------
     await prisma.device.create({
         data: {
             userId: users[0].id,
@@ -160,7 +160,7 @@ async function main() {
         },
     });
 
-    console.log("✅ Devices created");
+    console.log("Devices created");
 
     // Create Services
     const services = await Promise.all([
@@ -195,7 +195,7 @@ async function main() {
         }),
     ]);
 
-    console.log("✅ Services created");
+    console.log(" Services created");
 
     // Create Service Requests
     await prisma.serviceRequest.create({
@@ -208,7 +208,7 @@ async function main() {
         },
     });
 
-    console.log("✅ Service Requests created");
+    console.log("Service Requests created");
 
     // Create Custom Service Requests
     await prisma.customServiceRequest.create({
@@ -223,7 +223,7 @@ async function main() {
         },
     });
 
-    console.log("✅ Custom Service Requests created");
+    console.log(" Custom Service Requests created");
 
     // Create Social Services
     const socialService = await prisma.socialService.create({
@@ -237,7 +237,7 @@ async function main() {
         },
     });
 
-    console.log("✅ Social Services created");
+    console.log(" Social Services created");
 
     // Create Social Service Requests
     await prisma.socialServiceRequest.create({
@@ -253,7 +253,7 @@ async function main() {
         },
     });
 
-    console.log("✅ Social Service Requests created");
+    console.log(" Social Service Requests created");
 
     // Create Payments
     const payment = await prisma.payment.create({
@@ -267,7 +267,7 @@ async function main() {
         },
     });
 
-    console.log("✅ Payments created");
+    console.log("Payments created");
 
     // Create Buy Services
     await prisma.buyService.create({
@@ -281,7 +281,7 @@ async function main() {
         },
     });
 
-    console.log("✅ Buy Services created");
+    console.log(" Buy Services created");
 
     // Create Orders
     const order = await prisma.order.create({
@@ -303,7 +303,7 @@ async function main() {
         },
     });
 
-    console.log("✅ Orders created");
+    console.log(" Orders created");
 
     // Create Reviews
     await prisma.review.create({
@@ -315,7 +315,7 @@ async function main() {
         },
     });
 
-    console.log("✅ Reviews created");
+    console.log(" Reviews created");
 
     // Create Payment Methods
     await prisma.paymentMethod.create({
@@ -329,7 +329,7 @@ async function main() {
         },
     });
 
-    console.log("✅ Payment Methods created");
+    console.log(" Payment Methods created");
 
     // Create Withdrawals
     await prisma.withdrawal.create({
@@ -340,7 +340,7 @@ async function main() {
         },
     });
 
-    console.log("✅ Withdrawals created");
+    console.log(" Withdrawals created");
 
     // Create Disputes
     await prisma.dispute.create({
@@ -353,7 +353,7 @@ async function main() {
         },
     });
 
-    console.log("✅ Disputes created");
+    console.log(" Disputes created");
 
     // Create Live Chats
     const liveChat = await prisma.liveChat.create({
@@ -395,7 +395,7 @@ async function main() {
         },
     });
 
-    console.log("✅ Live Chats created");
+    console.log(" Live Chats created");
 
     // Create Private Conversations
     const privateConv = await prisma.privateConversation.create({
@@ -422,7 +422,7 @@ async function main() {
         },
     });
 
-    console.log("✅ Private Messages created");
+    console.log(" Private Messages created");
 
     // Create Support Chats
     const supportChat = await prisma.supportChat.create({
@@ -444,7 +444,7 @@ async function main() {
         },
     });
 
-    console.log("✅ Support Chats created");
+    console.log(" Support Chats created");
 
     // Create Notifications
     const notification = await prisma.notification.create({
@@ -465,7 +465,7 @@ async function main() {
         },
     });
 
-    console.log("✅ Notifications created");
+    console.log(" Notifications created");
 
     // Create Notification Toggles
     await Promise.all(
@@ -484,14 +484,14 @@ async function main() {
         ),
     );
 
-    console.log("✅ Notification Toggles created");
+    console.log(" Notification Toggles created");
 
     console.log("🎉 Seeding completed successfully!");
 }
 
 main()
     .catch((e) => {
-        console.error("❌ Error seeding database:", e);
+        console.error(" Error seeding database:", e);
         process.exit(1);
     })
     .finally(async () => {

@@ -357,6 +357,15 @@ export class FirebaseNotificationService {
             [NotificationType.SERVICE_REQUEST]: "Service",
             [NotificationType.PAYMENT_RECEIVED]: "Payment",
             [NotificationType.NEW_MESSAGE]: "Inquiry",
+            [NotificationType.NEW_FOLLOWER]: "UserRegistration",
+            [NotificationType.NEW_LIKE]: "UserRegistration",
+            [NotificationType.NEW_COMMENT]: "UserRegistration",
+            [NotificationType.REVIEW_RECEIVED]: "UserRegistration",
+            [NotificationType.ANNOUNCEMENT]: "UserRegistration",
+            [NotificationType.CUSTOM]: "UserRegistration",
+            [NotificationType.SERVICE_REQUEST_ACCEPTED]: "Service",
+            [NotificationType.SERVICE_REQUEST_DECLINED]: "Service",
+            [NotificationType.UPLOAD_PROOF]: "Service",
         };
 
         return mapping[type] || null;
@@ -429,6 +438,31 @@ export class FirebaseNotificationService {
                 body: d.body,
                 type: NotificationType.CUSTOM,
                 data: d.data || {},
+            }),
+            [NotificationType.SERVICE_REQUEST_ACCEPTED]: (d) => ({  
+                title: "Service Request Accepted",
+                body: `${d.sellerName} has accepted your service request for "${d.serviceName}"`,
+                type: NotificationType.SERVICE_REQUEST_ACCEPTED,
+                data: { serviceRequestId: d.serviceRequestId, serviceId: d.serviceId, serviceName: d.serviceName, sellerId: d.sellerId, sellerName: d.sellerName, status: "ACCEPTED" },
+            }),
+            [NotificationType.SERVICE_REQUEST_DECLINED]: (d) => ({
+                title: "Service Request Declined",
+                body: `${d.sellerName} has declined your service request for "${d.serviceName}". Reason: ${d.reason || "No reason provided"}`,
+                type: NotificationType.SERVICE_REQUEST_DECLINED,
+                data: { serviceRequestId: d.serviceRequestId, serviceId: d.serviceId, serviceName: d.serviceName, sellerId: d.sellerId, sellerName: d.sellerName, status: "DECLINED", reason: d.reason },
+            }),
+
+            [NotificationType.UPLOAD_PROOF]: (d) => ({
+                title: "Proof of Work Uploaded",
+                body: `${d.uploadedByName} has uploaded proof of work for "${d.serviceName}"`,
+                type: NotificationType.UPLOAD_PROOF,
+                data: { serviceRequestId: d.serviceRequestId, serviceId: d.serviceId, serviceName: d.serviceName, uploadedFileUrl: d.uploadedFileUrl, uploadedByUserId: d.uploadedByUserId },
+            }),
+            [NotificationType.follow]: (d) => ({
+                title: "New Follower",
+                body: `${d.followerName} started following you`,
+                type: NotificationType.follow,
+                data: { followerId: d.followerId },
             }),
         };
 

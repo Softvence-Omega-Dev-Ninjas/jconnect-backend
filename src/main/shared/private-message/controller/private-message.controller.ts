@@ -82,7 +82,7 @@ export class PrivateChatController implements OnModuleInit {
             dto,
         );
 
-        // Emit to both sender and recipient
+        //-------------- Emit to both sender and recipient to update their chat lists and messages in real-time ----------------
         this.gateway.emitNewMessage(senderId, message);
         this.gateway.emitNewMessage(recipientId, message);
 

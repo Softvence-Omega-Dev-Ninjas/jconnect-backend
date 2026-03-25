@@ -1,3 +1,4 @@
+import { Upload } from '@aws-sdk/lib-storage';
 import { AuthProvider, Role, ValidationType } from "@constant/enums";
 
 //  -----------------  Event payload interfaces (aligned with NotificationToggle schema) ---------------------
@@ -67,6 +68,11 @@ export interface ServiceRequestMeta {
     actionAt: Date;
 }
 
+export interface UploadProofMeta {
+    uploadedFileUrl: string;
+    uploadedAt: Date;
+}
+
 //--------------------EVENT TYPE CONSTANTS --------------------
 export const EVENT_TYPES = {
     USERREGISTRATION_CREATE: "user.create",
@@ -83,6 +89,7 @@ export const EVENT_TYPES = {
     INQUIRY_CREATE: "inquiry.create",
     SERVICE_REQUEST_ACCEPTED: "service_request.accepted",
     SERVICE_REQUEST_DECLINED: "service_request.declined",
+    UPLOAD_PROOF: "upload_proof",
 } as const;
 
 // ----------------- Type-safe keys for event types -----------------
@@ -105,4 +112,6 @@ export type EventPayloadMap = {
     [EVENT_TYPES.INQUIRY_CREATE]: InquiryMeta;
     [EVENT_TYPES.SERVICE_REQUEST_ACCEPTED]: ServiceRequestMeta;
     [EVENT_TYPES.SERVICE_REQUEST_DECLINED]: ServiceRequestMeta;
+
+    [EVENT_TYPES.UPLOAD_PROOF]: UploadProofMeta;
 };
