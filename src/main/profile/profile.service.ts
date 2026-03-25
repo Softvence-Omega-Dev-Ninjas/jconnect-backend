@@ -1,12 +1,13 @@
 // src/profile/profile.service.ts
 import { BadRequestException, Injectable, NotFoundException } from "@nestjs/common";
 
+import { HandleError } from "@common/error/handle-error.decorator";
 import { PrismaService } from "src/lib/prisma/prisma.service";
 import { CreateProfileDto, UpdateProfileDto } from "./dto/profile.dto";
 
 @Injectable()
 export class ProfileService {
-    constructor(private prisma: PrismaService) {}
+    constructor(private prisma: PrismaService) { }
 
     async create(data: CreateProfileDto) {
         const user = await this.prisma.user.findUnique({
@@ -39,16 +40,19 @@ export class ProfileService {
             };
         }
 
-        // 4️⃣ Create Profile with nested socialProfiles when provided
+        // ----------------Create Profile with nested socialProfiles when provided-------------------
         return this.prisma.profile.create({ data: profileData });
     }
 
+
+    @HandleError("Error fetching profiles")
     async findAll() {
         return this.prisma.profile.findMany({
             include: { user: { omit: { password: true } } },
         });
     }
 
+    @HandleError("Error fetching profile")
     async findOne(user_id: string) {
         const profile = await this.prisma.profile.findUnique({
             where: { user_id },
