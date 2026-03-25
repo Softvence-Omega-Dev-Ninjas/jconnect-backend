@@ -146,6 +146,7 @@ export class ServiceService {
         return { message: "Service created successfully", service };
     }
 
+    //------------------- Get all non-custom services-------------------//
     @HandleError("Failed to find service")
     async findAll() {
         return this.prisma.service.findMany({
@@ -164,6 +165,7 @@ export class ServiceService {
         });
     }
 
+    //------------------- Get services created by the authenticated user-------------------//
     @HandleError("Failed to find service")
     async Myservice(user: any) {
         return this.prisma.service.findMany({
@@ -182,6 +184,7 @@ export class ServiceService {
         });
     }
 
+    //------------------- Get service by ID-------------------//
     @HandleError("Failed to find service")
     async findOne(id: string) {
         let service: any = await this.prisma.service.findUnique({
@@ -211,6 +214,7 @@ export class ServiceService {
         return service;
     }
 
+    //------------------- Update service-------------------//
     @HandleError("Failed to update service")
     async update(id: string, dto: UpdateServiceDto, user: any): Promise<any> {
         if (!user.userId) return errorResponse("User ID is missing");

@@ -401,7 +401,6 @@ export class FirebaseMessagingService {
      */
     async verifyToken(fcmToken: string): Promise<boolean> {
         try {
-            // Try to send a dry run message
             await this.firebaseApp.messaging().send(
                 {
                     token: fcmToken,
