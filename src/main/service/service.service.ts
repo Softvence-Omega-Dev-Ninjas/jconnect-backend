@@ -1,10 +1,10 @@
 import { HandleError } from "@common/error/handle-error.decorator";
 import { errorResponse } from "@common/utilsResponse/response.util";
+import { FirebaseNotificationService } from "@main/shared/notification/firebase-notification.service";
+import { ServiceEvent } from "@main/shared/notification/interface/events-payload";
+import { EVENT_TYPES } from "@main/shared/notification/interface/events.name";
 import { Inject, Injectable, NotFoundException } from "@nestjs/common";
 import { EventEmitter2 } from "@nestjs/event-emitter";
-import { ServiceEvent } from "@common/interface/events-payload";
-import { EVENT_TYPES } from "@common/interface/events.name";
-import { FirebaseNotificationService } from "@main/shared/notification/firebase-notification.service";
 import { NotificationType } from "src/lib/firebase/dto/notification.dto";
 import { PrismaService } from "src/lib/prisma/prisma.service";
 import Stripe from "stripe";
@@ -146,6 +146,7 @@ export class ServiceService {
         return { message: "Service created successfully", service };
     }
 
+    //------------------- Get all non-custom services-------------------//
     @HandleError("Failed to find service")
     async findAll() {
         return this.prisma.service.findMany({
@@ -164,6 +165,7 @@ export class ServiceService {
         });
     }
 
+    //------------------- Get services created by the authenticated user-------------------//
     @HandleError("Failed to find service")
     async Myservice(user: any) {
         return this.prisma.service.findMany({
@@ -182,6 +184,7 @@ export class ServiceService {
         });
     }
 
+    //------------------- Get service by ID-------------------//
     @HandleError("Failed to find service")
     async findOne(id: string) {
         let service: any = await this.prisma.service.findUnique({
@@ -211,6 +214,7 @@ export class ServiceService {
         return service;
     }
 
+    //------------------- Update service-------------------//
     @HandleError("Failed to update service")
     async update(id: string, dto: UpdateServiceDto, user: any): Promise<any> {
         if (!user.userId) return errorResponse("User ID is missing");

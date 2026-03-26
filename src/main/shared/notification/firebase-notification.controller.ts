@@ -2,15 +2,7 @@ import { GetUser, ValidateAuth } from "@common/jwt/jwt.decorator";
 import { Body, Controller, Post, Param } from "@nestjs/common";
 import { ApiBearerAuth, ApiOperation, ApiTags } from "@nestjs/swagger";
 import { FirebaseNotificationService } from "./firebase-notification.service";
-import {
-    SendNotificationDto,
-    SendMultipleNotificationDto,
-    SendTopicNotificationDto,
-    TopicSubscriptionDto,
-    UpdateFcmTokenDto,
-    SendTemplatedNotificationDto,
-    NotificationType,
-} from "src/lib/firebase/dto/notification.dto";
+import { UpdateFcmTokenDto, NotificationType } from "src/lib/firebase/dto/notification.dto";
 
 @ApiTags("Firebase Notifications")
 @ValidateAuth()

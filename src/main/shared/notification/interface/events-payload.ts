@@ -4,6 +4,7 @@ import {
     PostMeta,
     ReviewMeta,
     ServiceMeta,
+    UploadProofMeta,
     UserRegistrationMeta,
 } from "./events.name";
 
@@ -33,7 +34,7 @@ export interface UserRegistration extends BaseEvent<UserRegistrationMeta> {
     };
 }
 
-// Post Event
+//----------------------- Post Event ----------------------
 export interface PostEvent extends BaseEvent<PostMeta> {
     info: {
         title: string;
@@ -52,7 +53,7 @@ export interface ServiceEvent extends BaseEvent<ServiceMeta> {
     };
 }
 
-// Message Event
+// --------------------- Message Event ----------------------
 export interface Message extends BaseEvent<MessageMeta> {
     info: {
         fromUserId: string;
@@ -62,7 +63,7 @@ export interface Message extends BaseEvent<MessageMeta> {
     };
 }
 
-// Review Event
+//  ---------------------Review Event ----------------------
 export interface ReviewEvent extends BaseEvent<ReviewMeta> {
     info: {
         reviewId: string;
@@ -71,13 +72,22 @@ export interface ReviewEvent extends BaseEvent<ReviewMeta> {
         recipients: { id: string; email: string }[];
     };
 }
-// Inquiry Event
+//  ---------------------Inquiry Event ----------------------
 export interface InquiryEvent extends BaseEvent<InquiryMeta> {
     info: {
         inquiryId: string;
         subject: string;
         message: string;
         fromUserId: string;
+        recipients: { id: string; email: string }[];
+    };
+}
+//  ---------------------Upload Proof Event ----------------------
+export interface UploadProofEvent extends BaseEvent<UploadProofMeta> {
+    info: {
+        uploadedFileUrl: string;
+        uploadedAt: Date;
+        uploadedByUserId: string;
         recipients: { id: string; email: string }[];
     };
 }

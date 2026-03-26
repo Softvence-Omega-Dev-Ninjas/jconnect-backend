@@ -1,8 +1,8 @@
 import { HttpException, Injectable, NotFoundException } from "@nestjs/common";
 
 import { HandleError } from "@common/error/handle-error.decorator";
-import { EVENT_TYPES, InquiryMeta } from "@common/interface/events.name";
 import { FirebaseNotificationService } from "@main/shared/notification/firebase-notification.service";
+import { EVENT_TYPES, InquiryMeta } from "@main/shared/notification/interface/events.name";
 import { EventEmitter2 } from "@nestjs/event-emitter";
 import { OrderStatus, Role } from "@prisma/client";
 import agoron2 from "argon2";

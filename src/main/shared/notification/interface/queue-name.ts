@@ -6,4 +6,7 @@ export enum QueueName {
     REVIEW = "review",
     SERVICE = "service",
     Inquiry = "inquiry",
+    follow = "follow",
+    UploadProof = "upload_proof",
+    PaymentReminder = "payment_reminder",
 }
