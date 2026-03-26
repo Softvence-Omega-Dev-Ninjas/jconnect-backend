@@ -1,9 +1,10 @@
 import { GetUser, ValidateUser } from "@common/jwt/jwt.decorator";
 import { Body, Controller, Get, Param, Post } from "@nestjs/common";
-import { ApiBearerAuth, ApiOperation } from "@nestjs/swagger";
+import { ApiBearerAuth, ApiOperation, ApiTags } from "@nestjs/swagger";
 import { follow_create_dto } from "./dto/follow_create.dto";
 import { FollowFunctionService } from "./follow-function.service";
 
+@ApiTags("Follow --------------------------- Function management")
 @Controller("follow-function")
 export class FollowFunctionController {
     constructor(private readonly followFunctionService: FollowFunctionService) {}
@@ -15,7 +16,7 @@ export class FollowFunctionController {
     async follow(@Body() folowingdata: follow_create_dto, @GetUser() user: any) {
         return this.followFunctionService.follow(folowingdata, user);
     }
-
+    // ------------------------------------------------------- added getFollowers endpoint -------------------------------------------------------
     @ApiBearerAuth()
     @ValidateUser()
     @ApiOperation({ summary: "Get followers of a user" })
@@ -24,7 +25,7 @@ export class FollowFunctionController {
         return this.followFunctionService.getFollowers(user);
     }
 
-    // follow status
+    // ------------------follow status----------------------
     @ApiBearerAuth()
     @ValidateUser()
     @ApiOperation({ summary: "Check if a user is following another user" })
@@ -32,7 +33,7 @@ export class FollowFunctionController {
     async followStatus(@GetUser() user: any, @Param("id") userIdToCheck: string) {
         return this.followFunctionService.followStatus(user, userIdToCheck);
     }
-
+    // ------------------------------------------------------- update: added getFollowings endpoint -------------------------------------------------------
     @ApiBearerAuth()
     @ValidateUser()
     @ApiOperation({ summary: "Get followings of a user" })

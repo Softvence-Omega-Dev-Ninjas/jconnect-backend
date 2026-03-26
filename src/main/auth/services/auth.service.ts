@@ -21,8 +21,8 @@ import { SendPhoneOtpDto, VerifyPhoneOtpDto } from "../dto/phone-login";
 import { ResetPasswordAuthDto } from "../dto/reset-password";
 import { ResendEmailDto, ResendverifyOtpDto, VerifyOtpAuthDto } from "../dto/varify-otp.dto";
 
-import { UserRegistration } from "@common/interface/events-payload";
-import { EVENT_TYPES } from "@common/interface/events.name";
+import { UserRegistration } from "@main/shared/notification/interface/events-payload";
+import { EVENT_TYPES } from "@main/shared/notification/interface/events.name";
 import { StripeService } from "@main/stripe/stripe.service";
 
 @Injectable()

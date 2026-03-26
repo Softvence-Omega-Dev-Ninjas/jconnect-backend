@@ -9,4 +9,4 @@ import { FirebaseNotificationService } from "@main/shared/notification/firebase-
     controllers: [],
     exports: [NotificationGateway],
 })
-export class NotificationModule {}
+export class NotificationModuleGateway {}
