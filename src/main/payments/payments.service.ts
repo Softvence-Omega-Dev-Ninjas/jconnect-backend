@@ -27,7 +27,7 @@ export class PaymentService {
         private readonly stripe: Stripe,
         private readonly mail: MailService,
         private readonly firebaseNotificationService: FirebaseNotificationService,
-    ) { }
+    ) {}
 
     async createCustomerID(user: any) {
         const customers = await this.stripe.customers.create({
@@ -283,7 +283,7 @@ export class PaymentService {
         };
     }
 
-    // Get single transaction history
+    // ---------------- Get single transaction history
     async getSingleTransactionHistory(id: string) {
         let transaction: any = await this.prisma.order.findUnique({
             where: { id },
@@ -328,13 +328,13 @@ export class PaymentService {
         transaction.buyer.platformRevenue =
             transaction.status === "RELEASED"
                 ? transaction.amount +
-                (transaction.amount * transaction.platformFee_percents) / 100 -
-                transaction.stripeFee -
-                transaction.amount
+                  (transaction.amount * transaction.platformFee_percents) / 100 -
+                  transaction.stripeFee -
+                  transaction.amount
                 : transaction.stripeFee && transaction.status === "CANCELLED"
-                    ? (transaction.amount * transaction.platformFee_percents) / 100 -
+                  ? (transaction.amount * transaction.platformFee_percents) / 100 -
                     transaction.stripeFee
-                    : 0;
+                  : 0;
 
         transaction.seller.servicePrice = transaction.amount;
         transaction.seller.platformFee =
@@ -345,8 +345,8 @@ export class PaymentService {
             transaction.stripeFee && transaction.status === "CANCELLED"
                 ? 0
                 : transaction.status === "RELEASED"
-                    ? transaction.amount - transaction.seller_amount
-                    : 0;
+                  ? transaction.amount - transaction.seller_amount
+                  : 0;
 
         return {
             success: true,
@@ -986,7 +986,7 @@ export class PaymentService {
             charge.balance_transaction as string,
         );
 
-       // const balanceTransaction = await this.stripe.balanceTransactions.retrieve(charge.balance_transaction as string);
+        // const balanceTransaction = await this.stripe.balanceTransactions.retrieve(charge.balance_transaction as string);
         let PlatfromRevinue = balanceTransaction.net - order.seller_amount;
 
         const updated = await this.prisma.order.update({
@@ -1280,7 +1280,9 @@ export class PaymentService {
                 );
                 console.log(`❌ Payment cancellation notification sent to buyer ${order.buyerId}`);
             } catch (error) {
-                console.error(`❌ Failed to send payment cancellation notification: ${error.message}`);
+                console.error(
+                    `❌ Failed to send payment cancellation notification: ${error.message}`,
+                );
             }
 
             return { message: "Payment authorization cancelled. No refund needed." };
@@ -1577,7 +1579,7 @@ export class PaymentService {
      *   - other useful events logged
      */
 
-    @HandleError('Error handling Stripe webhook')
+    @HandleError("Error handling Stripe webhook")
     async handleWebhook(rawBody: Buffer, signature: string) {
         const endpointSecret = process.env.STRIPE_WEBHOOK_SECRET_S!;
         let event: Stripe.Event;
@@ -1664,7 +1666,7 @@ export class PaymentService {
             }
         } catch (e) {
             this.logger.error("Error handling webhook", e as any);
-         
+
             throw e;
         }
 
@@ -1679,8 +1681,7 @@ export class PaymentService {
         return svc?.creatorId ?? "unknown";
     }
 
-
-    @HandleError('Error getting earnings and payouts')
+    @HandleError("Error getting earnings and payouts")
     async getEarningsAndPayouts(userId: string) {
         const user = await this.prisma.user.findUnique({
             where: { id: userId },
