@@ -36,7 +36,7 @@ export class AuthService {
         private readonly twilio: TwilioService,
         private readonly stripe: StripeService,
         private readonly eventEmitter: EventEmitter2,
-    ) {}
+    ) { }
 
     // ---------- REGISTER (send email verification OTP) ----------
     @HandleError("Failed to Register profile", "Register ")
@@ -100,11 +100,12 @@ export class AuthService {
 
         console.log("the new user", newUser);
 
-        // Send OTP email
-        await this.mail.sendEmail(
-            email,
-            "Welcome to DaConnect - Verify Your Email 🎉",
-            `
+        // Send OTP email (non-blocking)
+        try {
+            await this.mail.sendEmail(
+                email,
+                "Welcome to DaConnect - Verify Your Email 🎉",
+                `
             <!DOCTYPE html>
             <html>
             <head>
@@ -123,7 +124,7 @@ export class AuthService {
             <body>
                 <div class="container">
                     <div class="header">
-                        <div class="logo">🎵 DaConnect</div>
+                        <div class="logo">🎵 DjConnect</div>
                         <div style="font-size: 16px; opacity: 0.95;">Welcome to Our Community!</div>
                     </div>
                     <div class="content">
@@ -145,7 +146,11 @@ export class AuthService {
             </body>
             </html>
     `,
-        );
+            );
+            console.log(`📧 Registration OTP email sent to ${email}`);
+        } catch (error) {
+            console.error(`❌ Failed to send registration email to ${email}: ${error.message}`);
+        }
 
         // Generate JWT token for verification
         const jwtPayload = { id: newUser.id };
@@ -225,11 +230,12 @@ export class AuthService {
             },
         });
 
-        // Send OTP email
-        await this.mail.sendEmail(
-            email,
-            "Reset Your DaConnect Password 🔐",
-            `
+        // Send OTP email (non-blocking)
+        try {
+            await this.mail.sendEmail(
+                email,
+                "Reset Your DaConnect Password 🔐",
+                `
             <!DOCTYPE html>
             <html>
             <head>
@@ -273,7 +279,11 @@ export class AuthService {
             </body>
             </html>
     `,
-        );
+            );
+            console.log(`📧 Password reset email sent to ${email}`);
+        } catch (error) {
+            console.error(`❌ Failed to send password reset email to ${email}: ${error.message}`);
+        }
 
         // Generate JWT token for verification
         const jwtPayload = { id: user.id };
@@ -467,11 +477,12 @@ export class AuthService {
             },
         });
 
-        //---------------------  Send OTP email ----------------------
-        await this.mail.sendEmail(
-            email,
-            "DaConnect Account Verification - New Code 🔄",
-            `
+        //---------------------  Send OTP email (non-blocking) ----------------------
+        try {
+            await this.mail.sendEmail(
+                email,
+                "DaConnect Account Verification - New Code 🔄",
+                `
             <!DOCTYPE html>
             <html>
             <head>
@@ -512,7 +523,11 @@ export class AuthService {
             </body>
             </html>
     `,
-        );
+            );
+            console.log(`📧 Resend OTP email sent to ${email}`);
+        } catch (error) {
+            console.error(`❌ Failed to send resend OTP email to ${email}: ${error.message}`);
+        }
 
         const resetToken = await this.jwt.signAsync({ id: user.id }, { expiresIn: "10m" });
 
