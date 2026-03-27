@@ -1,4 +1,5 @@
 import { errorResponse } from "@common/utilsResponse/response.util";
+import { FirebaseNotificationService } from "@main/shared/notification/firebase-notification.service";
 import {
     BadRequestException,
     HttpException,
@@ -8,11 +9,13 @@ import {
     NotFoundException,
 } from "@nestjs/common";
 import { OrderStatus, Role } from "@prisma/client";
+import { NotificationType } from "src/lib/firebase/dto/notification.dto";
 import { MailService } from "src/lib/mail/mail.service";
 import { PrismaService } from "src/lib/prisma/prisma.service";
 import Stripe from "stripe";
 import { ConfirmSetupIntentDto } from "./dto/confirm-setup-intent.dto";
 import { PaginationDto } from "./dto/pagination.dto";
+import { HandleError } from "@common/error/handle-error.decorator";
 
 @Injectable()
 export class PaymentService {
@@ -23,7 +26,8 @@ export class PaymentService {
         @Inject("STRIPE_CLIENT")
         private readonly stripe: Stripe,
         private readonly mail: MailService,
-    ) {}
+        private readonly firebaseNotificationService: FirebaseNotificationService,
+    ) { }
 
     async createCustomerID(user: any) {
         const customers = await this.stripe.customers.create({
@@ -324,13 +328,13 @@ export class PaymentService {
         transaction.buyer.platformRevenue =
             transaction.status === "RELEASED"
                 ? transaction.amount +
-                  (transaction.amount * transaction.platformFee_percents) / 100 -
-                  transaction.stripeFee -
-                  transaction.amount
+                (transaction.amount * transaction.platformFee_percents) / 100 -
+                transaction.stripeFee -
+                transaction.amount
                 : transaction.stripeFee && transaction.status === "CANCELLED"
-                  ? (transaction.amount * transaction.platformFee_percents) / 100 -
+                    ? (transaction.amount * transaction.platformFee_percents) / 100 -
                     transaction.stripeFee
-                  : 0;
+                    : 0;
 
         transaction.seller.servicePrice = transaction.amount;
         transaction.seller.platformFee =
@@ -341,8 +345,8 @@ export class PaymentService {
             transaction.stripeFee && transaction.status === "CANCELLED"
                 ? 0
                 : transaction.status === "RELEASED"
-                  ? transaction.amount - transaction.seller_amount
-                  : 0;
+                    ? transaction.amount - transaction.seller_amount
+                    : 0;
 
         return {
             success: true,
@@ -982,8 +986,7 @@ export class PaymentService {
             charge.balance_transaction as string,
         );
 
-        // this.logger.log("Stripe ফি:", balanceTransaction.fee);
-        // this.logger.log("নেট অ্যামাউন্ট:", balanceTransaction.net);
+       // const balanceTransaction = await this.stripe.balanceTransactions.retrieve(charge.balance_transaction as string);
         let PlatfromRevinue = balanceTransaction.net - order.seller_amount;
 
         const updated = await this.prisma.order.update({
@@ -1129,6 +1132,28 @@ export class PaymentService {
         `,
         );
 
+        //------------------ Send payment released notification to seller ------------------//
+        try {
+            await this.firebaseNotificationService.sendToUser(
+                order.sellerId,
+                {
+                    title: " Payment Released",
+                    body: `Your payment of $${(order.amount / 100).toFixed(2)} for "${order.service.serviceName}" has been released`,
+                    type: NotificationType.PAYMENT_RECEIVED,
+                    data: {
+                        orderId: order.id,
+                        orderCode: order.orderCode,
+                        amount: order.amount.toString(),
+                        timestamp: new Date().toISOString(),
+                    },
+                },
+                true,
+            );
+            console.log(` Payment released notification sent to seller ${order.sellerId}`);
+        } catch (error) {
+            console.error(` Failed to send payment released notification: ${error.message}`);
+        }
+
         return {
             platformFee: setting?.platformFee_percents,
             order: updated,
@@ -1236,6 +1261,27 @@ export class PaymentService {
                 </html>
                 `,
             );
+
+            //------------------ Send payment cancellation notification ------------------//
+            try {
+                await this.firebaseNotificationService.sendToUser(
+                    order.buyerId,
+                    {
+                        title: "❌ Payment Cancelled",
+                        body: `Your payment authorization for order ${order.orderCode} has been cancelled. No charges were made.`,
+                        type: NotificationType.PAYMENT_RECEIVED,
+                        data: {
+                            orderId: order.id,
+                            orderCode: order.orderCode,
+                            timestamp: new Date().toISOString(),
+                        },
+                    },
+                    true,
+                );
+                console.log(`❌ Payment cancellation notification sent to buyer ${order.buyerId}`);
+            } catch (error) {
+                console.error(`❌ Failed to send payment cancellation notification: ${error.message}`);
+            }
 
             return { message: "Payment authorization cancelled. No refund needed." };
         }
@@ -1405,6 +1451,51 @@ export class PaymentService {
     `,
         );
 
+        //------------------ Send refund notifications ------------------//
+        try {
+            // Send push notification to buyer
+            await this.firebaseNotificationService.sendToUser(
+                order.buyerId,
+                {
+                    title: "💸 Refund Processed",
+                    body: `Your refund of $${(order.amount / 100).toFixed(2)} has been processed successfully`,
+                    type: NotificationType.PAYMENT_RECEIVED,
+                    data: {
+                        orderId: order.id,
+                        orderCode: order.orderCode,
+                        amount: order.amount.toString(),
+                        timestamp: new Date().toISOString(),
+                    },
+                },
+                true,
+            );
+            console.log(`💸 Refund notification sent to buyer ${order.buyerId}`);
+        } catch (error) {
+            console.error(`❌ Failed to send refund notification to buyer: ${error.message}`);
+        }
+
+        try {
+            // Send push notification to seller
+            await this.firebaseNotificationService.sendToUser(
+                order.sellerId,
+                {
+                    title: "⚠️ Order Refunded",
+                    body: `Order ${order.orderCode} has been refunded to the buyer. No payout will be issued.`,
+                    type: NotificationType.PAYMENT_RECEIVED,
+                    data: {
+                        orderId: order.id,
+                        orderCode: order.orderCode,
+                        amount: order.amount.toString(),
+                        timestamp: new Date().toISOString(),
+                    },
+                },
+                true,
+            );
+            console.log(`⚠️ Refund notification sent to seller ${order.sellerId}`);
+        } catch (error) {
+            console.error(`❌ Failed to send refund notification to seller: ${error.message}`);
+        }
+
         return {
             message: "Refund issued successfully",
             refund,
@@ -1485,6 +1576,8 @@ export class PaymentService {
      *   - payment_intent.succeeded: set order status = PAID
      *   - other useful events logged
      */
+
+    @HandleError('Error handling Stripe webhook')
     async handleWebhook(rawBody: Buffer, signature: string) {
         const endpointSecret = process.env.STRIPE_WEBHOOK_SECRET_S!;
         let event: Stripe.Event;
@@ -1503,7 +1596,7 @@ export class PaymentService {
                 case "checkout.session.completed": {
                     const session = event.data.object as Stripe.Checkout.Session;
                     console.log("payment_intent.completed call here");
-                    // get paymentIntent id
+                    //---------------------  get paymentIntent id ---------------------
                     const piId =
                         typeof session.payment_intent === "string"
                             ? session.payment_intent
@@ -1514,7 +1607,7 @@ export class PaymentService {
                         break;
                     }
 
-                    // If order already exists with this paymentIntentId, skip or update
+                    // --------------------- If order already exists with this paymentIntentId, skip or update ---------------------
                     const existing = await this.prisma.order.findUnique({
                         where: { paymentIntentId: piId },
                     });
@@ -1524,7 +1617,7 @@ export class PaymentService {
                         break;
                     }
 
-                    // create order record (still PENDING — we'll mark PAID on payment_intent.succeeded)
+                    // --------------create order record (still PENDING — we'll mark PAID on payment_intent.succeeded) -------------
                     await this.prisma.order.update({
                         where: { sessionId: session.id },
                         data: {
@@ -1543,7 +1636,7 @@ export class PaymentService {
                         break;
                     }
 
-                    // find order and mark PAID
+                    //------------------- find order and mark PAID ----------------
                     const order = await this.prisma.order.findUnique({
                         where: { paymentIntentId: intent.id },
                     });
@@ -1561,7 +1654,7 @@ export class PaymentService {
                     break;
                 }
 
-                // optional other events
+                //------------------- optional other events ----------------
                 case "payment_intent.payment_failed":
                     this.logger.warn("payment_intent.payment_failed", event.data.object);
                     break;
@@ -1571,7 +1664,7 @@ export class PaymentService {
             }
         } catch (e) {
             this.logger.error("Error handling webhook", e as any);
-            // don't throw — return 200 to Stripe after logging? but for now bubble up
+         
             throw e;
         }
 
@@ -1586,6 +1679,8 @@ export class PaymentService {
         return svc?.creatorId ?? "unknown";
     }
 
+
+    @HandleError('Error getting earnings and payouts')
     async getEarningsAndPayouts(userId: string) {
         const user = await this.prisma.user.findUnique({
             where: { id: userId },

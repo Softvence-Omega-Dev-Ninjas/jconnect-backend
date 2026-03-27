@@ -79,7 +79,7 @@ export class PaymentController {
         return { message: "success", res };
     }
 
-    // show all payment methods
+    // ------------- show all payment methods-------------------
     @ApiBearerAuth()
     @ValidateUser()
     @Get("my-paymentsss-methods")
