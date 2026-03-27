@@ -282,7 +282,7 @@ This endpoint is used by Admin/Buyer only.
     async stripeWebhook(@Req() req, @Headers("stripe-signature") signature: string) {
         return this.paymentService.handleWebhook(req.body, signature);
     }
-// --------------------- Request withdrawal to seller Stripe account ----------------------
+    // --------------------- Request withdrawal to seller Stripe account ----------------------
     @ApiBearerAuth()
     @ValidateUser()
     @Post()
@@ -298,7 +298,7 @@ This endpoint is used by Admin/Buyer only.
 
         return this.paymentService.transferToSeller(user.userId, body.amount);
     }
-// ----------------- Get earnings and payouts data for individual user ----------------------
+    // ----------------- Get earnings and payouts data for individual user ----------------------
     @ApiBearerAuth()
     @ValidateUser()
     @Get("earnings-payouts")

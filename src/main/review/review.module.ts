@@ -8,4 +8,4 @@ import { ReviewService } from "./review.service";
     controllers: [ReviewController],
     providers: [ReviewService],
 })
-export class ReviewModule { }
+export class ReviewModule {}

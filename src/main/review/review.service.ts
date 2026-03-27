@@ -13,7 +13,7 @@ export class ReviewService {
         private prisma: PrismaService,
         private readonly firebaseNotificationService: FirebaseNotificationService,
         private readonly mailService: MailService,
-    ) { }
+    ) {}
 
     // ** 1. CREATE (Create Review) - POST **
     async create(createReviewDto: CreateReviewDto, user: any) {
@@ -178,11 +178,15 @@ export class ReviewService {
                                     <p style="margin: 0; font-size: 14px; color: #64748b;">@${review.reviewer.username}</p>
                                 </div>
 
-                                ${review.reviewText ? `
+                                ${
+                                    review.reviewText
+                                        ? `
                                     <div class="review-text-box">
                                         "${review.reviewText}"
                                     </div>
-                                ` : ""}
+                                `
+                                        : ""
+                                }
                                 
                                 <div class="info-box">
                                     <strong style="color: #92400e;">💡 Great Impact:</strong>
