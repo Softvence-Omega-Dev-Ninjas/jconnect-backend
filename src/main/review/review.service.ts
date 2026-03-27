@@ -160,7 +160,7 @@ export class ReviewService {
                     <body>
                         <div class="container">
                             <div class="header">
-                                <div class="logo">⭐ DaConnect</div>
+                                <div class="logo">⭐ Dj Connect</div>
                                 <div class="header-subtitle">New Review Received</div>
                             </div>
                             <div class="content">
@@ -189,7 +189,7 @@ export class ReviewService {
                                 }
                                 
                                 <div class="info-box">
-                                    <strong style="color: #92400e;">💡 Great Impact:</strong>
+                                    <strong style="color: #92400e;"> Great Impact:</strong>
                                     <p style="margin: 10px 0 0 0; color: #475569;">This review helps other users discover your talent. Keep up the great work and building your reputation on DaConnect!</p>
                                 </div>
                                 
@@ -211,7 +211,7 @@ export class ReviewService {
                     `⭐ You received a new ${review.rating}-star review on DaConnect`,
                     emailHtml,
                 );
-                console.log(`📧 Review email sent to ${review.artist.email}`);
+                console.log(` Review email sent to ${review.artist.email}`);
             } catch (error) {
                 console.error(` Failed to send review email: ${error.message}`);
             }
@@ -226,7 +226,7 @@ export class ReviewService {
         }
     }
 
-    // ** 2. READ (Fetch all reviews for an Artist) - GET **
+    //  READ (Fetch all reviews for an Artist) - GET **
     async findAllByArtist(artistId: string) {
         console.log(artistId);
         // 1. Fetch all reviews for the artist
