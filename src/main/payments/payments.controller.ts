@@ -117,7 +117,7 @@ export class PaymentController {
         return this.paymentService.withdrawalHistory(user);
     }
 
-    // all transaction history
+    // --------------------- all transaction history    ----------------------
     @ApiBearerAuth()
     @ValidateSuperAdmin()
     @Get("all-transaction-history")
@@ -179,7 +179,7 @@ export class PaymentController {
         return this.paymentService.allTransactionHistory(paginationDto);
     }
 
-    // Get single transaction history
+    // ----------------- Get single transaction history with details ----------------------
     @ApiBearerAuth()
     @ValidateSuperAdmin()
     @Get("transaction-history/:id")
@@ -218,7 +218,7 @@ export class PaymentController {
     }
 
     // ----------------------------
-    // Admin/buyer Approve Payment Release
+    // --------------------- Admin/buyer Approve Payment Release to Seller ----------------------
     // ----------------------------
     @ApiBearerAuth()
     @ValidateUser()
@@ -282,7 +282,7 @@ This endpoint is used by Admin/Buyer only.
     async stripeWebhook(@Req() req, @Headers("stripe-signature") signature: string) {
         return this.paymentService.handleWebhook(req.body, signature);
     }
-
+// --------------------- Request withdrawal to seller Stripe account ----------------------
     @ApiBearerAuth()
     @ValidateUser()
     @Post()
@@ -298,7 +298,7 @@ This endpoint is used by Admin/Buyer only.
 
         return this.paymentService.transferToSeller(user.userId, body.amount);
     }
-
+// ----------------- Get earnings and payouts data for individual user ----------------------
     @ApiBearerAuth()
     @ValidateUser()
     @Get("earnings-payouts")

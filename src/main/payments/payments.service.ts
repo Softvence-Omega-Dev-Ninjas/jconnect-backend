@@ -211,7 +211,7 @@ export class PaymentService {
             "December",
         ];
 
-        // Build where clause for filtering
+        //----------------------  Build where clause for filtering ----------------------
         const where: any = {};
 
         if (status) {
@@ -283,7 +283,7 @@ export class PaymentService {
         };
     }
 
-    // ---------------- Get single transaction history
+    // ---------------- Get single transaction history with details ----------------
     async getSingleTransactionHistory(id: string) {
         let transaction: any = await this.prisma.order.findUnique({
             where: { id },
@@ -323,7 +323,7 @@ export class PaymentService {
         transaction.buyer.buyerPays =
             transaction.amount + (transaction.amount * transaction.platformFee_percents) / 100;
         transaction.buyer.stripeFee = transaction.stripeFee;
-        // transaction.buyer.sellerAmount = transaction.seller_amount;
+        //------------- transaction.buyer.sellerAmount = transaction.seller_amount; ----------------
         transaction.buyer.servicePriceMinus = transaction.amount;
         transaction.buyer.platformRevenue =
             transaction.status === "RELEASED"
