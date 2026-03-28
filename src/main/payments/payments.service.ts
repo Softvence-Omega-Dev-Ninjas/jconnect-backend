@@ -44,7 +44,7 @@ export class PaymentService {
         });
     }
 
-    //create stipe pyament methode secreate
+    //------------------ create stripe payment method secret key ------------------
     async createSetupIntent(userReq: any) {
         const user = await this.prisma.user.findUnique({ where: { id: userReq?.userId } });
         if (!user?.customerIdStripe)
@@ -59,7 +59,7 @@ export class PaymentService {
         return { client_secret: setupIntent.client_secret };
     }
 
-    //payment method setup with token & secreate id
+    //------------------ confirm stripe setup intent ------------------
     async confirmSetupIntent(body: ConfirmSetupIntentDto, ReqUser: any) {
         const setupIntentId = body.clientSecret.split("_secret")[0];
 

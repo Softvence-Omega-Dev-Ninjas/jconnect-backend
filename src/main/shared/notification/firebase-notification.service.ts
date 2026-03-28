@@ -20,7 +20,7 @@ export class FirebaseNotificationService {
     ) {}
 
     /**
-     * Send notification to a user
+     * ---------- Send notification to a user --------------------
      */
     async sendToUser(
         userId: string,
@@ -28,7 +28,7 @@ export class FirebaseNotificationService {
         saveToDb: boolean = true,
     ): Promise<{ success: boolean; error?: string }> {
         try {
-            // Get user's FCM token
+            // ---------------Get user's FCM token-------------------------
             const user = (await this.prisma.user.findUnique({
                 where: { id: userId },
                 select: { fcmToken: true } as any,
@@ -39,14 +39,14 @@ export class FirebaseNotificationService {
                 return { success: false, error: "User has no FCM token" };
             }
 
-            // Check notification settings
+            // ------------------Check notification settings ----------------
             const canSend = await this.checkNotificationSettings(userId, notification.type);
             if (!canSend) {
                 this.logger.log(`User ${userId} has disabled ${notification.type} notifications`);
                 return { success: false, error: "User has disabled this notification type" };
             }
 
-            // Send FCM notification
+            // ------------------Send FCM notification ----------------
             const result = await this.fcmService.sendToDevice({
                 fcmToken: user.fcmToken,
                 notification: {
