@@ -1,3 +1,4 @@
+import { HandleError } from "@common/error/handle-error.decorator";
 import { Injectable, Logger } from "@nestjs/common";
 import { NotificationType } from "src/lib/firebase/dto/notification.dto";
 import { FirebaseMessagingService } from "src/lib/firebase/firebase-messaging.service";
@@ -68,7 +69,7 @@ export class FirebaseNotificationService {
                 },
             });
 
-            // Save notification to database
+            // ---------- Save notification to database ----------
             if (saveToDb && result.success) {
                 await this.saveNotificationToDb(userId, notification);
             }
@@ -122,7 +123,7 @@ export class FirebaseNotificationService {
                 return { successCount: 0, failureCount: userIds.length };
             }
 
-            // Send FCM notification
+            // --------------Send FCM notification to eligible users----------------
             const result = await this.fcmService.sendToMultipleDevices({
                 fcmTokens: eligibleTokens,
                 notification: {
@@ -142,7 +143,7 @@ export class FirebaseNotificationService {
                 },
             });
 
-            // Save notifications to database
+            // ------------ Save notifications to database -----------------------
             if (saveToDb && result.successCount > 0) {
                 await Promise.all(
                     eligibleUsers.map((userId) => this.saveNotificationToDb(userId, notification)),
@@ -160,7 +161,7 @@ export class FirebaseNotificationService {
     }
 
     /**
-     * Send notification to all users subscribed to a topic
+     *------ Send notification to all users subscribed to a topic -------
      */
     async sendToTopic(
         topic: string,
@@ -194,8 +195,10 @@ export class FirebaseNotificationService {
     }
 
     /**
-     * Update user's FCM token
+     *------------- Update user's FCM token in database -------------
      */
+
+     @HandleError('Error updating FCM token for user')
     async updateFcmToken(userId: string, fcmToken: string): Promise<void> {
         try {
             await this.prisma.user.update({
@@ -210,8 +213,9 @@ export class FirebaseNotificationService {
     }
 
     /**
-     * Subscribe user to a topic
+     * ----------------Subscribe user to a topic ----------------
      */
+    @HandleError('Error subscribing user to topic')
     async subscribeUserToTopic(userId: string, topic: string): Promise<{ success: boolean }> {
         try {
             const user = (await this.prisma.user.findUnique({
@@ -234,8 +238,9 @@ export class FirebaseNotificationService {
     }
 
     /**
-     * Unsubscribe user from a topic
+     * --------------- Unsubscribe user from a topic ---------------
      */
+    @HandleError('Error unsubscribing user from topic')
     async unsubscribeUserFromTopic(userId: string, topic: string): Promise<{ success: boolean }> {
         try {
             const user = (await this.prisma.user.findUnique({
@@ -258,7 +263,7 @@ export class FirebaseNotificationService {
     }
 
     /**
-     * Check if user has enabled specific notification type
+     *  -------------- Check if user has enabled specific notification type ----------------
      */
     private async checkNotificationSettings(
         userId: string,
@@ -270,11 +275,10 @@ export class FirebaseNotificationService {
             });
 
             if (!settings) {
-                return true; // Default to enabled if no settings exist
+                return true; 
             }
 
-            // Map notification types to settings fields - use existing fields only
-            // Default to 'message' for most notification types
+           
             const typeMapping: Partial<Record<NotificationType, string>> = {
                 [NotificationType.NEW_MESSAGE]: "message",
                 [NotificationType.SERVICE_REQUEST]: "Service",
@@ -284,7 +288,7 @@ export class FirebaseNotificationService {
 
             const settingKey = typeMapping[type];
             if (!settingKey || !(settingKey in settings)) {
-                return true; // Default to enabled for unknown types
+                return true; 
             }
 
             return settings[settingKey as keyof typeof settings] !== false;
@@ -294,8 +298,8 @@ export class FirebaseNotificationService {
         }
     }
 
-    /**
-     * Filter users based on notification settings
+    /** 
+     *----------------  Filter users based on notification settings ------------------
      */
     private async filterUsersByNotificationSettings(
         userIds: string[],
@@ -314,14 +318,14 @@ export class FirebaseNotificationService {
     }
 
     /**
-     * Save notification to database
+     *------------------  Save notification to database ------------------
      */
     private async saveNotificationToDb(
         userId: string,
         notification: NotificationTemplate,
     ): Promise<void> {
         try {
-            // Create notification record with userId
+            // -------------- Create notification record with userId ----------------
             const notificationRecord = await this.prisma.notification.create({
                 data: {
                     userId: userId,
@@ -331,10 +335,10 @@ export class FirebaseNotificationService {
                 },
             });
 
-            // Map custom NotificationType to Prisma enum or null
+           
             const prismaNotificationType = this.mapToPrismaNotificationType(notification.type);
 
-            // Link notification to user
+            // ---------------- Link notification to user ----------------
             await this.prisma.userNotification.create({
                 data: {
                     userId,
@@ -349,10 +353,9 @@ export class FirebaseNotificationService {
     }
 
     /**
-     * Map our custom NotificationType to Prisma's enum
+     *  --------------- Map our custom NotificationType to Prisma's enum-------------------
      */
     private mapToPrismaNotificationType(type: NotificationType): any {
-        // Prisma enum has: Service, Payment, UserRegistration, Inquiry
         const mapping: Partial<Record<NotificationType, string>> = {
             [NotificationType.SERVICE_REQUEST]: "Service",
             [NotificationType.PAYMENT_RECEIVED]: "Payment",
@@ -372,7 +375,7 @@ export class FirebaseNotificationService {
     }
 
     /**
-     * Build notification templates
+     *-------------------- Build notification templates----------------------------
      */
     buildNotificationTemplate(
         type: NotificationType,
@@ -484,6 +487,13 @@ export class FirebaseNotificationService {
                 body: `${d.followerName} started following you`,
                 type: NotificationType.follow,
                 data: { followerId: d.followerId },
+            }),
+
+            [NotificationType.SERVICE_UPDATE]: (d) => ({
+                title: "Service Updated",
+                body: `${d.serviceName} has been updated`,
+                type: NotificationType.SERVICE_UPDATE,
+                data: { serviceId: d.serviceId },
             }),
         };
 

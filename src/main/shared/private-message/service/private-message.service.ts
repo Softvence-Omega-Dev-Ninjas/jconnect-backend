@@ -587,7 +587,7 @@ export class PrivateChatService {
             },
         });
 
-        // Send notification to buyer when seller accepts or declines the service request
+        // --------------- Send notification to buyer when seller accepts or declines the service request ---------------
         try {
             if (updated.service && updated.service.creator) {
                 const sellerName =
@@ -597,11 +597,11 @@ export class PrivateChatService {
                 const serviceName = updated.service.serviceName || "Your service request";
 
                 if (updateData.isAccepted === true) {
-                    // Send acceptance notification to buyer
+                    // ---------------- Send acceptance notification to buyer ----------------
                     await this.firebaseNotificationService.sendToUser(
                         updated.buyerId,
                         {
-                            title: "✅ Service Request Accepted",
+                            title: " Service Request Accepted",
                             body: `${sellerName} has accepted your service request for "${serviceName}"`,
                             type: NotificationType.SERVICE_REQUEST,
                             data: {
@@ -615,9 +615,9 @@ export class PrivateChatService {
                         },
                         true,
                     );
-                    console.log(`✅ Acceptance notification sent to buyer ${updated.buyerId}`);
+                    console.log(` Acceptance notification sent to buyer ${updated.buyerId}`);
 
-                    // Emit event for websocket listeners
+                    //  --------------- Send notification to seller Emit event for websocket listeners ---------------
                     this.eventEmitter.emit(EVENT_TYPES.SERVICE_REQUEST_ACCEPTED, {
                         info: {
                             serviceRequestId: id,
@@ -637,7 +637,7 @@ export class PrivateChatService {
                     await this.firebaseNotificationService.sendToUser(
                         updated.buyerId,
                         {
-                            title: "❌ Service Request Declined",
+                            title: " Service Request Declined",
                             body: `${sellerName} has declined your service request for "${serviceName}"`,
                             type: NotificationType.SERVICE_REQUEST,
                             data: {

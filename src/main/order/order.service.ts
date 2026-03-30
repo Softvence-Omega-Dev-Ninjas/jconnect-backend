@@ -6,7 +6,10 @@ import {
     NotFoundException,
 } from "@nestjs/common";
 
+import { HandleError } from "@common/error/handle-error.decorator";
+import { FirebaseNotificationService } from "@main/shared/notification/firebase-notification.service";
 import { OrderStatus, Role } from "@prisma/client";
+import { NotificationType } from "src/lib/firebase/dto/notification.dto";
 import { MailService } from "src/lib/mail/mail.service";
 import { PrismaService } from "src/lib/prisma/prisma.service";
 import Stripe from "stripe";
@@ -16,11 +19,13 @@ export class OrdersService {
     constructor(
         private prisma: PrismaService,
         private mail: MailService,
+        private readonly firebaseNotificationService: FirebaseNotificationService,
         @Inject("STRIPE_CLIENT")
         private readonly stripe: Stripe,
-    ) {}
+    ) { }
 
-    // CREATE ORDER
+    //----------------------- CREATE ORDER -----------------------
+    @HandleError("Failed to create order")
     async createOrder(buyerId: string, dto: any) {
         const service = await this.prisma.service.findUnique({
             where: { id: dto.serviceId },
@@ -58,6 +63,8 @@ export class OrdersService {
     // }
 
     // GET ONE ORDER
+
+    @HandleError("Failed to get order")
     async getOrder(id: string) {
         const order = await this.prisma.order.findUnique({
             where: { id },
@@ -89,7 +96,8 @@ export class OrdersService {
         return order;
     }
 
-    // UPDATE ORDER STATUS
+    // ----------------------UPDATE ORDER STATUS---------------------------
+    @HandleError("Failed to update order status")
     async updateStatus(id: string, status: OrderStatus, user: any) {
         const order: any = await this.prisma.order.findUnique({
             where: { id },
@@ -284,10 +292,299 @@ export class OrdersService {
             data: { status },
         });
 
+        //------------------ Send status change notifications ------------------//
+        try {
+            // Send notifications based on order status
+            switch (status) {
+                case OrderStatus.IN_PROGRESS:
+                    // Notify buyer that seller accepted their order
+                    try {
+                        await this.mail.sendEmail(
+                            order.buyer.email,
+                            `✅ Order ${order.orderCode} Accepted - Work Starting Soon`,
+                            `<!DOCTYPE html>
+                            <html>
+                            <head>
+                                <style>
+                                    body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.6; color: #333; margin: 0; padding: 0; background-color: #f5f7fa; }
+                                    .container { max-width: 600px; margin: 40px auto; background: white; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 20px rgba(0,0,0,0.08); }
+                                    .header { background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; padding: 40px 30px; text-align: center; }
+                                    .content { padding: 40px 30px; }
+                                    .order-info { background: #f0fdf4; border-left: 4px solid #10b981; padding: 20px; margin: 25px 0; border-radius: 6px; }
+                                    .footer { text-align: center; padding: 25px; background: #f8fafc; color: #64748b; font-size: 13px; border-top: 1px solid #e2e8f0; }
+                                </style>
+                            </head>
+                            <body>
+                                <div class="container">
+                                    <div class="header">
+                                        <div style="font-size: 32px; margin-bottom: 10px;">✅</div>
+                                        <h1 style="margin: 0; color: white;">Order Accepted!</h1>
+                                    </div>
+                                    <div class="content">
+                                        <h2 style="color: #1e293b; margin-bottom: 20px;">Great News!</h2>
+                                        <p style="font-size: 16px; color: #475569;">The seller has accepted your order and will start working on it soon.</p>
+                                        <div class="order-info">
+                                            <p style="margin: 5px 0;"><strong>Order Code:</strong> ${order.orderCode}</p>
+                                            <p style="margin: 5px 0;"><strong>Service:</strong> ${order.service.serviceName}</p>
+                                            <p style="margin: 5px 0;"><strong>Seller:</strong> ${order.seller.username}</p>
+                                        </div>
+                                        <p style="font-size: 14px; color: #64748b;">You'll receive updates as the seller progresses with your order. Thank you for using DaConnect!</p>
+                                    </div>
+                                    <div class="footer">
+                                        <p style="margin: 5px 0;"><strong style="color: #10b981;">DaConnect</strong> - Connecting Artists & Music Lovers</p>
+                                        <p style="margin: 5px 0;">&copy; 2025 DaConnect. All rights reserved.</p>
+                                    </div>
+                                </div>
+                            </body>
+                            </html>`
+                        );
+                        console.log(`📧 Order accepted email sent to buyer ${order.buyerId}`);
+                    } catch (error) {
+                        console.error(`❌ Failed to send order accepted email: ${error.message}`);
+                    }
+
+                    // Send push notification to buyer
+                    try {
+                        await this.firebaseNotificationService.sendToUser(
+                            order.buyerId,
+                            {
+                                title: "✅ Order Accepted",
+                                body: `Seller has accepted your order ${order.orderCode} for "${order.service.serviceName}". Work will begin soon!`,
+                                type: NotificationType.ORDER_UPDATE,
+                                data: {
+                                    orderId: updated.id,
+                                    orderCode: updated.orderCode,
+                                    status: updated.status,
+                                    timestamp: new Date().toISOString(),
+                                },
+                            },
+                            true,
+                        );
+                        console.log(`📱 Order accepted notification sent to buyer ${order.buyerId}`);
+                    } catch (error) {
+                        console.error(`❌ Failed to send order accepted notification: ${error.message}`);
+                    }
+                    break;
+
+                case OrderStatus.PROOF_SUBMITTED:
+                    // Notify buyer that seller submitted proof
+                    try {
+                        await this.mail.sendEmail(
+                            order.buyer.email,
+                            `📁 Proof Submitted for Order ${order.orderCode}`,
+                            `<!DOCTYPE html>
+                            <html>
+                            <head>
+                                <style>
+                                    body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.6; color: #333; margin: 0; padding: 0; background-color: #f5f7fa; }
+                                    .container { max-width: 600px; margin: 40px auto; background: white; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 20px rgba(0,0,0,0.08); }
+                                    .header { background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); color: white; padding: 40px 30px; text-align: center; }
+                                    .content { padding: 40px 30px; }
+                                    .proof-info { background: #fffbeb; border-left: 4px solid #f59e0b; padding: 20px; margin: 25px 0; border-radius: 6px; }
+                                    .footer { text-align: center; padding: 25px; background: #f8fafc; color: #64748b; font-size: 13px; border-top: 1px solid #e2e8f0; }
+                                </style>
+                            </head>
+                            <body>
+                                <div class="container">
+                                    <div class="header">
+                                        <div style="font-size: 32px; margin-bottom: 10px;">📁</div>
+                                        <h1 style="margin: 0; color: white;">Proof Files Submitted</h1>
+                                    </div>
+                                    <div class="content">
+                                        <h2 style="color: #1e293b; margin-bottom: 20px;">Work in Progress!</h2>
+                                        <p style="font-size: 16px; color: #475569;">The seller has submitted proof files for your order. Please review them and confirm if you're satisfied with the work.</p>
+                                        <div class="proof-info">
+                                            <p style="margin: 5px 0;"><strong>Order Code:</strong> ${order.orderCode}</p>
+                                            <p style="margin: 5px 0;"><strong>Service:</strong> ${order.service.serviceName}</p>
+                                            <p style="margin: 5px 0;"><strong>Seller:</strong> ${order.seller.username}</p>
+                                        </div>
+                                        <p style="font-size: 14px; color: #64748b;">Once you review and confirm, the order will be completed and the seller will receive their payment.</p>
+                                    </div>
+                                    <div class="footer">
+                                        <p style="margin: 5px 0;"><strong style="color: #f59e0b;">DaConnect</strong> - Connecting Artists & Music Lovers</p>
+                                        <p style="margin: 5px 0;">&copy; 2025 DaConnect. All rights reserved.</p>
+                                    </div>
+                                </div>
+                            </body>
+                            </html>`
+                        );
+                        console.log(`📧 Proof submitted email sent to buyer ${order.buyerId}`);
+                    } catch (error) {
+                        console.error(`❌ Failed to send proof submitted email: ${error.message}`);
+                    }
+
+                    // -------------------- Send push notification to buyer --------------------
+                    try {
+                        await this.firebaseNotificationService.sendToUser(
+                            order.buyerId,
+                            {
+                                title: " Proof Submitted",
+                                body: `Seller has submitted proof files for your order ${order.orderCode}. Please review and confirm completion.`,
+                                type: NotificationType.ORDER_UPDATE,
+                                data: {
+                                    orderId: updated.id,
+                                    orderCode: updated.orderCode,
+                                    status: updated.status,
+                                    timestamp: new Date().toISOString(),
+                                },
+                            },
+                            true,
+                        );
+                        console.log(`📱 Proof submitted notification sent to buyer ${order.buyerId}`);
+                    } catch (error) {
+                        console.error(`❌ Failed to send proof submitted notification: ${error.message}`);
+                    }
+                    break;
+
+                case OrderStatus.RELEASED:
+                    // Notify buyer that order is completed
+                    try {
+                        await this.mail.sendEmail(
+                            order.buyer.email,
+                            `🎉 Order ${order.orderCode} Completed!`,
+                            `<!DOCTYPE html>
+                            <html>
+                            <head>
+                                <style>
+                                    body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.6; color: #333; margin: 0; padding: 0; background-color: #f5f7fa; }
+                                    .container { max-width: 600px; margin: 40px auto; background: white; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 20px rgba(0,0,0,0.08); }
+                                    .header { background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%); color: white; padding: 40px 30px; text-align: center; }
+                                    .content { padding: 40px 30px; }
+                                    .completed-info { background: #eef2ff; border-left: 4px solid #6366f1; padding: 20px; margin: 25px 0; border-radius: 6px; }
+                                    .footer { text-align: center; padding: 25px; background: #f8fafc; color: #64748b; font-size: 13px; border-top: 1px solid #e2e8f0; }
+                                </style>
+                            </head>
+                            <body>
+                                <div class="container">
+                                    <div class="header">
+                                        <div style="font-size: 32px; margin-bottom: 10px;">🎉</div>
+                                        <h1 style="margin: 0; color: white;">Order Completed!</h1>
+                                    </div>
+                                    <div class="content">
+                                        <h2 style="color: #1e293b; margin-bottom: 20px;">Thank You!</h2>
+                                        <p style="font-size: 16px; color: #475569;">Your order has been successfully completed! We hope you're satisfied with the service.</p>
+                                        <div class="completed-info">
+                                            <p style="margin: 5px 0;"><strong>Order Code:</strong> ${order.orderCode}</p>
+                                            <p style="margin: 5px 0;"><strong>Service:</strong> ${order.service.serviceName}</p>
+                                            <p style="margin: 5px 0;"><strong>Seller:</strong> ${order.seller.username}</p>
+                                        </div>
+                                        <p style="font-size: 14px; color: #64748b;">Consider leaving a review to help the seller and other users. Thanks for using DaConnect!</p>
+                                    </div>
+                                    <div class="footer">
+                                        <p style="margin: 5px 0;"><strong style="color: #6366f1;">DaConnect</strong> - Connecting Artists & Music Lovers</p>
+                                        <p style="margin: 5px 0;">&copy; 2025 DaConnect. All rights reserved.</p>
+                                    </div>
+                                </div>
+                            </body>
+                            </html>`
+                        );
+                        console.log(`📧 Order completed email sent to buyer ${order.buyerId}`);
+                    } catch (error) {
+                        console.error(`❌ Failed to send order completed email: ${error.message}`);
+                    }
+
+                    // Notify seller that payment is released
+                    try {
+                        await this.mail.sendEmail(
+                            order.seller.email,
+                            `💰 Payment Released for Order ${order.orderCode}`,
+                            `<!DOCTYPE html>
+                            <html>
+                            <head>
+                                <style>
+                                    body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.6; color: #333; margin: 0; padding: 0; background-color: #f5f7fa; }
+                                    .container { max-width: 600px; margin: 40px auto; background: white; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 20px rgba(0,0,0,0.08); }
+                                    .header { background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; padding: 40px 30px; text-align: center; }
+                                    .content { padding: 40px 30px; }
+                                    .payment-info { background: #f0fdf4; border-left: 4px solid #10b981; padding: 20px; margin: 25px 0; border-radius: 6px; }
+                                    .footer { text-align: center; padding: 25px; background: #f8fafc; color: #64748b; font-size: 13px; border-top: 1px solid #e2e8f0; }
+                                </style>
+                            </head>
+                            <body>
+                                <div class="container">
+                                    <div class="header">
+                                        <div style="font-size: 32px; margin-bottom: 10px;">💰</div>
+                                        <h1 style="margin: 0; color: white;">Payment Released!</h1>
+                                    </div>
+                                    <div class="content">
+                                        <h2 style="color: #1e293b; margin-bottom: 20px;">Great Job!</h2>
+                                        <p style="font-size: 16px; color: #475569;">The buyer has confirmed delivery and your payment has been released!</p>
+                                        <div class="payment-info">
+                                            <p style="margin: 5px 0;"><strong>Order Code:</strong> ${order.orderCode}</p>
+                                            <p style="margin: 5px 0;"><strong>Service:</strong> ${order.service.serviceName}</p>
+                                            <p style="margin: 5px 0;"><strong>Status:</strong> Payment Released</p>
+                                        </div>
+                                        <p style="font-size: 14px; color: #64748b;">The funds are now available in your DaConnect account. Keep up the excellent work!</p>
+                                    </div>
+                                    <div class="footer">
+                                        <p style="margin: 5px 0;"><strong style="color: #10b981;">DaConnect</strong> - Empowering Artists</p>
+                                        <p style="margin: 5px 0;">&copy; 2025 DaConnect. All rights reserved.</p>
+                                    </div>
+                                </div>
+                            </body>
+                            </html>`
+                        );
+                        console.log(`📧 Payment released email sent to seller ${order.sellerId}`);
+                    } catch (error) {
+                        console.error(`❌ Failed to send payment released email: ${error.message}`);
+                    }
+
+                    //--------------- Send push notification to buyer -----------------
+                    try {
+                        await this.firebaseNotificationService.sendToUser(
+                            order.buyerId,
+                            {
+                                title: " Order Completed",
+                                body: `Order ${order.orderCode} has been completed! Thank you for using DaConnect.`,
+                                type: NotificationType.ORDER_UPDATE,
+                                data: {
+                                    orderId: updated.id,
+                                    orderCode: updated.orderCode,
+                                    status: updated.status,
+                                    timestamp: new Date().toISOString(),
+                                },
+                            },
+                            true,
+                        );
+                        console.log(`📱 Order completed notification sent to buyer ${order.buyerId}`);
+                    } catch (error) {
+                        console.error(`❌ Failed to send order completed notification: ${error.message}`);
+                    }
+
+                    //----------------- Send push notification to seller 
+                    try {
+                        await this.firebaseNotificationService.sendToUser(
+                            order.sellerId,
+                            {
+                                title: "Payment Released",
+                                body: `Payment for order ${order.orderCode} has been released to your account.`,
+                                type: NotificationType.PAYMENT_RECEIVED,
+                                data: {
+                                    orderId: updated.id,
+                                    orderCode: updated.orderCode,
+                                    status: updated.status,
+                                    timestamp: new Date().toISOString(),
+                                },
+                            },
+                            true,
+                        );
+                        console.log(`📱 Payment released notification sent to seller ${order.sellerId}`);
+                    } catch (error) {
+                        console.error(`❌ Failed to send payment released notification: ${error.message}`);
+                    }
+                    break;
+
+                default:
+                    break;
+            }
+        } catch (error) {
+            console.error(`❌ Error sending order status notifications: ${error.message}`);
+        }
+
         return { ...updated, message: "Order status updated successfully" };
     }
 
-    // DELETE ORDER
+    // -----------------------DELETE ORDER -------------------------
     async deleteOrder(orderId: string, user: any) {
         // 1) Load order
         const order = await this.prisma.order.findUnique({
@@ -344,6 +641,8 @@ export class OrdersService {
         });
     }
 
+    // ----------------- PROOF SUBMISSION BY SELLER WITH Notification -----------------
+
     async submitProof(orderId: string, userFromReq: any, proofUrls: string[]) {
         const order = await this.prisma.order.findUnique({
             where: { id: orderId },
@@ -376,7 +675,7 @@ export class OrdersService {
 
         if (!order) throw new NotFoundException("Order not found");
 
-        // Only seller can upload proof
+        // ---------------Only seller can upload proof-------------------------
         if (order.sellerId !== user?.id) {
             throw new ForbiddenException("Only seller can upload proof");
         }
@@ -390,7 +689,7 @@ export class OrdersService {
             data: {
                 status: OrderStatus.PROOF_SUBMITTED,
                 proofUrl: {
-                    push: proofUrls, // <-- NEW URLs will be appended
+                    push: proofUrls,
                 },
             },
             include: {
@@ -416,7 +715,7 @@ export class OrdersService {
             },
         });
 
-        // Send email notification to buyer
+        // -----------Send email notification to buyer ----------------
         try {
             await this.mail.sendEmail(
                 order.buyer.email,
@@ -499,7 +798,30 @@ export class OrdersService {
             );
         } catch (error) {
             console.error("Failed to send email notification to buyer:", error);
-            // Continue even if email fails
+            //
+        }
+
+        // -------------Send push notification to buyer ----------------
+        try {
+            await this.firebaseNotificationService.sendToUser(
+                order.buyerId,
+                {
+                    title: `Proof Submitted for Order ${order.orderCode}`,
+                    body: `The seller has submitted proof for your order ${order.orderCode}. Please review it.`,
+                    type: NotificationType.UPLOAD_PROOF,
+                    data: {
+                        orderId: updated.id,
+                        orderCode: updated.orderCode,
+                        status: updated.status,
+                        timestamp: new Date().toISOString(),
+                    },
+                },
+                true,
+            );
+            console.log(` Proof submitted notification sent to buyer ${order.buyerId}`);
+        } catch (error) {
+            console.error("Failed to send proof submitted notification to buyer:", error);
+
         }
 
         return updated;
@@ -510,7 +832,7 @@ export class OrdersService {
 
         if (!order) throw new NotFoundException("Order not found");
 
-        // Only seller or admin can update delivery date
+        //------------- Only seller or admin can update delivery date ----------------
         const isSeller = order.sellerId === user.userId;
         const isAdmin = user.roles.includes("ADMIN");
         const isSuperAdmin = user.roles.includes("SUPER_ADMIN");
@@ -531,6 +853,7 @@ export class OrdersService {
         return updated;
     }
 
+    @HandleError("Failed to get orders by buyer")
     async getOrdersByBuyer(buyerId: string, status?: OrderStatus) {
         // console.log("ami call hoychi buyer order ", buyerId);
 
@@ -551,6 +874,7 @@ export class OrdersService {
             orderBy: { createdAt: "desc" },
         });
     }
+    @HandleError("Failed to get orders by buyer")
     async myServiceOrder(sellerId: string) {
         // console.log("ami call hoychi buyer order ", buyerId);
 
@@ -694,7 +1018,7 @@ export class OrdersService {
                 },
             });
 
-            // Send email notification to seller
+            // -------- Send email notification to seller -----------
             try {
                 await this.mail.sendEmail(
                     order.seller.email,
@@ -771,7 +1095,7 @@ export class OrdersService {
                 );
             } catch (error) {
                 console.error("Failed to send email notification:", error);
-                // Continue even if email fails
+                // -------Continue even if email fails -------
             }
 
             return updatedOrder;
