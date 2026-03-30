@@ -27,7 +27,7 @@ export class PaymentService {
         private readonly stripe: Stripe,
         private readonly mail: MailService,
         private readonly firebaseNotificationService: FirebaseNotificationService,
-    ) { }
+    ) {}
 
     async createCustomerID(user: any) {
         const customers = await this.stripe.customers.create({
@@ -330,13 +330,13 @@ export class PaymentService {
         transaction.buyer.platformRevenue =
             transaction.status === "RELEASED"
                 ? transaction.amount +
-                (transaction.amount * transaction.platformFee_percents) / 100 -
-                transaction.stripeFee -
-                transaction.amount
+                  (transaction.amount * transaction.platformFee_percents) / 100 -
+                  transaction.stripeFee -
+                  transaction.amount
                 : transaction.stripeFee && transaction.status === "CANCELLED"
-                    ? (transaction.amount * transaction.platformFee_percents) / 100 -
+                  ? (transaction.amount * transaction.platformFee_percents) / 100 -
                     transaction.stripeFee
-                    : 0;
+                  : 0;
 
         transaction.seller.servicePrice = transaction.amount;
         transaction.seller.platformFee =
@@ -347,8 +347,8 @@ export class PaymentService {
             transaction.stripeFee && transaction.status === "CANCELLED"
                 ? 0
                 : transaction.status === "RELEASED"
-                    ? transaction.amount - transaction.seller_amount
-                    : 0;
+                  ? transaction.amount - transaction.seller_amount
+                  : 0;
 
         return {
             success: true,
