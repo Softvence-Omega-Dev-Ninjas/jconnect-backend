@@ -19,6 +19,7 @@ export class ServiceService {
         @Inject("STRIPE_CLIENT") private stripe: Stripe,
     ) {}
 
+    // ------------------- Create new service-------------------//
     @HandleError("Failed to create service")
     async create(dto: CreateServiceDto, user: any): Promise<any> {
         if (!user.userId) return errorResponse("User ID is missing");
@@ -56,7 +57,7 @@ export class ServiceService {
         });
 
         // -----------------------------------------
-        //  ------------  Get users who enabled SERVICE notifications ------------
+        //  ------------  Get users who enabled SERVICE notifications ONLY FOLLOWER can send notifications ------------
         // -----------------------------------------
         const recipients = await this.prisma.user.findMany({
             select: {
@@ -64,6 +65,13 @@ export class ServiceService {
                 email: true,
                 fcmToken: true,
                 username: true,
+            },
+            where: {
+                following: {
+                    some: {
+                        followerId: user.userId,
+                    },
+                },
             },
         });
 
@@ -237,6 +245,62 @@ export class ServiceService {
                 ...dto,
             },
         });
+
+        const recipients = await this.prisma.user.findMany({
+            select: {
+                id: true,
+                email: true,
+                fcmToken: true,
+                username: true,
+            },
+            where: {
+                following: {
+                    some: {
+                        followerId: user.userId,
+                    },
+                },
+            },
+        });
+
+        // ----------------------  Emit Service Event ----------------------
+        const payload: ServiceEvent = {
+            action: "UPDATE",
+            meta: {
+                serviceName: updatedService.serviceName,
+                description: updatedService.description || "",
+                authorId: user.userId,
+                publishedAt: new Date(),
+            },
+            info: {
+                serviceName: updatedService.serviceName,
+                description: updatedService.description || "",
+                authorId: user.userId,
+                publishedAt: new Date(),
+                recipients: recipients.map((r) => ({
+                    id: r.id,
+                    email: r.email,
+                })),
+            },
+        };
+
+        this.eventEmitter.emit(EVENT_TYPES.SERVICE_CREATE, payload);
+
+        // ------------------ send firebase notifications to followers ------------------
+        await this.firebaseNotificationService.sendToMultipleUsers(
+            recipients.map((r) => r.id),
+            {
+                title: `Service Updated: ${updatedService.serviceName}`,
+                body: `${service.serviceName} has been updated. Check out the new details!`,
+                type: NotificationType.SERVICE_UPDATE,
+                data: {
+                    serviceId: updatedService.id,
+                    serviceName: updatedService.serviceName,
+                    userId: user.userId,
+                },
+            },
+        );
+        console.log(" Service update notification sent to followers of user", user.userId);
+
         return {
             message: "Service updated successfully",
             service: updatedService,

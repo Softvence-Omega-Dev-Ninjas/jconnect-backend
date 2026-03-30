@@ -1,3 +1,4 @@
+import { HandleError } from "@common/error/handle-error.decorator";
 import { errorResponse } from "@common/utilsResponse/response.util";
 import { FirebaseNotificationService } from "@main/shared/notification/firebase-notification.service";
 import {
@@ -15,7 +16,6 @@ import { PrismaService } from "src/lib/prisma/prisma.service";
 import Stripe from "stripe";
 import { ConfirmSetupIntentDto } from "./dto/confirm-setup-intent.dto";
 import { PaginationDto } from "./dto/pagination.dto";
-import { HandleError } from "@common/error/handle-error.decorator";
 
 @Injectable()
 export class PaymentService {
@@ -27,7 +27,7 @@ export class PaymentService {
         private readonly stripe: Stripe,
         private readonly mail: MailService,
         private readonly firebaseNotificationService: FirebaseNotificationService,
-    ) {}
+    ) { }
 
     async createCustomerID(user: any) {
         const customers = await this.stripe.customers.create({
@@ -44,7 +44,8 @@ export class PaymentService {
         });
     }
 
-    //create stipe pyament methode secreate
+    //------------------ create stripe payment method secret key ------------------
+    @HandleError("Failed to create setup intent")
     async createSetupIntent(userReq: any) {
         const user = await this.prisma.user.findUnique({ where: { id: userReq?.userId } });
         if (!user?.customerIdStripe)
@@ -59,7 +60,8 @@ export class PaymentService {
         return { client_secret: setupIntent.client_secret };
     }
 
-    //payment method setup with token & secreate id
+    //------------------ confirm stripe setup intent ------------------
+    @HandleError("Failed to confirm setup intent")
     async confirmSetupIntent(body: ConfirmSetupIntentDto, ReqUser: any) {
         const setupIntentId = body.clientSecret.split("_secret")[0];
 
@@ -167,7 +169,7 @@ export class PaymentService {
         return withdrawal_history;
     }
 
-    // show all payment methods
+    // ---------------- show all payment methods ----------------
     async getMyPaymentMethods(ReqUser: any) {
         if (!ReqUser) {
             throw new BadRequestException("User is required");
@@ -184,7 +186,8 @@ export class PaymentService {
         return paymentMethods;
     }
 
-    // All transaction history
+    //----------------  All transaction history with pagination, filtering and sorting ----------------
+    @HandleError("Failed to fetch transaction history")
     async allTransactionHistory(paginationDto: PaginationDto) {
         const { page = 1, limit = 10, status, month, sortOrder = "desc", search } = paginationDto;
 
@@ -284,6 +287,7 @@ export class PaymentService {
     }
 
     // ---------------- Get single transaction history with details ----------------
+    @HandleError("Failed to fetch transaction details")
     async getSingleTransactionHistory(id: string) {
         let transaction: any = await this.prisma.order.findUnique({
             where: { id },
@@ -328,13 +332,13 @@ export class PaymentService {
         transaction.buyer.platformRevenue =
             transaction.status === "RELEASED"
                 ? transaction.amount +
-                  (transaction.amount * transaction.platformFee_percents) / 100 -
-                  transaction.stripeFee -
-                  transaction.amount
+                (transaction.amount * transaction.platformFee_percents) / 100 -
+                transaction.stripeFee -
+                transaction.amount
                 : transaction.stripeFee && transaction.status === "CANCELLED"
-                  ? (transaction.amount * transaction.platformFee_percents) / 100 -
+                    ? (transaction.amount * transaction.platformFee_percents) / 100 -
                     transaction.stripeFee
-                  : 0;
+                    : 0;
 
         transaction.seller.servicePrice = transaction.amount;
         transaction.seller.platformFee =
@@ -345,8 +349,8 @@ export class PaymentService {
             transaction.stripeFee && transaction.status === "CANCELLED"
                 ? 0
                 : transaction.status === "RELEASED"
-                  ? transaction.amount - transaction.seller_amount
-                  : 0;
+                    ? transaction.amount - transaction.seller_amount
+                    : 0;
 
         return {
             success: true,
@@ -474,6 +478,7 @@ export class PaymentService {
     // }
 
     // trasnfer to seller account / withdraw for seller
+    @HandleError("Failed to transfer to seller")
     async transferToSeller(userID: string, amount: number) {
         const user = await this.prisma.user.findUnique({
             where: { id: userID },
@@ -725,6 +730,8 @@ export class PaymentService {
         };
     }
 
+    // ------------------ create order with payment method  with notification ------------------
+    @HandleError("createOrderWithPaymentMethod error")
     async createOrderWithPaymentMethod(userFromReq: any, serviceId: string, frontendUrl: string) {
         const user = await this.prisma.user.findUnique({
             where: { id: userFromReq.userId },
@@ -780,7 +787,24 @@ export class PaymentService {
                 status: OrderStatus.PENDING,
             },
         });
+        // ------------------- notify seller with firebase notification -------------------
+        await this.firebaseNotificationService.sendToUser(
+            service.creatorId!,
+            {
+                title: `New Order: ${service.serviceName}`,
+                body: `Your order for "${service.serviceName}" has been placed successfully`,
+                type: NotificationType.ORDER_UPDATE,
+                data: {
+                    orderId: order.id,
+                    orderCode: order.orderCode,
+                    amount: order.amount.toString(),
+                    timestamp: new Date().toISOString(),
+                },
+            },
+            true,
+        );
 
+        //-------------- send email to user --------------
         await this.mail.sendEmail(
             userFromReq.email,
             "DaConnect - Order Placed Successfully 🎉",
@@ -924,7 +948,9 @@ export class PaymentService {
             amount: service.price,
         };
     }
+    // ------------------ approve payment and release fund with notification ------------------
 
+    @HandleError("approvePayment error")
     async approvePayment(orderId: string, user: any) {
         const order = await this.prisma.order.findUnique({
             where: { id: orderId },
@@ -1002,6 +1028,27 @@ export class PaymentService {
                 platformFee_percents: setting.platformFee_percents,
             },
         });
+
+        try {
+            await this.firebaseNotificationService.sendToUser(
+                order.sellerId,
+                {
+                    title: " Payment Released",
+                    body: `Your payment of $${(order.amount / 100).toFixed(2)} for "${order.service.serviceName}" has been released`,
+                    type: NotificationType.PAYMENT_RECEIVED,
+                    data: {
+                        orderId: order.id,
+                        orderCode: order.orderCode,
+                        amount: order.amount.toString(),
+                        timestamp: new Date().toISOString(),
+                    },
+                },
+                true,
+            );
+            console.log(` Payment released notification sent to seller ${order.sellerId}`);
+        } catch (error) {
+            console.error(` Failed to send payment released notification: ${error.message}`);
+        }
 
         await this.mail.sendEmail(
             order.buyer.email,
@@ -1162,6 +1209,8 @@ export class PaymentService {
         };
     }
 
+
+    @HandleError("refundPayment error")
     async refundPayment(orderId: string, user: any) {
         // 1) Load order with relations
         const order = await this.prisma.order.findUnique({
@@ -1459,7 +1508,7 @@ export class PaymentService {
             await this.firebaseNotificationService.sendToUser(
                 order.buyerId,
                 {
-                    title: "💸 Refund Processed",
+                    title: " payment has been processed successfully",
                     body: `Your refund of $${(order.amount / 100).toFixed(2)} has been processed successfully`,
                     type: NotificationType.PAYMENT_RECEIVED,
                     data: {
