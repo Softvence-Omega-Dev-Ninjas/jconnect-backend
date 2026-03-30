@@ -45,6 +45,7 @@ export class PaymentService {
     }
 
     //------------------ create stripe payment method secret key ------------------
+    @HandleError("Failed to create setup intent")
     async createSetupIntent(userReq: any) {
         const user = await this.prisma.user.findUnique({ where: { id: userReq?.userId } });
         if (!user?.customerIdStripe)
@@ -60,6 +61,7 @@ export class PaymentService {
     }
 
     //------------------ confirm stripe setup intent ------------------
+    @HandleError("Failed to confirm setup intent")
     async confirmSetupIntent(body: ConfirmSetupIntentDto, ReqUser: any) {
         const setupIntentId = body.clientSecret.split("_secret")[0];
 
@@ -725,9 +727,8 @@ export class PaymentService {
         };
     }
 
-
     // ------------------ create order with payment method  with notification ------------------
-    @HandleError('createOrderWithPaymentMethod error')
+    @HandleError("createOrderWithPaymentMethod error")
     async createOrderWithPaymentMethod(userFromReq: any, serviceId: string, frontendUrl: string) {
         const user = await this.prisma.user.findUnique({
             where: { id: userFromReq.userId },
@@ -787,20 +788,18 @@ export class PaymentService {
         await this.firebaseNotificationService.sendToUser(
             service.creatorId!,
             {
-                    title: `New Order: ${service.serviceName}`,
-                    body: `Your order for "${service.serviceName}" has been placed successfully`,
-                    type: NotificationType.ORDER_UPDATE,
-                    data: {
-                        orderId: order.id,
-                        orderCode: order.orderCode,
-                        amount: order.amount.toString(),
-                        timestamp: new Date().toISOString(),
-                    },
+                title: `New Order: ${service.serviceName}`,
+                body: `Your order for "${service.serviceName}" has been placed successfully`,
+                type: NotificationType.ORDER_UPDATE,
+                data: {
+                    orderId: order.id,
+                    orderCode: order.orderCode,
+                    amount: order.amount.toString(),
+                    timestamp: new Date().toISOString(),
                 },
-                true,
-              
-        ); 
-
+            },
+            true,
+        );
 
         //-------------- send email to user --------------
         await this.mail.sendEmail(
