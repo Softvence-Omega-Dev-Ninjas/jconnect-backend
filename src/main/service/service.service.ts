@@ -17,7 +17,7 @@ export class ServiceService {
         private readonly eventEmitter: EventEmitter2,
         private readonly firebaseNotificationService: FirebaseNotificationService,
         @Inject("STRIPE_CLIENT") private stripe: Stripe,
-    ) { }
+    ) {}
 
     // ------------------- Create new service-------------------//
     @HandleError("Failed to create service")
@@ -299,8 +299,8 @@ export class ServiceService {
                 },
             },
         );
-    console.log(' Service update notification sent to followers of user', user.userId);
-    
+        console.log(" Service update notification sent to followers of user", user.userId);
+
         return {
             message: "Service updated successfully",
             service: updatedService,

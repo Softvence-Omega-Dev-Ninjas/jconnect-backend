@@ -347,6 +347,7 @@ export enum NotificationType {
     SERVICE_UPDATE = "SERVICE_UPDATE",
     UPLOAD_PROOF = "UPLOAD_PROOF",
     follow = "follow",
+    NEW_ORDER = "NEW_ORDER",
 }
 
 // Send templated notification

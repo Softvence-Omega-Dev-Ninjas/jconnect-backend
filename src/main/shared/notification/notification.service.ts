@@ -108,7 +108,6 @@ export class NotificationSettingService {
         }
     }
 
-
     // ---------------- Mark notification as read ----------------
     @HandleError("Failed to mark notification as read")
     async markAsRead(userId: string, notificationId: string): Promise<TResponse<any>> {
@@ -146,8 +145,6 @@ export class NotificationSettingService {
         }
     }
 
-
-
     //--------------- Delete a notification ----------------
     @HandleError("Failed to delete notification")
     async deleteNotification(userId: string, notificationId: string): Promise<TResponse<any>> {
@@ -172,7 +169,6 @@ export class NotificationSettingService {
     // ----------------- Get unread count ----------------
 
     @HandleError("Failed to get unread count")
-
     async getUnreadCount(userId: string): Promise<TResponse<any>> {
         try {
             const count = await this.prisma.userNotification.count({

@@ -22,7 +22,7 @@ export class OrdersService {
         private readonly firebaseNotificationService: FirebaseNotificationService,
         @Inject("STRIPE_CLIENT")
         private readonly stripe: Stripe,
-    ) { }
+    ) {}
 
     //----------------------- CREATE ORDER -----------------------
     @HandleError("Failed to create order")
@@ -336,7 +336,7 @@ export class OrdersService {
                                     </div>
                                 </div>
                             </body>
-                            </html>`
+                            </html>`,
                         );
                         console.log(`📧 Order accepted email sent to buyer ${order.buyerId}`);
                     } catch (error) {
@@ -360,9 +360,13 @@ export class OrdersService {
                             },
                             true,
                         );
-                        console.log(`📱 Order accepted notification sent to buyer ${order.buyerId}`);
+                        console.log(
+                            `📱 Order accepted notification sent to buyer ${order.buyerId}`,
+                        );
                     } catch (error) {
-                        console.error(`❌ Failed to send order accepted notification: ${error.message}`);
+                        console.error(
+                            `❌ Failed to send order accepted notification: ${error.message}`,
+                        );
                     }
                     break;
 
@@ -406,7 +410,7 @@ export class OrdersService {
                                     </div>
                                 </div>
                             </body>
-                            </html>`
+                            </html>`,
                         );
                         console.log(`📧 Proof submitted email sent to buyer ${order.buyerId}`);
                     } catch (error) {
@@ -430,9 +434,13 @@ export class OrdersService {
                             },
                             true,
                         );
-                        console.log(`📱 Proof submitted notification sent to buyer ${order.buyerId}`);
+                        console.log(
+                            `📱 Proof submitted notification sent to buyer ${order.buyerId}`,
+                        );
                     } catch (error) {
-                        console.error(`❌ Failed to send proof submitted notification: ${error.message}`);
+                        console.error(
+                            `❌ Failed to send proof submitted notification: ${error.message}`,
+                        );
                     }
                     break;
 
@@ -476,7 +484,7 @@ export class OrdersService {
                                     </div>
                                 </div>
                             </body>
-                            </html>`
+                            </html>`,
                         );
                         console.log(`📧 Order completed email sent to buyer ${order.buyerId}`);
                     } catch (error) {
@@ -522,7 +530,7 @@ export class OrdersService {
                                     </div>
                                 </div>
                             </body>
-                            </html>`
+                            </html>`,
                         );
                         console.log(`📧 Payment released email sent to seller ${order.sellerId}`);
                     } catch (error) {
@@ -546,12 +554,16 @@ export class OrdersService {
                             },
                             true,
                         );
-                        console.log(`📱 Order completed notification sent to buyer ${order.buyerId}`);
+                        console.log(
+                            `📱 Order completed notification sent to buyer ${order.buyerId}`,
+                        );
                     } catch (error) {
-                        console.error(`❌ Failed to send order completed notification: ${error.message}`);
+                        console.error(
+                            `❌ Failed to send order completed notification: ${error.message}`,
+                        );
                     }
 
-                    //----------------- Send push notification to seller 
+                    //----------------- Send push notification to seller
                     try {
                         await this.firebaseNotificationService.sendToUser(
                             order.sellerId,
@@ -568,9 +580,13 @@ export class OrdersService {
                             },
                             true,
                         );
-                        console.log(`📱 Payment released notification sent to seller ${order.sellerId}`);
+                        console.log(
+                            `📱 Payment released notification sent to seller ${order.sellerId}`,
+                        );
                     } catch (error) {
-                        console.error(`❌ Failed to send payment released notification: ${error.message}`);
+                        console.error(
+                            `❌ Failed to send payment released notification: ${error.message}`,
+                        );
                     }
                     break;
 
@@ -821,7 +837,6 @@ export class OrdersService {
             console.log(` Proof submitted notification sent to buyer ${order.buyerId}`);
         } catch (error) {
             console.error("Failed to send proof submitted notification to buyer:", error);
-
         }
 
         return updated;

@@ -1,3 +1,4 @@
+import { HandleError } from "@common/error/handle-error.decorator";
 import { errorResponse } from "@common/utilsResponse/response.util";
 import { FirebaseNotificationService } from "@main/shared/notification/firebase-notification.service";
 import {
@@ -15,7 +16,6 @@ import { PrismaService } from "src/lib/prisma/prisma.service";
 import Stripe from "stripe";
 import { ConfirmSetupIntentDto } from "./dto/confirm-setup-intent.dto";
 import { PaginationDto } from "./dto/pagination.dto";
-import { HandleError } from "@common/error/handle-error.decorator";
 
 @Injectable()
 export class PaymentService {
@@ -27,7 +27,7 @@ export class PaymentService {
         private readonly stripe: Stripe,
         private readonly mail: MailService,
         private readonly firebaseNotificationService: FirebaseNotificationService,
-    ) {}
+    ) { }
 
     async createCustomerID(user: any) {
         const customers = await this.stripe.customers.create({
@@ -328,13 +328,13 @@ export class PaymentService {
         transaction.buyer.platformRevenue =
             transaction.status === "RELEASED"
                 ? transaction.amount +
-                  (transaction.amount * transaction.platformFee_percents) / 100 -
-                  transaction.stripeFee -
-                  transaction.amount
+                (transaction.amount * transaction.platformFee_percents) / 100 -
+                transaction.stripeFee -
+                transaction.amount
                 : transaction.stripeFee && transaction.status === "CANCELLED"
-                  ? (transaction.amount * transaction.platformFee_percents) / 100 -
+                    ? (transaction.amount * transaction.platformFee_percents) / 100 -
                     transaction.stripeFee
-                  : 0;
+                    : 0;
 
         transaction.seller.servicePrice = transaction.amount;
         transaction.seller.platformFee =
@@ -345,8 +345,8 @@ export class PaymentService {
             transaction.stripeFee && transaction.status === "CANCELLED"
                 ? 0
                 : transaction.status === "RELEASED"
-                  ? transaction.amount - transaction.seller_amount
-                  : 0;
+                    ? transaction.amount - transaction.seller_amount
+                    : 0;
 
         return {
             success: true,
@@ -725,6 +725,9 @@ export class PaymentService {
         };
     }
 
+
+    // ------------------ create order with payment method  with notification ------------------
+    @HandleError('createOrderWithPaymentMethod error')
     async createOrderWithPaymentMethod(userFromReq: any, serviceId: string, frontendUrl: string) {
         const user = await this.prisma.user.findUnique({
             where: { id: userFromReq.userId },
@@ -780,7 +783,26 @@ export class PaymentService {
                 status: OrderStatus.PENDING,
             },
         });
+        // ------------------- notify seller with firebase notification -------------------
+        await this.firebaseNotificationService.sendToUser(
+            service.creatorId!,
+            {
+                    title: `New Order: ${service.serviceName}`,
+                    body: `Your order for "${service.serviceName}" has been placed successfully`,
+                    type: NotificationType.ORDER_UPDATE,
+                    data: {
+                        orderId: order.id,
+                        orderCode: order.orderCode,
+                        amount: order.amount.toString(),
+                        timestamp: new Date().toISOString(),
+                    },
+                },
+                true,
+              
+        ); 
 
+
+        //-------------- send email to user --------------
         await this.mail.sendEmail(
             userFromReq.email,
             "DaConnect - Order Placed Successfully 🎉",
@@ -1002,6 +1024,27 @@ export class PaymentService {
                 platformFee_percents: setting.platformFee_percents,
             },
         });
+
+        try {
+            await this.firebaseNotificationService.sendToUser(
+                order.sellerId,
+                {
+                    title: " Payment Released",
+                    body: `Your payment of $${(order.amount / 100).toFixed(2)} for "${order.service.serviceName}" has been released`,
+                    type: NotificationType.PAYMENT_RECEIVED,
+                    data: {
+                        orderId: order.id,
+                        orderCode: order.orderCode,
+                        amount: order.amount.toString(),
+                        timestamp: new Date().toISOString(),
+                    },
+                },
+                true,
+            );
+            console.log(` Payment released notification sent to seller ${order.sellerId}`);
+        } catch (error) {
+            console.error(` Failed to send payment released notification: ${error.message}`);
+        }
 
         await this.mail.sendEmail(
             order.buyer.email,

@@ -198,7 +198,7 @@ export class FirebaseNotificationService {
      *------------- Update user's FCM token in database -------------
      */
 
-     @HandleError('Error updating FCM token for user')
+    @HandleError("Error updating FCM token for user")
     async updateFcmToken(userId: string, fcmToken: string): Promise<void> {
         try {
             await this.prisma.user.update({
@@ -215,7 +215,7 @@ export class FirebaseNotificationService {
     /**
      * ----------------Subscribe user to a topic ----------------
      */
-    @HandleError('Error subscribing user to topic')
+    @HandleError("Error subscribing user to topic")
     async subscribeUserToTopic(userId: string, topic: string): Promise<{ success: boolean }> {
         try {
             const user = (await this.prisma.user.findUnique({
@@ -240,7 +240,7 @@ export class FirebaseNotificationService {
     /**
      * --------------- Unsubscribe user from a topic ---------------
      */
-    @HandleError('Error unsubscribing user from topic')
+    @HandleError("Error unsubscribing user from topic")
     async unsubscribeUserFromTopic(userId: string, topic: string): Promise<{ success: boolean }> {
         try {
             const user = (await this.prisma.user.findUnique({
@@ -275,10 +275,9 @@ export class FirebaseNotificationService {
             });
 
             if (!settings) {
-                return true; 
+                return true;
             }
 
-           
             const typeMapping: Partial<Record<NotificationType, string>> = {
                 [NotificationType.NEW_MESSAGE]: "message",
                 [NotificationType.SERVICE_REQUEST]: "Service",
@@ -288,7 +287,7 @@ export class FirebaseNotificationService {
 
             const settingKey = typeMapping[type];
             if (!settingKey || !(settingKey in settings)) {
-                return true; 
+                return true;
             }
 
             return settings[settingKey as keyof typeof settings] !== false;
@@ -298,7 +297,7 @@ export class FirebaseNotificationService {
         }
     }
 
-    /** 
+    /**
      *----------------  Filter users based on notification settings ------------------
      */
     private async filterUsersByNotificationSettings(
@@ -335,7 +334,6 @@ export class FirebaseNotificationService {
                 },
             });
 
-           
             const prismaNotificationType = this.mapToPrismaNotificationType(notification.type);
 
             // ---------------- Link notification to user ----------------
@@ -494,6 +492,18 @@ export class FirebaseNotificationService {
                 body: `${d.serviceName} has been updated`,
                 type: NotificationType.SERVICE_UPDATE,
                 data: { serviceId: d.serviceId },
+            }),
+            [NotificationType.NEW_ORDER]: (d) => ({
+                title: "New Order",
+                body: `You have a new order for "${d.serviceName}" from ${d.clientName}`,
+                type: NotificationType.NEW_ORDER,
+                data: {
+                    orderId: d.orderId,
+                    serviceId: d.serviceId,
+                    serviceName: d.serviceName,
+                    clientId: d.clientId,
+                    clientName: d.clientName,
+                },
             }),
         };
 

@@ -157,9 +157,6 @@ export class OrdersController {
     //     return { proofUrls: order.proofUrls };
     // }
 
-
-
-
     // ----------------------------- orders status update ------------------------------
     @ApiBearerAuth()
     @ValidateUser()
