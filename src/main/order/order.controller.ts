@@ -92,6 +92,7 @@ export class OrdersController {
         return this.ordersService.getOrder(id);
     }
 
+    // -------------------- Proof upload -------------------
     @ApiBearerAuth()
     @ValidateUser()
     @Post("ProofUpload")
@@ -156,6 +157,7 @@ export class OrdersController {
     //     return { proofUrls: order.proofUrls };
     // }
 
+    // ----------------------------- orders status update ------------------------------
     @ApiBearerAuth()
     @ValidateUser()
     @Patch(":id/status")
@@ -174,7 +176,7 @@ export class OrdersController {
         return this.ordersService.updateStatus(id, status, user);
     }
 
-    // Delete order (admin OR buyer before payment)
+    // --------------- Delete order (admin OR buyer before payment) ---------------
 
     @Delete("delete/:orderId")
     @ApiBearerAuth()

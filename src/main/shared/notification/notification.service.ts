@@ -7,6 +7,7 @@ import { NotificationToggleDto } from "./dto/create-notification.dto";
 @Injectable()
 export class NotificationSettingService {
     constructor(private readonly prisma: PrismaService) {}
+    // ---------------- Get notification settings ----------------
     @HandleError("Failed to get notification settings")
     async getNotificationSetting(userId: string): Promise<TResponse<any>> {
         try {
@@ -25,6 +26,8 @@ export class NotificationSettingService {
             return errorResponse("Failed to get notification settings");
         }
     }
+
+    // ---------------- Update notification settings ----------------
 
     @HandleError("Failed to update notification settings")
     async updateNotificationSetting(
@@ -54,8 +57,8 @@ export class NotificationSettingService {
         }
     }
 
+    // ---------------- Get user-specific notifications ----------------
     @HandleError("Failed to get notifications")
-    // Get user-specific notifications (unread and recent)
     async getUserSpecificNotification(userId: string): Promise<TResponse<any>> {
         try {
             const notifications = await this.prisma.userNotification.findMany({
@@ -105,8 +108,8 @@ export class NotificationSettingService {
         }
     }
 
+    // ---------------- Mark notification as read ----------------
     @HandleError("Failed to mark notification as read")
-    // Mark notification as read
     async markAsRead(userId: string, notificationId: string): Promise<TResponse<any>> {
         try {
             const userNotification = await this.prisma.userNotification.updateMany({
@@ -127,7 +130,8 @@ export class NotificationSettingService {
         }
     }
 
-    // Mark all notifications as read
+    //----------------- Mark all notifications as read ---------------------
+    @HandleError("Failed to mark all notifications as read")
     async markAllAsRead(userId: string): Promise<TResponse<any>> {
         try {
             await this.prisma.userNotification.updateMany({
@@ -141,8 +145,8 @@ export class NotificationSettingService {
         }
     }
 
+    //--------------- Delete a notification ----------------
     @HandleError("Failed to delete notification")
-    // Delete a notification
     async deleteNotification(userId: string, notificationId: string): Promise<TResponse<any>> {
         try {
             const deleted = await this.prisma.userNotification.deleteMany({
@@ -162,8 +166,9 @@ export class NotificationSettingService {
         }
     }
 
+    // ----------------- Get unread count ----------------
+
     @HandleError("Failed to get unread count")
-    // Get unread notification count
     async getUnreadCount(userId: string): Promise<TResponse<any>> {
         try {
             const count = await this.prisma.userNotification.count({

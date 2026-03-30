@@ -218,7 +218,7 @@ export class ReviewService {
 
             return review;
         } catch (error) {
-            // Handle Prisma unique constraint violation (P2002)
+            //---------------- Handle Prisma unique constraint violation---------------------
             if (error.code === "P2002") {
                 throw new BadRequestException("You have already reviewed this artist.");
             }
@@ -259,7 +259,7 @@ export class ReviewService {
         };
     }
 
-    // ** 3. UPDATE (Update Review) - PATCH **
+    // ** . UPDATE (Update Review) - PATCH **
     async update(id: string, updateReviewDto: UpdateReviewDto) {
         try {
             const updatedReview = await this.prisma.review.update({

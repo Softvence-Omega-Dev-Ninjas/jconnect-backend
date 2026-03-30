@@ -344,8 +344,10 @@ export enum NotificationType {
     CUSTOM = "CUSTOM",
     SERVICE_REQUEST_ACCEPTED = "SERVICE_REQUEST_ACCEPTED",
     SERVICE_REQUEST_DECLINED = "SERVICE_REQUEST_DECLINED",
+    SERVICE_UPDATE = "SERVICE_UPDATE",
     UPLOAD_PROOF = "UPLOAD_PROOF",
     follow = "follow",
+    NEW_ORDER = "NEW_ORDER",
 }
 
 // Send templated notification
