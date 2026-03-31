@@ -18,7 +18,7 @@ export class FirebaseNotificationService {
     constructor(
         private readonly prisma: PrismaService,
         private readonly fcmService: FirebaseMessagingService,
-    ) {}
+    ) { }
 
     /**
      * ---------- Send notification to a user --------------------
@@ -35,8 +35,17 @@ export class FirebaseNotificationService {
                 select: { fcmToken: true } as any,
             })) as { fcmToken: string | null } | null;
 
-            if (!user || !user.fcmToken) {
-                this.logger.warn(`User ${userId} has no FCM token`);
+            if (!user) {
+                this.logger.error(`User ${userId} not found`);
+                return { success: false, error: "User not found" };
+            }
+
+            if (!user.fcmToken) {
+                this.logger.warn(`User ${userId} has no FCM token - skipping push notification but saving to DB`);
+                // Save to DB even if FCM token is missing
+                if (saveToDb) {
+                    await this.saveNotificationToDb(userId, notification);
+                }
                 return { success: false, error: "User has no FCM token" };
             }
 
@@ -48,6 +57,7 @@ export class FirebaseNotificationService {
             }
 
             // ------------------Send FCM notification ----------------
+            this.logger.log(`Sending ${notification.type} notification to user ${userId} with FCM token`);
             const result = await this.fcmService.sendToDevice({
                 fcmToken: user.fcmToken,
                 notification: {
@@ -74,9 +84,10 @@ export class FirebaseNotificationService {
                 await this.saveNotificationToDb(userId, notification);
             }
 
+            this.logger.log(`Notification result for user ${userId}: ${JSON.stringify(result)}`);
             return result;
         } catch (error) {
-            this.logger.error(`Error sending notification to user ${userId}: ${error.message}`);
+            this.logger.error(`Error sending notification to user ${userId}: ${error.message}`, error.stack);
             return { success: false, error: error.message };
         }
     }
@@ -283,6 +294,8 @@ export class FirebaseNotificationService {
                 [NotificationType.SERVICE_REQUEST]: "Service",
                 [NotificationType.REVIEW_RECEIVED]: "review",
                 [NotificationType.ANNOUNCEMENT]: "post",
+                [NotificationType.ORDER_UPDATE]: "order",
+                [NotificationType.PAYMENT_RECEIVED]: "payment",
             };
 
             const settingKey = typeMapping[type];
@@ -357,6 +370,7 @@ export class FirebaseNotificationService {
         const mapping: Partial<Record<NotificationType, string>> = {
             [NotificationType.SERVICE_REQUEST]: "Service",
             [NotificationType.PAYMENT_RECEIVED]: "Payment",
+            [NotificationType.ORDER_UPDATE]: "Service",
             [NotificationType.NEW_MESSAGE]: "Inquiry",
             [NotificationType.NEW_FOLLOWER]: "UserRegistration",
             [NotificationType.NEW_LIKE]: "UserRegistration",
