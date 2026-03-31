@@ -40,7 +40,7 @@ export class ReviewService {
                 await this.firebaseNotificationService.sendToUser(
                     createReviewDto.artistId,
                     {
-                        title: `⭐ New Review from ${review.reviewer.username}`,
+                        title: `New Review from ${review.reviewer.username}`,
                         body: `You received a ${review.rating}-star review: "${review.reviewText?.substring(0, 50)}${review.reviewText && review.reviewText.length > 50 ? "..." : ""}"`,
                         type: NotificationType.REVIEW_RECEIVED,
                         data: {
@@ -52,7 +52,7 @@ export class ReviewService {
                     },
                     true,
                 );
-                console.log(`⭐ Review notification sent to artist ${createReviewDto.artistId}`);
+                console.log(` Review notification sent to artist ${createReviewDto.artistId}`);
             } catch (error) {
                 console.error(` Failed to send review notification: ${error.message}`);
             }
@@ -208,7 +208,7 @@ export class ReviewService {
 
                 await this.mailService.sendEmail(
                     review.artist.email,
-                    `⭐ You received a new ${review.rating}-star review on DaConnect`,
+                    `You received a new ${review.rating}-star review on DaConnect`,
                     emailHtml,
                 );
                 console.log(` Review email sent to ${review.artist.email}`);

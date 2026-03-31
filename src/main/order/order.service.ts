@@ -22,7 +22,7 @@ export class OrdersService {
         private readonly firebaseNotificationService: FirebaseNotificationService,
         @Inject("STRIPE_CLIENT")
         private readonly stripe: Stripe,
-    ) {}
+    ) { }
 
     //----------------------- CREATE ORDER -----------------------
     @HandleError("Failed to create order")
@@ -343,9 +343,9 @@ export class OrdersService {
                         console.error(`❌ Failed to send order accepted email: ${error.message}`);
                     }
 
-                    // Send push notification to buyer
+                    // -------------------- Send push notification to buyer -----------------
                     try {
-                        await this.firebaseNotificationService.sendToUser(
+                        const result = await this.firebaseNotificationService.sendToUser(
                             order.buyerId,
                             {
                                 title: "✅ Order Accepted",
@@ -360,12 +360,18 @@ export class OrdersService {
                             },
                             true,
                         );
-                        console.log(
-                            `📱 Order accepted notification sent to buyer ${order.buyerId}`,
-                        );
+                        if (result.success) {
+                            console.log(
+                                `📱 Order accepted notification sent to buyer ${order.buyerId}`,
+                            );
+                        } else {
+                            console.warn(
+                                `⚠️ Order accepted notification not sent to buyer ${order.buyerId}: ${result.error}`,
+                            );
+                        }
                     } catch (error) {
                         console.error(
-                            `❌ Failed to send order accepted notification: ${error.message}`,
+                            `❌ Failed to send order accepted notification to buyer ${order.buyerId}: ${error instanceof Error ? error.message : String(error)}`,
                         );
                     }
                     break;
@@ -419,10 +425,10 @@ export class OrdersService {
 
                     // -------------------- Send push notification to buyer --------------------
                     try {
-                        await this.firebaseNotificationService.sendToUser(
+                        const result = await this.firebaseNotificationService.sendToUser(
                             order.buyerId,
                             {
-                                title: " Proof Submitted",
+                                title: "📁 Proof Submitted",
                                 body: `Seller has submitted proof files for your order ${order.orderCode}. Please review and confirm completion.`,
                                 type: NotificationType.ORDER_UPDATE,
                                 data: {
@@ -434,12 +440,18 @@ export class OrdersService {
                             },
                             true,
                         );
-                        console.log(
-                            `📱 Proof submitted notification sent to buyer ${order.buyerId}`,
-                        );
+                        if (result.success) {
+                            console.log(
+                                `📱 Proof submitted notification sent to buyer ${order.buyerId}`,
+                            );
+                        } else {
+                            console.warn(
+                                `⚠️ Proof submitted notification not sent to buyer ${order.buyerId}: ${result.error}`,
+                            );
+                        }
                     } catch (error) {
                         console.error(
-                            `❌ Failed to send proof submitted notification: ${error.message}`,
+                            `❌ Failed to send proof submitted notification to buyer ${order.buyerId}: ${error instanceof Error ? error.message : String(error)}`,
                         );
                     }
                     break;
@@ -539,10 +551,10 @@ export class OrdersService {
 
                     //--------------- Send push notification to buyer -----------------
                     try {
-                        await this.firebaseNotificationService.sendToUser(
+                        const resultBuyer = await this.firebaseNotificationService.sendToUser(
                             order.buyerId,
                             {
-                                title: " Order Completed",
+                                title: "🎉 Order Completed",
                                 body: `Order ${order.orderCode} has been completed! Thank you for using DaConnect.`,
                                 type: NotificationType.ORDER_UPDATE,
                                 data: {
@@ -554,21 +566,27 @@ export class OrdersService {
                             },
                             true,
                         );
-                        console.log(
-                            `📱 Order completed notification sent to buyer ${order.buyerId}`,
-                        );
+                        if (resultBuyer.success) {
+                            console.log(
+                                `📱 Order completed notification sent to buyer ${order.buyerId}`,
+                            );
+                        } else {
+                            console.warn(
+                                `⚠️ Order completed notification not sent to buyer ${order.buyerId}: ${resultBuyer.error}`,
+                            );
+                        }
                     } catch (error) {
                         console.error(
-                            `❌ Failed to send order completed notification: ${error.message}`,
+                            `❌ Failed to send order completed notification to buyer ${order.buyerId}: ${error instanceof Error ? error.message : String(error)}`,
                         );
                     }
 
                     //----------------- Send push notification to seller
                     try {
-                        await this.firebaseNotificationService.sendToUser(
+                        const resultSeller = await this.firebaseNotificationService.sendToUser(
                             order.sellerId,
                             {
-                                title: "Payment Released",
+                                title: "💰 Payment Released",
                                 body: `Payment for order ${order.orderCode} has been released to your account.`,
                                 type: NotificationType.PAYMENT_RECEIVED,
                                 data: {
@@ -580,12 +598,18 @@ export class OrdersService {
                             },
                             true,
                         );
-                        console.log(
-                            `📱 Payment released notification sent to seller ${order.sellerId}`,
-                        );
+                        if (resultSeller.success) {
+                            console.log(
+                                `📱 Payment released notification sent to seller ${order.sellerId}`,
+                            );
+                        } else {
+                            console.warn(
+                                `⚠️ Payment released notification not sent to seller ${order.sellerId}: ${resultSeller.error}`,
+                            );
+                        }
                     } catch (error) {
                         console.error(
-                            `❌ Failed to send payment released notification: ${error.message}`,
+                            `❌ Failed to send payment released notification to seller ${order.sellerId}: ${error instanceof Error ? error.message : String(error)}`,
                         );
                     }
                     break;
@@ -818,26 +842,24 @@ export class OrdersService {
         }
 
         // -------------Send push notification to buyer ----------------
-        try {
-            await this.firebaseNotificationService.sendToUser(
-                order.buyerId,
-                {
-                    title: `Proof Submitted for Order ${order.orderCode}`,
-                    body: `The seller has submitted proof for your order ${order.orderCode}. Please review it.`,
-                    type: NotificationType.UPLOAD_PROOF,
-                    data: {
-                        orderId: updated.id,
-                        orderCode: updated.orderCode,
-                        status: updated.status,
-                        timestamp: new Date().toISOString(),
+        await this.firebaseNotificationService.sendToUser(
+            order.buyerId,
+                    {
+                        title: " upload proof file ",
+                        body: `${updated.buyer.username} has updated the proof files for "${order.proofUrl}"`,
+                        type: NotificationType.UPLOAD_PROOF,
+                        data: {
+                            serviceRequestId: order.buyer.id,
+                            buyerId: updated.buyerId,
+                            sellerId: updated.sellerId,
+                            timestamp: new Date().toISOString(),
+                        },
                     },
-                },
-                true,
-            );
-            console.log(` Proof submitted notification sent to buyer ${order.buyerId}`);
-        } catch (error) {
-            console.error("Failed to send proof submitted notification to buyer:", error);
-        }
+                    true,
+                );
+                console.log(
+                    `📁 Update notification sent to seller ${updated.sellerId} about updated files`,
+                );
 
         return updated;
     }
