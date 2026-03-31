@@ -27,4 +27,7 @@ export class TestRoutesService {
     test() {
         return "test";
     }
+    async testAsync() {
+        return "test async";
+    }
 }
