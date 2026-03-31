@@ -13,7 +13,7 @@ import { ServiceModule } from "./service/service.module";
 import { SharedModule } from "./shared/shared.module";
 import { UsersModule } from "./users/users.module";
 import { SettingsModule } from "./settings/settings.module";
-import { TestRoutesModule } from './test-routes/test-routes.module';
+import { TestRoutesModule } from "./test-routes/test-routes.module";
 
 @Module({
     imports: [
