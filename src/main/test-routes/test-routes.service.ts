@@ -23,4 +23,8 @@ export class TestRoutesService {
     remove(id: number) {
         return `This action removes a #${id} testRoute`;
     }
+
+    test() {
+        return "test";
+    }
 }
