@@ -22,7 +22,7 @@ export class OrdersService {
         private readonly firebaseNotificationService: FirebaseNotificationService,
         @Inject("STRIPE_CLIENT")
         private readonly stripe: Stripe,
-    ) { }
+    ) {}
 
     //----------------------- CREATE ORDER -----------------------
     @HandleError("Failed to create order")
@@ -844,22 +844,22 @@ export class OrdersService {
         // -------------Send push notification to buyer ----------------
         await this.firebaseNotificationService.sendToUser(
             order.buyerId,
-                    {
-                        title: " upload proof file ",
-                        body: `${updated.buyer.username} has updated the proof files for "${order.proofUrl}"`,
-                        type: NotificationType.UPLOAD_PROOF,
-                        data: {
-                            serviceRequestId: order.buyer.id,
-                            buyerId: updated.buyerId,
-                            sellerId: updated.sellerId,
-                            timestamp: new Date().toISOString(),
-                        },
-                    },
-                    true,
-                );
-                console.log(
-                    `📁 Update notification sent to seller ${updated.sellerId} about updated files`,
-                );
+            {
+                title: " upload proof file ",
+                body: `${updated.buyer.username} has updated the proof files for "${order.proofUrl}"`,
+                type: NotificationType.UPLOAD_PROOF,
+                data: {
+                    serviceRequestId: order.buyer.id,
+                    buyerId: updated.buyerId,
+                    sellerId: updated.sellerId,
+                    timestamp: new Date().toISOString(),
+                },
+            },
+            true,
+        );
+        console.log(
+            `📁 Update notification sent to seller ${updated.sellerId} about updated files`,
+        );
 
         return updated;
     }
