@@ -18,7 +18,7 @@ export class FirebaseNotificationService {
     constructor(
         private readonly prisma: PrismaService,
         private readonly fcmService: FirebaseMessagingService,
-    ) { }
+    ) {}
 
     /**
      * ---------- Send notification to a user --------------------
@@ -41,7 +41,9 @@ export class FirebaseNotificationService {
             }
 
             if (!user.fcmToken) {
-                this.logger.warn(`User ${userId} has no FCM token - skipping push notification but saving to DB`);
+                this.logger.warn(
+                    `User ${userId} has no FCM token - skipping push notification but saving to DB`,
+                );
                 // Save to DB even if FCM token is missing
                 if (saveToDb) {
                     await this.saveNotificationToDb(userId, notification);
@@ -57,7 +59,9 @@ export class FirebaseNotificationService {
             }
 
             // ------------------Send FCM notification ----------------
-            this.logger.log(`Sending ${notification.type} notification to user ${userId} with FCM token`);
+            this.logger.log(
+                `Sending ${notification.type} notification to user ${userId} with FCM token`,
+            );
             const result = await this.fcmService.sendToDevice({
                 fcmToken: user.fcmToken,
                 notification: {
@@ -87,7 +91,10 @@ export class FirebaseNotificationService {
             this.logger.log(`Notification result for user ${userId}: ${JSON.stringify(result)}`);
             return result;
         } catch (error) {
-            this.logger.error(`Error sending notification to user ${userId}: ${error.message}`, error.stack);
+            this.logger.error(
+                `Error sending notification to user ${userId}: ${error.message}`,
+                error.stack,
+            );
             return { success: false, error: error.message };
         }
     }
