@@ -31,4 +31,8 @@ export class TestRoutesController {
     remove(@Param("id") id: string) {
         return this.testRoutesService.remove(+id);
     }
+    @Post("test")
+    test() {
+        return this.testRoutesService.test();
+    }
 }
