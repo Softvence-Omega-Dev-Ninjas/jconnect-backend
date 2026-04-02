@@ -17,7 +17,7 @@ export class ServiceService {
         private readonly eventEmitter: EventEmitter2,
         private readonly firebaseNotificationService: FirebaseNotificationService,
         @Inject("STRIPE_CLIENT") private stripe: Stripe,
-    ) {}
+    ) { }
 
     // ------------------- Create new service-------------------//
     @HandleError("Failed to create service")
@@ -67,7 +67,7 @@ export class ServiceService {
                 username: true,
             },
             where: {
-                following: {
+                follwers: {
                     some: {
                         followerId: user.userId,
                     },
@@ -254,7 +254,7 @@ export class ServiceService {
                 username: true,
             },
             where: {
-                following: {
+                follwers: {
                     some: {
                         followerId: user.userId,
                     },
