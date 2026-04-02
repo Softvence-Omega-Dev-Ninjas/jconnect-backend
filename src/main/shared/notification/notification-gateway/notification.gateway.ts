@@ -461,52 +461,52 @@ export class NotificationGateway
             this.logger.log(`Notification saved for buyer ${buyerId}`);
 
             // ------------- SEND EMAIL NOTIFICATION ----------------
-            try {
-                const buyer = await this.prisma.user.findUnique({
-                    where: { id: buyerId },
-                    select: { email: true, full_name: true },
-                });
+            // try {
+            //     const buyer = await this.prisma.user.findUnique({
+            //         where: { id: buyerId },
+            //         select: { email: true, full_name: true },
+            //     });
 
-                if (buyer?.email) {
-                    await this.mailService.sendEmail(
-                        buyer.email,
-                        "Service Request Accepted",
-                        `
-                        <p>Hello ${buyer.full_name || "Buyer"},</p>
-                        <p><strong>${payload.info.sellerName}</strong> has accepted your service request for <strong>"${payload.info.serviceName}"</strong>.</p>
-                        <p>You can now proceed with the next steps of your request.</p>
-                        <p>Thank you,<br/>DaConnect Team</p>
-                        `,
-                    );
-                    this.logger.log(` Email notification sent to buyer ${buyerId}`);
-                }
-            } catch (emailError: any) {
-                this.logger.error(`Failed to send email notification: ${emailError.message}`);
-            }
+            //     if (buyer?.email) {
+            //         await this.mailService.sendEmail(
+            //             buyer.email,
+            //             "Service Request Accepted",
+            //             `
+            //             <p>Hello ${buyer.full_name || "Buyer"},</p>
+            //             <p><strong>${payload.info.sellerName}</strong> has accepted your service request for <strong>"${payload.info.serviceName}"</strong>.</p>
+            //             <p>You can now proceed with the next steps of your request.</p>
+            //             <p>Thank you,<br/>DaConnect Team</p>
+            //             `,
+            //         );
+            //         this.logger.log(` Email notification sent to buyer ${buyerId}`);
+            //     }
+            // } catch (emailError: any) {
+            //     this.logger.error(`Failed to send email notification: ${emailError.message}`);
+            // }
 
             // ------------- SEND FIREBASE NOTIFICATION ----------------
-            try {
-                await this.firebaseNotificationService.sendToUser(
-                    buyerId,
-                    {
-                        title: " Service Request Accepted",
-                        body: `${payload.info.sellerName} has accepted your service request for "${payload.info.serviceName}"`,
-                        type: NotificationType.SERVICE_REQUEST,
-                        data: {
-                            serviceRequestId: payload.info.serviceRequestId,
-                            sellerId: payload.info.sellerId,
-                            sellerName: payload.info.sellerName,
-                            serviceName: payload.info.serviceName,
-                            status: "ACCEPTED",
-                            timestamp: new Date().toISOString(),
-                        },
-                    },
-                    false,
-                );
-                this.logger.log(` Firebase notification sent to buyer ${buyerId}`);
-            } catch (fbError: any) {
-                this.logger.error(`Failed to send Firebase notification: ${fbError.message}`);
-            }
+            // try {
+            //     await this.firebaseNotificationService.sendToUser(
+            //         buyerId,
+            //         {
+            //             title: " Service Request Accepted",
+            //             body: `${payload.info.sellerName} has accepted your service request for "${payload.info.serviceName}"`,
+            //             type: NotificationType.SERVICE_REQUEST,
+            //             data: {
+            //                 serviceRequestId: payload.info.serviceRequestId,
+            //                 sellerId: payload.info.sellerId,
+            //                 sellerName: payload.info.sellerName,
+            //                 serviceName: payload.info.serviceName,
+            //                 status: "ACCEPTED",
+            //                 timestamp: new Date().toISOString(),
+            //             },
+            //         },
+            //         false,
+            //     );
+            //     this.logger.log(` Firebase notification sent to buyer ${buyerId}`);
+            // } catch (fbError: any) {
+            //     this.logger.error(`Failed to send Firebase notification: ${fbError.message}`);
+            // }
 
             // ------------- SEND REALTIME VIA SOCKET -------------
             const clients = this.getClientsForUser(buyerId);
@@ -586,57 +586,57 @@ export class NotificationGateway
             this.logger.log(`Notification saved for buyer ${buyerId}`);
 
             // ------------- SEND EMAIL NOTIFICATION ----------------
-            try {
-                const buyer = await this.prisma.user.findUnique({
-                    where: { id: buyerId },
-                    select: { email: true, full_name: true },
-                });
+            // try {
+            //     const buyer = await this.prisma.user.findUnique({
+            //         where: { id: buyerId },
+            //         select: { email: true, full_name: true },
+            //     });
 
-                if (buyer?.email) {
-                    const reasonText = payload.info.reason
-                        ? `<p><strong>Reason:</strong> ${payload.info.reason}</p>`
-                        : "";
-                    await this.mailService.sendEmail(
-                        buyer.email,
-                        " Service Request Declined",
-                        `
-                        <p>Hello ${buyer.full_name || "Buyer"},</p>
-                        <p><strong>${payload.info.sellerName}</strong> has declined your service request for <strong>"${payload.info.serviceName}"</strong>.</p>
-                        ${reasonText}
-                        <p>You can create a new request or contact the seller for more details.</p>
-                        <p>Thank you,<br/>DaConnect Team</p>
-                        `,
-                    );
-                    this.logger.log(` Email notification sent to buyer ${buyerId}`);
-                }
-            } catch (emailError: any) {
-                this.logger.error(`Failed to send email notification: ${emailError.message}`);
-            }
+            //     if (buyer?.email) {
+            //         const reasonText = payload.info.reason
+            //             ? `<p><strong>Reason:</strong> ${payload.info.reason}</p>`
+            //             : "";
+            //         await this.mailService.sendEmail(
+            //             buyer.email,
+            //             " Service Request Declined",
+            //             `
+            //             <p>Hello ${buyer.full_name || "Buyer"},</p>
+            //             <p><strong>${payload.info.sellerName}</strong> has declined your service request for <strong>"${payload.info.serviceName}"</strong>.</p>
+            //             ${reasonText}
+            //             <p>You can create a new request or contact the seller for more details.</p>
+            //             <p>Thank you,<br/>DaConnect Team</p>
+            //             `,
+            //         );
+            //         this.logger.log(` Email notification sent to buyer ${buyerId}`);
+            //     }
+            // } catch (emailError: any) {
+            //     this.logger.error(`Failed to send email notification: ${emailError.message}`);
+            // }
 
             // ------------- SEND FIREBASE NOTIFICATION  ----------------
-            try {
-                await this.firebaseNotificationService.sendToUser(
-                    buyerId,
-                    {
-                        title: " Service Request Declined",
-                        body: `${payload.info.sellerName} has declined your service request for "${payload.info.serviceName}"`,
-                        type: NotificationType.SERVICE_REQUEST,
-                        data: {
-                            serviceRequestId: payload.info.serviceRequestId,
-                            sellerId: payload.info.sellerId,
-                            sellerName: payload.info.sellerName,
-                            serviceName: payload.info.serviceName,
-                            status: "DECLINED",
-                            reason: payload.info.reason || undefined,
-                            timestamp: new Date().toISOString(),
-                        },
-                    },
-                    false,
-                );
-                this.logger.log(` Firebase notification sent to buyer ${buyerId}`);
-            } catch (fbError: any) {
-                this.logger.error(`Failed to send Firebase notification: ${fbError.message}`);
-            }
+            // try {
+            //     await this.firebaseNotificationService.sendToUser(
+            //         buyerId,
+            //         {
+            //             title: " Service Request Declined",
+            //             body: `${payload.info.sellerName} has declined your service request for "${payload.info.serviceName}"`,
+            //             type: NotificationType.SERVICE_REQUEST,
+            //             data: {
+            //                 serviceRequestId: payload.info.serviceRequestId,
+            //                 sellerId: payload.info.sellerId,
+            //                 sellerName: payload.info.sellerName,
+            //                 serviceName: payload.info.serviceName,
+            //                 status: "DECLINED",
+            //                 reason: payload.info.reason || undefined,
+            //                 timestamp: new Date().toISOString(),
+            //             },
+            //         },
+            //         false,
+            //     );
+            //     this.logger.log(` Firebase notification sent to buyer ${buyerId}`);
+            // } catch (fbError: any) {
+            //     this.logger.error(`Failed to send Firebase notification: ${fbError.message}`);
+            // }
 
             // ------------- SEND REALTIME VIA SOCKET -------------
             const clients = this.getClientsForUser(buyerId);

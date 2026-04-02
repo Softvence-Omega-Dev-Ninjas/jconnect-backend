@@ -1,5 +1,8 @@
 # JCONNECT BACKND
-
+``` 
+sudo systemctl stop postgresql
+sudo systemctl disable postgresql
+```
 ## fix docker
 
 ```bash
