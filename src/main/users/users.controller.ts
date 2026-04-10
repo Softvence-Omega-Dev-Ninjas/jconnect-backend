@@ -42,7 +42,7 @@ export class UsersController {
     constructor(
         private readonly usersService: UsersService,
         private awsservice: AwsService,
-    ) {}
+    ) { }
 
     @Get("check-username/:username")
     @ApiOperation({ summary: "Check if username is available" })
@@ -101,7 +101,7 @@ export class UsersController {
     })
     @UseInterceptors(
         FileInterceptor("image", {
-            limits: { fileSize: 1 * 1024 * 1024 },
+            limits: { fileSize: 10 * 1024 * 1024 },
             fileFilter: (req, file, cb) => {
                 if (!file.mimetype.startsWith("image/")) {
                     return cb(new BadRequestException("Only image files are allowed!"), false);
