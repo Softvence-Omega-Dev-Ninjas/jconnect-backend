@@ -235,7 +235,7 @@ export class ReviewService {
             include: {
                 // Include the reviewer's full_name and email
                 reviewer: {
-                    select: { full_name: true, email: true },
+                    select: { full_name: true, email: true, username: true },
                 },
             },
             orderBy: {
